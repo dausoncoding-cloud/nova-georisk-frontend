@@ -935,6 +935,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tasks/{task_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Task Archive */
+        get: operations["get_task_archive_api_v1_tasks__task_id__archive_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tasks/{task_id}/cancel": {
         parameters: {
             query?: never;
@@ -1167,9 +1184,7 @@ export interface components {
              */
             project_id: string;
             /** Source Lineage */
-            source_lineage?: {
-                [key: string]: unknown;
-            } | null;
+            source_lineage?: Record<string, never> | null;
             source_type: components["schemas"]["AOISourceType"];
             stats: components["schemas"]["AOIStats"];
         };
@@ -1321,9 +1336,7 @@ export interface components {
         /** AtlasLegend */
         AtlasLegend: {
             /** Entries */
-            entries?: {
-                [key: string]: unknown;
-            }[];
+            entries?: Record<string, never>[];
             /** Maximum */
             maximum?: number | null;
             /** Minimum */
@@ -1357,9 +1370,7 @@ export interface components {
             /** Project Id */
             project_id: string;
             /** Provenance */
-            provenance: {
-                [key: string]: unknown;
-            };
+            provenance: Record<string, never>;
             /** Result Id */
             result_id: string | null;
             /** Screening Caveat */
@@ -1408,7 +1419,10 @@ export interface components {
         };
         /** Body_list_geopackage_layers_api_v1_aoi_gpkg_layers_post */
         Body_list_geopackage_layers_api_v1_aoi_gpkg_layers_post: {
-            /** File */
+            /**
+             * File
+             * Format: binary
+             */
             file: string;
             /**
              * Project Id
@@ -1418,14 +1432,20 @@ export interface components {
         };
         /** Body_register_upload_api_v1_source_datasets_post */
         Body_register_upload_api_v1_source_datasets_post: {
-            /** File */
+            /**
+             * File
+             * Format: binary
+             */
             file: string;
             /** Manifest */
             manifest: string;
         };
         /** Body_upload_geopackage_aoi_api_v1_aoi_upload_gpkg_post */
         Body_upload_geopackage_aoi_api_v1_aoi_upload_gpkg_post: {
-            /** File */
+            /**
+             * File
+             * Format: binary
+             */
             file: string;
             /** Layer Name */
             layer_name?: string | null;
@@ -1442,7 +1462,10 @@ export interface components {
         };
         /** Body_upload_shapefile_aoi_api_v1_aoi_upload_post */
         Body_upload_shapefile_aoi_api_v1_aoi_upload_post: {
-            /** File */
+            /**
+             * File
+             * Format: binary
+             */
             file: string;
             /**
              * Name
@@ -1457,7 +1480,10 @@ export interface components {
         };
         /** Body_validate_upload_api_v1_source_datasets_validate_post */
         Body_validate_upload_api_v1_source_datasets_validate_post: {
-            /** File */
+            /**
+             * File
+             * Format: binary
+             */
             file: string;
             /** Manifest */
             manifest: string;
@@ -1503,6 +1529,33 @@ export interface components {
             weights: {
                 [key: string]: number;
             };
+        };
+        /** ClassArea */
+        ClassArea: {
+            /** Area Ha */
+            area_ha: number;
+            /** Area Km2 */
+            area_km2: number;
+            /** Area M2 */
+            area_m2: number;
+            /** Area Method */
+            area_method: string;
+            /** Cells */
+            cells: number;
+            /** Class Value */
+            class_value: number;
+            /** Classification Basis */
+            classification_basis: string;
+            /** Denominator Area M2 */
+            denominator_area_m2: number;
+            /** Evidence Ref */
+            evidence_ref: string;
+            /** Label */
+            label: string;
+            /** Percent Of Valid */
+            percent_of_valid: number;
+            /** Product Key */
+            product_key: string;
         };
         /** ClassificationValidationRequest */
         ClassificationValidationRequest: {
@@ -1639,6 +1692,7 @@ export interface components {
              * Gap Policy
              * @default reject
              * @constant
+             * @enum {string}
              */
             gap_policy: "reject";
             /** Temporal Resolution Hours */
@@ -1657,9 +1711,7 @@ export interface components {
              */
             access: boolean;
             /** Capabilities */
-            capabilities?: {
-                [key: string]: unknown;
-            };
+            capabilities?: Record<string, never>;
             /** Category */
             category: string;
             /** Description */
@@ -1715,6 +1767,71 @@ export interface components {
             detail: unknown;
             error: components["schemas"]["ApiError"];
         };
+        /** EvidenceStatement */
+        EvidenceStatement: {
+            /** Evidence Refs */
+            evidence_refs: string[];
+            /** Text */
+            text: string;
+        };
+        /** ExecutionEvent */
+        ExecutionEvent: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "submitted" | "initialized" | "enqueued" | "started" | "progress" | "sources_revalidated" | "completed" | "failed" | "canceled" | "retry_created";
+            /** Actor Id */
+            actor_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Previous Sha256 */
+            previous_sha256: string;
+            /** Progress Pct */
+            progress_pct: number;
+            /** Sequence */
+            sequence: number;
+            /** Sha256 */
+            sha256: string;
+        };
+        /** ExecutionRecord */
+        ExecutionRecord: {
+            /** Aoi Sha256 */
+            aoi_sha256: string | null;
+            /** Aoi Snapshot */
+            aoi_snapshot: Record<string, never> | null;
+            /** Aoi Source Lineage */
+            aoi_source_lineage: Record<string, never> | null;
+            /**
+             * Cache Policy
+             * @constant
+             * @enum {string}
+             */
+            cache_policy: "revalidate_registered_sources_no_automatic_result_or_gee_reuse";
+            /** Events */
+            events: components["schemas"]["ExecutionEvent"][];
+            /** Implementation Sha256 */
+            implementation_sha256: string;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "api" | "legacy_worker";
+            /** Parameters Sha256 */
+            parameters_sha256: string;
+            /** Retry Of */
+            retry_of: string | null;
+            /**
+             * Schema Version
+             * @default 1.0
+             * @constant
+             * @enum {string}
+             */
+            schema_version: "1.0";
+        };
         /** ExposureDensityRequest */
         ExposureDensityRequest: {
             /** Normalized Density */
@@ -1745,9 +1862,11 @@ export interface components {
             /**
              * Algorithm
              * @default random_forest
-             * @constant
+             * @enum {string}
              */
-            algorithm: "random_forest";
+            algorithm: "random_forest" | "xgboost" | "svm" | "cart" | "gradient_boosting" | "neural_network";
+            /** Comparison Algorithms */
+            comparison_algorithms?: ("random_forest" | "xgboost" | "svm" | "cart" | "gradient_boosting" | "neural_network")[];
             /**
              * N Estimators
              * @default 200
@@ -1758,6 +1877,22 @@ export interface components {
              * @default 1.0
              */
             version: string;
+        };
+        /**
+         * FIRRISPostprocessingConfig
+         * @description Optional categorical generalization; raw scientific predictions are preserved.
+         */
+        FIRRISPostprocessingConfig: {
+            /** Operations */
+            operations?: ("majority" | "opening" | "closing")[];
+            /** Policy Reference */
+            policy_reference?: string | null;
+            /**
+             * Window Pixels
+             * @default 3
+             * @enum {integer}
+             */
+            window_pixels: 3 | 5 | 7;
         };
         /** FIRRISPreprocessingConfig */
         FIRRISPreprocessingConfig: {
@@ -1776,6 +1911,11 @@ export interface components {
              * @default true
              */
             normalize_projection: boolean;
+            /**
+             * Preview Enhancement
+             * @default false
+             */
+            preview_enhancement: boolean;
             /**
              * Sar Speckle Filter
              * @default true
@@ -1832,11 +1972,10 @@ export interface components {
             /** Label Source */
             label_source?: string | null;
             model?: components["schemas"]["FIRRISModelConfig"];
+            postprocessing?: components["schemas"]["FIRRISPostprocessingConfig"];
             preprocessing?: components["schemas"]["FIRRISPreprocessingConfig"];
             /** Quality */
-            quality?: {
-                [key: string]: unknown;
-            };
+            quality?: Record<string, never>;
             sampling?: components["schemas"]["FIRRISSamplingConfig"];
             source: components["schemas"]["SatelliteSourceConfig"];
             /** Valid Mask */
@@ -2156,6 +2295,24 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /** QuantitativeSeries */
+        QuantitativeSeries: {
+            /** Basis */
+            basis: string;
+            /** Evidence Refs */
+            evidence_refs: string[];
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "class_area" | "histogram" | "observed_time_series";
+            /** Points */
+            points: Record<string, never>[];
+            /** Product Key */
+            product_key: string;
+            /** Units */
+            units: string;
+        };
         /** RasterGrid */
         RasterGrid: {
             /** Crs */
@@ -2211,6 +2368,45 @@ export interface components {
             /** Willmott D */
             willmott_d: number;
         };
+        /** ResultAnalytics */
+        ResultAnalytics: {
+            /** Class Areas */
+            class_areas?: components["schemas"]["ClassArea"][];
+            /** Limitations */
+            limitations: string[];
+            /**
+             * Schema Version
+             * @default 1.0
+             * @constant
+             * @enum {string}
+             */
+            schema_version: "1.0";
+            /** Series */
+            series?: components["schemas"]["QuantitativeSeries"][];
+        };
+        /** ResultInterpretation */
+        ResultInterpretation: {
+            /** Findings */
+            findings: components["schemas"]["EvidenceStatement"][];
+            /**
+             * Independent Scientific Validation
+             * @default false
+             * @constant
+             * @enum {boolean}
+             */
+            independent_scientific_validation: false;
+            /** Limitations */
+            limitations: string[];
+            /**
+             * Method
+             * @default deterministic_evidence_rules_v1
+             * @constant
+             * @enum {string}
+             */
+            method: "deterministic_evidence_rules_v1";
+            /** Recommendations */
+            recommendations: components["schemas"]["EvidenceStatement"][];
+        };
         /** ResultLayerResponse */
         ResultLayerResponse: {
             /** Artifact Keys */
@@ -2223,6 +2419,10 @@ export interface components {
             } | null;
             /** Crs */
             crs?: string | null;
+            /** Display Bounds Wgs84 */
+            display_bounds_wgs84?: {
+                [key: string]: number;
+            } | null;
             /** Key */
             key: string;
             /** Label */
@@ -2233,9 +2433,7 @@ export interface components {
              */
             layer_type: "raster" | "vector";
             /** Legend */
-            legend?: {
-                [key: string]: unknown;
-            } | unknown[] | null;
+            legend?: Record<string, never> | unknown[] | null;
             /** Nodata */
             nodata?: number | string | null;
             /** Planned Delivery Types */
@@ -2247,9 +2445,9 @@ export interface components {
             /** Rendering Reason */
             rendering_reason?: string | null;
             /** Spatial Resolution */
-            spatial_resolution?: {
-                [key: string]: unknown;
-            } | null;
+            spatial_resolution?: Record<string, never> | null;
+            /** Temporal Metadata */
+            temporal_metadata?: Record<string, never> | null;
             /** Units */
             units?: string | null;
         };
@@ -2280,9 +2478,7 @@ export interface components {
             /** Format */
             format: string;
             /** Gis Metadata */
-            gis_metadata?: {
-                [key: string]: unknown;
-            } | null;
+            gis_metadata?: Record<string, never> | null;
             /** Key */
             key: string;
             /** Label */
@@ -2322,6 +2518,7 @@ export interface components {
         };
         /** ResultResponse */
         ResultResponse: {
+            analytics?: components["schemas"]["ResultAnalytics"] | null;
             /** Aoi Id */
             aoi_id: string | null;
             /**
@@ -2338,6 +2535,7 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            interpretation?: components["schemas"]["ResultInterpretation"] | null;
             /** Layers */
             layers: components["schemas"]["ResultLayerResponse"][];
             /** Products */
@@ -2348,15 +2546,11 @@ export interface components {
              */
             project_id: string;
             /** Provenance */
-            provenance: {
-                [key: string]: unknown;
-            } | null;
+            provenance: Record<string, never> | null;
             /** Result Type */
             result_type: string;
             /** Summary */
-            summary: {
-                [key: string]: unknown;
-            } | null;
+            summary: Record<string, never> | null;
             /**
              * Task Id
              * Format: uuid
@@ -2384,11 +2578,34 @@ export interface components {
             /** Vulnerability */
             vulnerability: number[];
         };
+        /** SatellitePreprocessingOptions */
+        SatellitePreprocessingOptions: {
+            /**
+             * Climate Interpolation
+             * @constant
+             * @enum {string}
+             */
+            climate_interpolation: "reviewed_station_idw";
+            /**
+             * Raster Alignment
+             * @constant
+             * @enum {string}
+             */
+            raster_alignment: "nearest_no_upsampling";
+            /** Terrain Products */
+            terrain_products?: ("slope" | "aspect" | "curvature" | "flow_direction" | "flow_accumulation" | "twi")[];
+        };
         /** SatelliteSourceConfig */
         SatelliteSourceConfig: {
             baseline_period?: components["schemas"]["AnalysisDateRange"] | null;
             /** Datasets */
             datasets?: string[];
+            /**
+             * Date Mode
+             * @default pre-post
+             * @enum {string}
+             */
+            date_mode: "pre-post" | "seasonal" | "annual";
             /**
              * Dem Source
              * @default SRTM
@@ -2490,7 +2707,7 @@ export interface components {
              * Module
              * @enum {string}
              */
-            module: "hazard" | "exposure" | "vulnerability" | "insecurity" | "risk" | "resilience" | "flood_depth" | "flood_velocity" | "flood_hazard_product" | "flood_aep" | "flood_return_period" | "flood_duration" | "flood_susceptibility" | "flood_hazard_zonation";
+            module: "hazard" | "exposure" | "vulnerability" | "insecurity" | "risk" | "resilience" | "flood_depth" | "flood_velocity" | "flood_hazard_product" | "flood_aep" | "flood_return_period" | "flood_duration" | "flood_susceptibility" | "flood_hazard_zonation" | "satellite_preprocessing" | "flood_change";
             /** Reason */
             reason?: string | null;
             /** Source Ids */
@@ -2512,13 +2729,14 @@ export interface components {
              * Module
              * @enum {string}
              */
-            module: "hazard" | "exposure" | "vulnerability" | "insecurity" | "risk" | "resilience" | "flood_depth" | "flood_velocity" | "flood_hazard_product" | "flood_aep" | "flood_return_period" | "flood_duration" | "flood_susceptibility" | "flood_hazard_zonation";
+            module: "hazard" | "exposure" | "vulnerability" | "insecurity" | "risk" | "resilience" | "flood_depth" | "flood_velocity" | "flood_hazard_product" | "flood_aep" | "flood_return_period" | "flood_duration" | "flood_susceptibility" | "flood_hazard_zonation" | "satellite_preprocessing" | "flood_change";
             period: components["schemas"]["TemporalCoverage"];
             /**
              * Project Id
              * Format: uuid
              */
             project_id: string;
+            satellite_options?: components["schemas"]["SatellitePreprocessingOptions"] | null;
             /** Sources */
             sources?: {
                 [key: string]: string;
@@ -2535,6 +2753,7 @@ export interface components {
              * Analysis Ready
              * @default false
              * @constant
+             * @enum {boolean}
              */
             analysis_ready: false;
             /** Bounds */
@@ -2556,6 +2775,7 @@ export interface components {
              * Structural Validation Only
              * @default true
              * @constant
+             * @enum {boolean}
              */
             structural_validation_only: true;
         };
@@ -2565,6 +2785,7 @@ export interface components {
              * Analysis Ready
              * @default false
              * @constant
+             * @enum {boolean}
              */
             analysis_ready: false;
             /** Bounds */
@@ -2581,6 +2802,7 @@ export interface components {
              * Structural Validation Only
              * @default true
              * @constant
+             * @enum {boolean}
              */
             structural_validation_only: true;
         };
@@ -2599,6 +2821,7 @@ export interface components {
             /**
              * Crs Datum Verified
              * @constant
+             * @enum {boolean}
              */
             crs_datum_verified: true;
             /**
@@ -2621,26 +2844,31 @@ export interface components {
             /**
              * Licence Verified
              * @constant
+             * @enum {boolean}
              */
             licence_verified: true;
             /**
              * Provenance Verified
              * @constant
+             * @enum {boolean}
              */
             provenance_verified: true;
             /**
              * Qa Verified
              * @constant
+             * @enum {boolean}
              */
             qa_verified: true;
             /**
              * Temporal Coverage Verified
              * @constant
+             * @enum {boolean}
              */
             temporal_coverage_verified: true;
             /**
              * Uncertainty Reviewed
              * @constant
+             * @enum {boolean}
              */
             uncertainty_reviewed: true;
         };
@@ -2669,6 +2897,16 @@ export interface components {
         SusceptibilityRequest: {
             /** Susceptibility */
             susceptibility: number[];
+        };
+        /** TaskArchiveResponse */
+        TaskArchiveResponse: {
+            /** Limitations */
+            limitations: string[];
+            /** Results */
+            results: Record<string, never>[];
+            /** Submitted Parameters */
+            submitted_parameters: Record<string, never>;
+            task: components["schemas"]["TaskStatusResponse"];
         };
         /** TaskPage */
         TaskPage: {
@@ -2708,6 +2946,7 @@ export interface components {
             error_message?: string | null;
             /** Error Summary */
             error_summary?: string | null;
+            execution?: components["schemas"]["ExecutionRecord"] | null;
             /**
              * Id
              * Format: uuid
@@ -2724,9 +2963,7 @@ export interface components {
              */
             project_id: string;
             /** Result Payload */
-            result_payload?: {
-                [key: string]: unknown;
-            } | null;
+            result_payload?: Record<string, never> | null;
             result_reference?: components["schemas"]["ResultReference"] | null;
             /** Started At */
             started_at?: string | null;
@@ -2955,9 +3192,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Bad request */
@@ -6599,9 +6834,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Bad request */
@@ -6994,6 +7227,82 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskStatusResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_task_archive_api_v1_tasks__task_id__archive_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskArchiveResponse"];
                 };
             };
             /** @description Bad request */
@@ -7751,9 +8060,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Authentication failed */

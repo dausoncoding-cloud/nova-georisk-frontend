@@ -6,7 +6,6 @@ import type { GeoJsonGeometry } from "../aois/geometry";
 import { protectedProductUrl } from "./resultsApi";
 import {
   artifactsForLayer,
-  defaultLegend,
   loadProtectedRaster,
   loadProtectedVector,
   selectRasterArtifact,
@@ -17,6 +16,9 @@ import {
   type ResultArtifact,
   type ResultLayer,
 } from "./gisViewer";
+
+import { deliveredBands, reprojectRaster, reprojectVector, validDisplayBounds, styleDeliveredVector } from "./deliveredGis";
+import { DeliveredMetadata } from "./QuantitativeDelivery";
 
 type AOI = { geometry: GeoJsonGeometry; crs: string; name: string };
 
@@ -31,12 +33,9 @@ function normalizedBounds(value: Record<string, number> | null | undefined): Bou
 }
 
 function LayerLegendView({ layer, raster }: { layer: ResultLayer; raster: RasterData | null }) {
-  const fallback = defaultLegend(layer.product_key, raster?.minimum, raster?.maximum);
-  const metadata = layer.legend && !Array.isArray(layer.legend) && typeof layer.legend === "object" ? layer.legend as Record<string, unknown> : null;
-  const entries = Array.isArray(metadata?.entries) && metadata.entries.every((item) => item && typeof item === "object" && typeof item.label === "string" && typeof item.color === "string")
-    ? metadata.entries as Array<{ label: string; color: string }> : fallback.entries;
-  const title = typeof metadata?.title === "string" ? metadata.title : "Legend";
-  return <div className="gis-legend" aria-label={`${layer.label} legend`}><strong>{title}</strong><div className="legend-entries">{entries.map((entry, index) => <span key={`${entry.color}-${index}`}><i style={{ background: entry.color }} />{entry.label || " "}</span>)}</div>{fallback.minimum !== undefined && fallback.maximum !== undefined ? <small>Displayed range: {fallback.minimum.toFixed(2)} – {fallback.maximum.toFixed(2)} {layer.units ?? ""}</small> : null}</div>;
+  const entries = deliveredBands(layer.legend);
+  const metadata = layer.legend as Record<string, unknown> | null;
+  return <div className="gis-legend" aria-label={`${layer.label} legend`}><strong>{typeof metadata?.title === "string" ? metadata.title : "Delivered legend"}</strong>{entries.length ? <div className="legend-entries">{entries.map((entry, index) => <span key={index}><i style={{ background: entry.color }} />{entry.label}{entry.value !== undefined ? ` (code ${entry.value})` : ""}{entry.min != null || entry.max != null ? ` [${entry.min ?? "open"}, ${entry.max ?? "open"}] ${layer.units ?? "units unavailable"}` : ""}</span>)}</div> : <p>Product legend unavailable.</p>}{raster ? <small>Decoded display sample range: {raster.minimum} – {raster.maximum} {layer.units ?? "units unavailable"}; not authoritative statistics.</small> : null}</div>;
 }
 
 function leafletBounds(bounds: Bounds, crs: string | null | undefined): LatLngBoundsExpression | null {
@@ -87,9 +86,14 @@ function GisLayerPane({ resultId, layer, artifacts, aoi, showAoi }: { resultId: 
     setRaster(null);
     setVector(null);
     const operation = layer.layer_type === "vector" && vectorArtifact
-      ? loadProtectedVector(protectedProductUrl(resultId, vectorArtifact.key), controller.signal).then(setVector)
+      ? loadProtectedVector(protectedProductUrl(resultId, vectorArtifact.key), controller.signal).then(value => { if (!layer.crs) throw new Error("Vector CRS unavailable."); setVector(styleDeliveredVector(reprojectVector(value, layer.crs), layer)); })
       : rasterArtifact && rasterArtifact.artifact_type !== "preview"
-        ? loadProtectedRaster(protectedProductUrl(resultId, rasterArtifact.key), layer.product_key, controller.signal).then(setRaster)
+        ? loadProtectedRaster(protectedProductUrl(resultId, rasterArtifact.key), layer, controller.signal).then(value => {
+          if (layer.crs && value.crs !== layer.crs) throw new Error("Raster CRS differs from the delivered contract.");
+          const bounds = validDisplayBounds(normalizedBounds(layer.display_bounds_wgs84));
+          if (!bounds) throw new Error("Validated WGS84 display bounds unavailable.");
+          setRaster(reprojectRaster(value, bounds));
+        })
         : Promise.resolve();
     operation.catch((reason: unknown) => {
       if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "The GIS layer could not be loaded.");
@@ -97,30 +101,33 @@ function GisLayerPane({ resultId, layer, artifacts, aoi, showAoi }: { resultId: 
       if (!controller.signal.aborted) setLoading(false);
     });
     return () => controller.abort();
-  }, [attempt, layer.layer_type, layer.product_key, rasterArtifact, resultId, vectorArtifact]);
+  }, [attempt, layer, rasterArtifact, resultId, vectorArtifact]);
 
-  const bounds = raster?.bounds ?? normalizedBounds(layer.bounding_box);
-  const targetCrs = raster?.crs ?? layer.crs;
+  const bounds = validDisplayBounds(normalizedBounds(layer.display_bounds_wgs84));
+  const targetCrs = layer.crs;
   let projectionError: string | null = null;
-  const mapBounds = bounds ? leafletBounds(bounds, targetCrs) : null;
+  const mapBounds = bounds ? leafletBounds(bounds, "EPSG:4326") : null;
   if (bounds && !mapBounds) projectionError = `Interactive display does not support ${targetCrs ?? "the declared CRS"}; download the GIS artifact for authoritative use.`;
   let imageUrl: string | null = null;
   try { imageUrl = raster ? rasterUrl(raster) : null; } catch (reason) { projectionError = reason instanceof Error ? reason.message : "Raster preview could not be prepared."; }
 
-  const preview = rasterArtifact?.artifact_type === "preview" ? rasterArtifact : undefined;
+  const preview = rasterArtifact?.artifact_type === "preview" && layer.crs === "EPSG:4326" ? rasterArtifact : undefined;
   return <article className="gis-pane">
     <header><div><span className="engine-key">{layer.layer_type} · {targetCrs ?? "CRS unavailable"}</span><h3>{layer.label}</h3></div><span className={`layer-state ${layer.renderable ? "layer-state--ready" : ""}`}>{layer.renderable ? "Ready" : "Metadata"}</span></header>
     <div className="gis-pane-toolbar"><label>Basemap<select value={basemap} onChange={(event) => setBasemap(event.target.value as typeof basemap)}><option value="light">Light</option><option value="street">Street</option><option value="none">None</option></select></label><label>Opacity<input aria-label={`${layer.label} opacity`} type="range" min="0" max="1" step="0.05" value={opacity} onChange={(event) => setOpacity(Number(event.target.value))} /></label><button type="button" className="button button--quiet button--small" onClick={() => setAttempt((value) => value + 1)}>Refresh layer</button></div>
     <div className="gis-map-frame gis-map-frame--interactive">
       {loading ? <div className="gis-map-state"><span className="spinner" /><strong>Loading protected layer…</strong></div> : null}
       {error ? <div className="gis-map-state gis-map-state--error"><strong>Layer unavailable</strong><p>{error}</p><button className="button button--quiet" type="button" onClick={() => setAttempt((value) => value + 1)}>Retry</button></div> : null}
-      {!loading && !error && mapBounds ? <MapContainer bounds={mapBounds} zoomControl className="leaflet-fill"><MapFitter bounds={mapBounds} />{basemap === "light" ? <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" /> : null}{basemap === "street" ? <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /> : null}{imageUrl ? <ImageOverlay url={imageUrl} bounds={mapBounds} opacity={opacity} /> : null}{preview && !imageUrl ? <ImageOverlay url={protectedProductUrl(resultId, preview.key)} bounds={mapBounds} opacity={opacity} /> : null}{vector ? <GeoJSON data={vector as GeoJSON.FeatureCollection} style={{ color: "#007d8e", fillColor: "#2ec2cf", fillOpacity: opacity * .55, weight: 2 }} /> : null}{showAoi && aoi && aoi.crs.toUpperCase().includes("4326") ? <GeoJSON data={aoi.geometry as GeoJSON.Geometry} style={{ color: "#ffffff", dashArray: "7 5", fillOpacity: 0, weight: 3 }} /> : null}<ScaleControl imperial={false} /><MapCoordinates /><div className="map-north" aria-label="North">N<span>↑</span></div><div className="map-crs">{targetCrs}</div></MapContainer> : null}
+      {!loading && !error && mapBounds ? <MapContainer bounds={mapBounds} zoomControl className="leaflet-fill"><MapFitter bounds={mapBounds} />{basemap === "light" ? <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" /> : null}{basemap === "street" ? <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /> : null}{imageUrl ? <ImageOverlay url={imageUrl} bounds={mapBounds} opacity={opacity} /> : null}{preview && !imageUrl ? <ImageOverlay url={protectedProductUrl(resultId, preview.key)} bounds={mapBounds} opacity={opacity} /> : null}{vector ? <GeoJSON data={vector as GeoJSON.FeatureCollection} style={feature => ({ color: feature?.properties?.__displayColor, fillColor: feature?.properties?.__displayColor, fillOpacity: opacity, weight: 2 })} /> : null}{showAoi && aoi && aoi.crs.toUpperCase().includes("4326") ? <GeoJSON data={aoi.geometry as GeoJSON.Geometry} style={{ color: "#ffffff", dashArray: "7 5", fillOpacity: 0, weight: 3 }} /> : null}<ScaleControl imperial={false} /><MapCoordinates /><div className="map-north" aria-label="North">N<span>↑</span></div><div className="map-crs">{targetCrs}</div></MapContainer> : null}
       {!loading && !error && !raster && !vector && !preview ? <div className="gis-map-state"><strong>No renderable artifact</strong><p>{layer.rendering_reason ?? "Download the available product for desktop GIS."}</p></div> : null}
     </div>
     {projectionError ? <div className="inline-alert" role="alert">{projectionError}</div> : null}
-    {raster?.crs && layer.crs && raster.crs.toUpperCase() !== layer.crs.toUpperCase() ? <div className="inline-alert" role="alert">Raster CRS {raster.crs} differs from contract CRS {layer.crs}.</div> : null}
+    {!bounds ? <p role="alert">Validated WGS84 display bounds unavailable; map display withheld.</p> : null}
+    <p>Units: {layer.units ?? "Unavailable"} · Nodata: {String(layer.nodata ?? "Unavailable")}</p>
+    <h4>Source bounds and layer metadata</h4><DeliveredMetadata value={{ source_bounds: layer.bounding_box, units: layer.units, nodata: layer.nodata, spatial_resolution: layer.spatial_resolution }} />
+    <h4>Temporal metadata</h4><DeliveredMetadata value={layer.temporal_metadata} />
     <LayerLegendView layer={layer} raster={raster} />
-    <dl className="gis-pane-facts"><div><dt>Bounds</dt><dd>{bounds ? `${bounds.west.toFixed(4)}, ${bounds.south.toFixed(4)} → ${bounds.east.toFixed(4)}, ${bounds.north.toFixed(4)}` : "Unavailable"}</dd></div><div><dt>Resolution</dt><dd>{layer.spatial_resolution ? `${String(layer.spatial_resolution.x)} × ${String(layer.spatial_resolution.y)} ${String(layer.spatial_resolution.unit ?? "")}` : raster ? `${raster.width} × ${raster.height} display cells` : "Unavailable"}</dd></div></dl>
+    <dl className="gis-pane-facts"><div><dt>Display bounds (WGS84)</dt><dd>{bounds ? `${bounds.west.toFixed(4)}, ${bounds.south.toFixed(4)} → ${bounds.east.toFixed(4)}, ${bounds.north.toFixed(4)}` : "Unavailable"}</dd></div><div><dt>Resolution</dt><dd>{layer.spatial_resolution ? `${String(layer.spatial_resolution.x)} × ${String(layer.spatial_resolution.y)} ${String(layer.spatial_resolution.unit ?? "")}` : raster ? `${raster.width} × ${raster.height} display cells` : "Unavailable"}</dd></div></dl>
   </article>;
 }
 

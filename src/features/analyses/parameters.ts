@@ -74,6 +74,7 @@ export function buildGeeSatelliteWorkflowParameters(form: SatelliteWorkflowForm)
     workflow: {
       source: {
         provider: "gee",
+        date_mode: "pre-post",
         datasets: ["COPERNICUS/S1_GRD", "COPERNICUS/S2_SR_HARMONIZED", "UCSB-CHG/CHIRPS/DAILY", "USGS/SRTMGL1_003", "JRC/GSW1_4/GlobalSurfaceWater"],
         target_period: { start: form.targetStart, end: form.targetEnd },
         baseline_period: { start: form.baselineStart, end: form.baselineEnd },
@@ -86,6 +87,7 @@ export function buildGeeSatelliteWorkflowParameters(form: SatelliteWorkflowForm)
       },
       preprocessing: {
         cloud_mask: form.cloudMask,
+        preview_enhancement: false,
         sar_speckle_filter: form.sarSpeckleFilter,
         sar_speckle_radius_m: 50,
         normalize_projection: form.normalizeProjection,

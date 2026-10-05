@@ -96,7 +96,6 @@
           "source_lineage": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -447,7 +446,6 @@
         "properties": {
           "entries": {
             "items": {
-              "additionalProperties": true,
               "type": "object"
             },
             "title": "Entries",
@@ -547,7 +545,6 @@
             "type": "string"
           },
           "provenance": {
-            "additionalProperties": true,
             "title": "Provenance",
             "type": "object"
           },
@@ -718,7 +715,7 @@
       "Body_list_geopackage_layers_api_v1_aoi_gpkg_layers_post": {
         "properties": {
           "file": {
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File",
             "type": "string"
           },
@@ -738,7 +735,7 @@
       "Body_register_upload_api_v1_source_datasets_post": {
         "properties": {
           "file": {
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File",
             "type": "string"
           },
@@ -757,7 +754,7 @@
       "Body_upload_geopackage_aoi_api_v1_aoi_upload_gpkg_post": {
         "properties": {
           "file": {
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File",
             "type": "string"
           },
@@ -794,7 +791,7 @@
       "Body_upload_shapefile_aoi_api_v1_aoi_upload_post": {
         "properties": {
           "file": {
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File",
             "type": "string"
           },
@@ -819,7 +816,7 @@
       "Body_validate_upload_api_v1_source_datasets_validate_post": {
         "properties": {
           "file": {
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File",
             "type": "string"
           },
@@ -964,6 +961,82 @@
           "summary"
         ],
         "title": "CapacitySubindexResponse",
+        "type": "object"
+      },
+      "ClassArea": {
+        "additionalProperties": false,
+        "properties": {
+          "area_ha": {
+            "minimum": 0.0,
+            "title": "Area Ha",
+            "type": "number"
+          },
+          "area_km2": {
+            "minimum": 0.0,
+            "title": "Area Km2",
+            "type": "number"
+          },
+          "area_m2": {
+            "minimum": 0.0,
+            "title": "Area M2",
+            "type": "number"
+          },
+          "area_method": {
+            "title": "Area Method",
+            "type": "string"
+          },
+          "cells": {
+            "minimum": 0.0,
+            "title": "Cells",
+            "type": "integer"
+          },
+          "class_value": {
+            "title": "Class Value",
+            "type": "integer"
+          },
+          "classification_basis": {
+            "title": "Classification Basis",
+            "type": "string"
+          },
+          "denominator_area_m2": {
+            "exclusiveMinimum": 0.0,
+            "title": "Denominator Area M2",
+            "type": "number"
+          },
+          "evidence_ref": {
+            "title": "Evidence Ref",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "percent_of_valid": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Percent Of Valid",
+            "type": "number"
+          },
+          "product_key": {
+            "title": "Product Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_key",
+          "class_value",
+          "label",
+          "cells",
+          "area_m2",
+          "area_ha",
+          "area_km2",
+          "percent_of_valid",
+          "denominator_area_m2",
+          "area_method",
+          "classification_basis",
+          "evidence_ref"
+        ],
+        "title": "ClassArea",
         "type": "object"
       },
       "ClassificationValidationRequest": {
@@ -1352,6 +1425,9 @@
           "gap_policy": {
             "const": "reject",
             "default": "reject",
+            "enum": [
+              "reject"
+            ],
             "title": "Gap Policy",
             "type": "string"
           },
@@ -1392,7 +1468,6 @@
             "type": "boolean"
           },
           "capabilities": {
-            "additionalProperties": true,
             "title": "Capabilities",
             "type": "object"
           },
@@ -1562,6 +1637,200 @@
         "title": "ErrorEnvelope",
         "type": "object"
       },
+      "EvidenceStatement": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "evidence_refs"
+        ],
+        "title": "EvidenceStatement",
+        "type": "object"
+      },
+      "ExecutionEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "submitted",
+              "initialized",
+              "enqueued",
+              "started",
+              "progress",
+              "sources_revalidated",
+              "completed",
+              "failed",
+              "canceled",
+              "retry_created"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "previous_sha256": {
+            "title": "Previous Sha256",
+            "type": "string"
+          },
+          "progress_pct": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Progress Pct",
+            "type": "integer"
+          },
+          "sequence": {
+            "minimum": 1.0,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sequence",
+          "action",
+          "at",
+          "actor_id",
+          "progress_pct",
+          "previous_sha256",
+          "sha256"
+        ],
+        "title": "ExecutionEvent",
+        "type": "object"
+      },
+      "ExecutionRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "aoi_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aoi Sha256"
+          },
+          "aoi_snapshot": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aoi Snapshot"
+          },
+          "aoi_source_lineage": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aoi Source Lineage"
+          },
+          "cache_policy": {
+            "const": "revalidate_registered_sources_no_automatic_result_or_gee_reuse",
+            "enum": [
+              "revalidate_registered_sources_no_automatic_result_or_gee_reuse"
+            ],
+            "title": "Cache Policy",
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ExecutionEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "implementation_sha256": {
+            "title": "Implementation Sha256",
+            "type": "string"
+          },
+          "origin": {
+            "enum": [
+              "api",
+              "legacy_worker"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "parameters_sha256": {
+            "title": "Parameters Sha256",
+            "type": "string"
+          },
+          "retry_of": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry Of"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "default": "1.0",
+            "enum": [
+              "1.0"
+            ],
+            "title": "Schema Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "origin",
+          "parameters_sha256",
+          "aoi_sha256",
+          "aoi_snapshot",
+          "aoi_source_lineage",
+          "implementation_sha256",
+          "cache_policy",
+          "retry_of",
+          "events"
+        ],
+        "title": "ExecutionRecord",
+        "type": "object"
+      },
       "ExposureDensityRequest": {
         "properties": {
           "normalized_density": {
@@ -1617,12 +1886,36 @@
         "type": "object"
       },
       "FIRRISModelConfig": {
+        "additionalProperties": false,
         "properties": {
           "algorithm": {
-            "const": "random_forest",
             "default": "random_forest",
+            "enum": [
+              "random_forest",
+              "xgboost",
+              "svm",
+              "cart",
+              "gradient_boosting",
+              "neural_network"
+            ],
             "title": "Algorithm",
             "type": "string"
+          },
+          "comparison_algorithms": {
+            "items": {
+              "enum": [
+                "random_forest",
+                "xgboost",
+                "svm",
+                "cart",
+                "gradient_boosting",
+                "neural_network"
+              ],
+              "type": "string"
+            },
+            "maxItems": 5,
+            "title": "Comparison Algorithms",
+            "type": "array"
           },
           "n_estimators": {
             "default": 200,
@@ -1642,6 +1935,50 @@
         "title": "FIRRISModelConfig",
         "type": "object"
       },
+      "FIRRISPostprocessingConfig": {
+        "additionalProperties": false,
+        "description": "Optional categorical generalization; raw scientific predictions are preserved.",
+        "properties": {
+          "operations": {
+            "items": {
+              "enum": [
+                "majority",
+                "opening",
+                "closing"
+              ],
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Operations",
+            "type": "array"
+          },
+          "policy_reference": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 3,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Reference"
+          },
+          "window_pixels": {
+            "default": 3,
+            "enum": [
+              3,
+              5,
+              7
+            ],
+            "title": "Window Pixels",
+            "type": "integer"
+          }
+        },
+        "title": "FIRRISPostprocessingConfig",
+        "type": "object"
+      },
       "FIRRISPreprocessingConfig": {
         "properties": {
           "clip_to_aoi": {
@@ -1657,6 +1994,11 @@
           "normalize_projection": {
             "default": true,
             "title": "Normalize Projection",
+            "type": "boolean"
+          },
+          "preview_enhancement": {
+            "default": false,
+            "title": "Preview Enhancement",
             "type": "boolean"
           },
           "sar_speckle_filter": {
@@ -1787,11 +2129,13 @@
           "model": {
             "$ref": "#/components/schemas/FIRRISModelConfig"
           },
+          "postprocessing": {
+            "$ref": "#/components/schemas/FIRRISPostprocessingConfig"
+          },
           "preprocessing": {
             "$ref": "#/components/schemas/FIRRISPreprocessingConfig"
           },
           "quality": {
-            "additionalProperties": true,
             "title": "Quality",
             "type": "object"
           },
@@ -2708,6 +3052,56 @@
         "title": "ProjectUpdateRequest",
         "type": "object"
       },
+      "QuantitativeSeries": {
+        "additionalProperties": false,
+        "properties": {
+          "basis": {
+            "title": "Basis",
+            "type": "string"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "class_area",
+              "histogram",
+              "observed_time_series"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "product_key": {
+            "title": "Product Key",
+            "type": "string"
+          },
+          "units": {
+            "title": "Units",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_key",
+          "kind",
+          "units",
+          "points",
+          "basis",
+          "evidence_refs"
+        ],
+        "title": "QuantitativeSeries",
+        "type": "object"
+      },
       "RasterGrid": {
         "additionalProperties": false,
         "properties": {
@@ -2858,6 +3252,97 @@
         "title": "RegressionValidationResponse",
         "type": "object"
       },
+      "ResultAnalytics": {
+        "additionalProperties": false,
+        "properties": {
+          "class_areas": {
+            "items": {
+              "$ref": "#/components/schemas/ClassArea"
+            },
+            "title": "Class Areas",
+            "type": "array"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "default": "1.0",
+            "enum": [
+              "1.0"
+            ],
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/QuantitativeSeries"
+            },
+            "title": "Series",
+            "type": "array"
+          }
+        },
+        "required": [
+          "limitations"
+        ],
+        "title": "ResultAnalytics",
+        "type": "object"
+      },
+      "ResultInterpretation": {
+        "additionalProperties": false,
+        "properties": {
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceStatement"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "independent_scientific_validation": {
+            "const": false,
+            "default": false,
+            "enum": [
+              false
+            ],
+            "title": "Independent Scientific Validation",
+            "type": "boolean"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "method": {
+            "const": "deterministic_evidence_rules_v1",
+            "default": "deterministic_evidence_rules_v1",
+            "enum": [
+              "deterministic_evidence_rules_v1"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceStatement"
+            },
+            "title": "Recommendations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "findings",
+          "recommendations",
+          "limitations"
+        ],
+        "title": "ResultInterpretation",
+        "type": "object"
+      },
       "ResultLayerResponse": {
         "properties": {
           "artifact_keys": {
@@ -2899,6 +3384,20 @@
             ],
             "title": "Crs"
           },
+          "display_bounds_wgs84": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Bounds Wgs84"
+          },
           "key": {
             "title": "Key",
             "type": "string"
@@ -2918,7 +3417,6 @@
           "legend": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -2977,7 +3475,6 @@
           "spatial_resolution": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -2985,6 +3482,17 @@
               }
             ],
             "title": "Spatial Resolution"
+          },
+          "temporal_metadata": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temporal Metadata"
           },
           "units": {
             "anyOf": [
@@ -3089,7 +3597,6 @@
           "gis_metadata": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -3189,6 +3696,16 @@
       },
       "ResultResponse": {
         "properties": {
+          "analytics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResultAnalytics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "aoi_id": {
             "anyOf": [
               {
@@ -3222,6 +3739,16 @@
             "title": "Id",
             "type": "string"
           },
+          "interpretation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResultInterpretation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "layers": {
             "items": {
               "$ref": "#/components/schemas/ResultLayerResponse"
@@ -3244,7 +3771,6 @@
           "provenance": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -3260,7 +3786,6 @@
           "summary": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -3351,6 +3876,48 @@
         "title": "RiskMapRequest",
         "type": "object"
       },
+      "SatellitePreprocessingOptions": {
+        "additionalProperties": false,
+        "properties": {
+          "climate_interpolation": {
+            "const": "reviewed_station_idw",
+            "enum": [
+              "reviewed_station_idw"
+            ],
+            "title": "Climate Interpolation",
+            "type": "string"
+          },
+          "raster_alignment": {
+            "const": "nearest_no_upsampling",
+            "enum": [
+              "nearest_no_upsampling"
+            ],
+            "title": "Raster Alignment",
+            "type": "string"
+          },
+          "terrain_products": {
+            "items": {
+              "enum": [
+                "slope",
+                "aspect",
+                "curvature",
+                "flow_direction",
+                "flow_accumulation",
+                "twi"
+              ],
+              "type": "string"
+            },
+            "title": "Terrain Products",
+            "type": "array"
+          }
+        },
+        "required": [
+          "raster_alignment",
+          "climate_interpolation"
+        ],
+        "title": "SatellitePreprocessingOptions",
+        "type": "object"
+      },
       "SatelliteSourceConfig": {
         "properties": {
           "baseline_period": {
@@ -3369,6 +3936,16 @@
             },
             "title": "Datasets",
             "type": "array"
+          },
+          "date_mode": {
+            "default": "pre-post",
+            "enum": [
+              "pre-post",
+              "seasonal",
+              "annual"
+            ],
+            "title": "Date Mode",
+            "type": "string"
           },
           "dem_source": {
             "default": "SRTM",
@@ -3563,7 +4140,9 @@
               "flood_return_period",
               "flood_duration",
               "flood_susceptibility",
-              "flood_hazard_zonation"
+              "flood_hazard_zonation",
+              "satellite_preprocessing",
+              "flood_change"
             ],
             "title": "Module",
             "type": "string"
@@ -3650,7 +4229,9 @@
               "flood_return_period",
               "flood_duration",
               "flood_susceptibility",
-              "flood_hazard_zonation"
+              "flood_hazard_zonation",
+              "satellite_preprocessing",
+              "flood_change"
             ],
             "title": "Module",
             "type": "string"
@@ -3662,6 +4243,16 @@
             "format": "uuid",
             "title": "Project Id",
             "type": "string"
+          },
+          "satellite_options": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SatellitePreprocessingOptions"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "sources": {
             "additionalProperties": {
@@ -3705,6 +4296,9 @@
           "analysis_ready": {
             "const": false,
             "default": false,
+            "enum": [
+              false
+            ],
             "title": "Analysis Ready",
             "type": "boolean"
           },
@@ -3746,6 +4340,9 @@
           "structural_validation_only": {
             "const": true,
             "default": true,
+            "enum": [
+              true
+            ],
             "title": "Structural Validation Only",
             "type": "boolean"
           }
@@ -3767,6 +4364,9 @@
           "analysis_ready": {
             "const": false,
             "default": false,
+            "enum": [
+              false
+            ],
             "title": "Analysis Ready",
             "type": "boolean"
           },
@@ -3803,6 +4403,9 @@
           "structural_validation_only": {
             "const": true,
             "default": true,
+            "enum": [
+              true
+            ],
             "title": "Structural Validation Only",
             "type": "boolean"
           }
@@ -3832,6 +4435,9 @@
           },
           "crs_datum_verified": {
             "const": true,
+            "enum": [
+              true
+            ],
             "title": "Crs Datum Verified",
             "type": "boolean"
           },
@@ -3860,26 +4466,41 @@
           },
           "licence_verified": {
             "const": true,
+            "enum": [
+              true
+            ],
             "title": "Licence Verified",
             "type": "boolean"
           },
           "provenance_verified": {
             "const": true,
+            "enum": [
+              true
+            ],
             "title": "Provenance Verified",
             "type": "boolean"
           },
           "qa_verified": {
             "const": true,
+            "enum": [
+              true
+            ],
             "title": "Qa Verified",
             "type": "boolean"
           },
           "temporal_coverage_verified": {
             "const": true,
+            "enum": [
+              true
+            ],
             "title": "Temporal Coverage Verified",
             "type": "boolean"
           },
           "uncertainty_reviewed": {
             "const": true,
+            "enum": [
+              true
+            ],
             "title": "Uncertainty Reviewed",
             "type": "boolean"
           }
@@ -3962,6 +4583,39 @@
           "susceptibility"
         ],
         "title": "SusceptibilityRequest",
+        "type": "object"
+      },
+      "TaskArchiveResponse": {
+        "properties": {
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "results": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "submitted_parameters": {
+            "title": "Submitted Parameters",
+            "type": "object"
+          },
+          "task": {
+            "$ref": "#/components/schemas/TaskStatusResponse"
+          }
+        },
+        "required": [
+          "task",
+          "submitted_parameters",
+          "results",
+          "limitations"
+        ],
+        "title": "TaskArchiveResponse",
         "type": "object"
       },
       "TaskPage": {
@@ -4074,6 +4728,16 @@
             ],
             "title": "Error Summary"
           },
+          "execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExecutionRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -4092,7 +4756,6 @@
           "result_payload": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -4436,7 +5099,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "title": "Response Get Source Binding Contract Api V1 Analyses Source Bindings Contract Get",
                   "type": "object"
                 }
@@ -8915,7 +9577,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "title": "Response Catalogue Api V1 Source Datasets Catalogue Get",
                   "type": "object"
                 }
@@ -9553,6 +10214,99 @@
           }
         },
         "summary": "Get Task Status",
+        "tags": [
+          "Tasks"
+        ]
+      }
+    },
+    "/api/v1/tasks/{task_id}/archive": {
+      "get": {
+        "operationId": "get_task_archive_api_v1_tasks__task_id__archive_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskArchiveResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authorization failed"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get Task Archive",
         "tags": [
           "Tasks"
         ]
@@ -10429,7 +11183,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "title": "Response Health Health Get",
                   "type": "object"
                 }

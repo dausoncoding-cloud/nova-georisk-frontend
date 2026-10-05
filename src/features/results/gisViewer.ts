@@ -1,3 +1,4 @@
+import { colorizeDelivered } from "./deliveredGis";
 import type { TypedArray } from "geotiff";
 import type { components } from "../../shared/api/generated/nova-browser-api";
 import type { GeoJsonGeometry } from "../aois/geometry";
@@ -23,17 +24,6 @@ export type RasterData = {
 
 export type LegendEntry = { label: string; color: string };
 export type LayerLegend = { minimum?: number; maximum?: number; entries: LegendEntry[] };
-
-const PALETTES: Record<string, string[]> = {
-  flood_extent: ["#228B22", "#00BFFF"],
-  flood_probability: ["#0B6E4F", "#F6D55C", "#ED553B", "#7A0019"],
-  flood_depth: ["#d9f0ff", "#49a9e8", "#08306b"],
-  flood_velocity: ["#d9f0ff", "#f6d55c", "#d62728"],
-  flood_hazard: ["#0b6e4f", "#f6d55c", "#f28e2b", "#c1121f"],
-  flood_risk: ["#0b6e4f", "#f6d55c", "#f28e2b", "#7a0019"],
-};
-
-const DEFAULT_PALETTE = ["#0b3c5d", "#00b4d8", "#f9c74f", "#d00000"];
 
 export function artifactsForLayer(layer: ResultLayer, artifacts: ResultArtifact[]): ResultArtifact[] {
   return artifacts.filter((artifact) => layer.artifact_keys.includes(artifact.key));
@@ -96,7 +86,7 @@ function crsFromGeoKeys(keys: Partial<Record<string, unknown>> | null): string |
 
 export async function loadProtectedRaster(
   url: string,
-  productKey: string,
+  layer: ResultLayer,
   signal?: AbortSignal,
 ): Promise<RasterData> {
   const { fromUrl } = await import("geotiff");
@@ -123,8 +113,7 @@ export async function loadProtectedRaster(
   const values = await image.readRasters({ samples: [0], width, height, interleave: true, signal }) as TypedArray & { width: number; height: number };
   const rawNoData = image.getGDALNoData();
   const nodata = rawNoData === null ? null : Number(rawNoData);
-  const palette = PALETTES[productKey] ?? DEFAULT_PALETTE;
-  const colored = colorizeRaster(values, nodata, palette, productKey === "flood_probability" ? 0 : undefined, productKey === "flood_probability" ? 1 : undefined);
+  const colored = colorizeDelivered(values, nodata, layer);
   const bbox = image.getBoundingBox();
   const west = bbox[0]!;
   const south = bbox[1]!;
@@ -184,11 +173,4 @@ export function geometryPaths(
     const py = ((bounds.north - y) / spanY) * height;
     return `${index === 0 ? "M" : "L"}${px.toFixed(2)} ${py.toFixed(2)}`;
   }).join(" ") + " Z"));
-}
-
-export function defaultLegend(productKey: string, minimum?: number, maximum?: number): LayerLegend {
-  if (productKey === "flood_extent") return { entries: [{ label: "Non-flooded", color: "#dce8e5" }, { label: "Flooded", color: "#00a6d6" }] };
-  if (productKey === "flood_probability") return { minimum: 0, maximum: 1, entries: [{ label: "Low", color: "#0b6e4f" }, { label: "Moderate", color: "#f6d55c" }, { label: "High", color: "#ed553b" }, { label: "Extreme", color: "#7a0019" }] };
-  const palette = PALETTES[productKey] ?? DEFAULT_PALETTE;
-  return { minimum, maximum, entries: palette.map((color, index) => ({ label: index === 0 ? "Low" : index === palette.length - 1 ? "High" : "", color })) };
 }

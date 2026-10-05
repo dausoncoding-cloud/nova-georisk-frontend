@@ -78,7 +78,7 @@ describe("GIS viewer utilities", () => {
         },
       });
     });
-    const raster = await loadProtectedRaster("/api/v1/results/one/products/cog", "flood_probability");
+    const raster = await loadProtectedRaster("/api/v1/results/one/products/cog", { ...layer, legend: { entries: [{ label: "Low", max: .5, color: "#000000" }, { label: "High", color: "#ffffff" }] } } as unknown as ResultLayer);
     expect(raster).toMatchObject({ width: 2, height: 2, nodata: -9999, crs: "EPSG:4326" });
     expect(raster.bounds).toEqual({ west: 36, south: -2, east: 37, north: -1 });
     expect(Array.from(raster.rgba.slice(12, 16))).toEqual([0, 0, 0, 0]);

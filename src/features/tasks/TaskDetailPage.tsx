@@ -5,6 +5,7 @@ import { queryKeys } from "../../shared/api/queryKeys";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
 import { cancelTask, fetchTask, retryTask, taskPollingInterval } from "./tasksApi";
+import { TaskArchive } from "./TaskArchive";
 import { TaskStatusBadge } from "./TaskStatusBadge";
 
 const formatDate = (value: string | null | undefined) => value ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "medium" }).format(new Date(value)) : "—";
@@ -34,6 +35,7 @@ export function TaskDetailPage() {
       <section className="task-progress-card"><div className="task-progress-card__top"><div><span>Processing progress</span><strong>{data.progress_pct}%</strong></div><span>{isActive ? "Auto-refreshing every 2 seconds" : "Terminal state"}</span></div><progress className="progress-track" max={100} value={Math.min(100, Math.max(0, data.progress_pct))}>{data.progress_pct}%</progress></section>
       <section className="detail-grid"><article className="metric-card"><span>Engine</span><strong>{data.engine_key}</strong></article><article className="metric-card"><span>Created</span><strong>{formatDate(data.created_at)}</strong></article><article className="metric-card"><span>Started</span><strong>{formatDate(data.started_at)}</strong></article><article className="metric-card"><span>Completed</span><strong>{formatDate(data.completed_at)}</strong></article></section>
       {data.error_summary ? <section className="error-panel" role="alert"><span className="eyebrow">Analysis error</span><h2>Task did not complete</h2><p>{data.error_summary}</p></section> : null}
+      <TaskArchive key={taskId} taskId={taskId} />
       <section className="panel action-panel"><div><h2>Task actions</h2><p>Cancel active work or retry a failed/canceled task through the protected BFF contract.</p></div><div className="form-actions">{isActive ? <button className="button button--danger" type="button" disabled={action.isPending} onClick={() => action.mutate("cancel")}>Cancel task</button> : null}{data.status === "failed" || data.status === "canceled" ? <button className="button button--primary" type="button" disabled={action.isPending} onClick={() => action.mutate("retry")}>Retry task</button> : null}{data.result_reference ? <Link className="button button--primary" to={`/results/${data.result_reference.id}`}>Open result</Link> : null}</div>{action.isError ? <div className="card-error" role="alert">{getErrorMessage(action.error)}</div> : null}</section>
     </div>
   );

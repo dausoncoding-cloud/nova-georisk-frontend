@@ -4,6 +4,8 @@ import { queryKeys } from "../../shared/api/queryKeys";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
 import { fetchAoi } from "../aois/aoisApi";
+import { TaskArchive } from "../tasks/TaskArchive";
+import { QuantitativeDelivery } from "./QuantitativeDelivery";
 import { ExportCenter } from "./ExportCenter";
 import { FIRRISGisViewer } from "./FIRRISGisViewer";
 import { fetchResult } from "./resultsApi";
@@ -39,6 +41,8 @@ export function ResultDetailPage() {
 
     <section className="panel viewer-panel"><div className="panel-heading"><div><h2>FIRRIS GIS viewer</h2><p>Protected raster/vector display, AOI overlay, CRS checks, legends, and product comparison.</p></div><span className="count-badge">{data.layers.length}</span></div>{aoi.isPending ? <LoadingState label="Loading AOI boundary…" /> : null}{aoi.isError ? <div className="inline-alert" role="alert">The AOI boundary could not be loaded. Result layers remain available.</div> : null}{!aoi.isPending ? <FIRRISGisViewer resultId={data.id} layers={data.layers} artifacts={data.products} aoi={aoi.data ? { geometry: aoi.data.geometry, crs: aoi.data.crs, name: aoi.data.name } : null} /> : null}</section>
 
+    <QuantitativeDelivery analytics={data.analytics} products={productMetadata} change={asRecord(summary?.change_statistics)} />
+    <TaskArchive key={data.task_id} taskId={data.task_id} />
     <section className="result-exploration"><article className="panel metadata-panel"><div className="panel-heading"><div><h2>Product metadata</h2><p>Delivered products, units, extents, and summary statistics.</p></div></div><JsonMetadata value={productMetadata} empty="No product summary was persisted." /></article><article className="panel metadata-panel"><div className="panel-heading"><div><h2>Validation metrics</h2><p>Held-out accuracy assessment for this model run.</p></div></div><JsonMetadata value={validation} empty="This result does not contain model-validation metrics." />{model ? <details className="model-details"><summary>Model metadata</summary><JsonMetadata value={model} /></details> : null}</article><article className="panel metadata-panel"><div className="panel-heading"><div><h2>Provenance</h2><p>Data sources, processing lineage, and validation limitations.</p></div></div><JsonMetadata value={asRecord(data.provenance)} /></article></section>
 
     <ExportCenter resultId={data.id} artifacts={artifacts} />

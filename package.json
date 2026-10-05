@@ -20,6 +20,7 @@
     "geotiff": "^3.0.5",
     "leaflet": "^1.9.4",
     "openapi-fetch": "0.17.0",
+    "proj4": "^2.22.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-leaflet": "^5.0.0",

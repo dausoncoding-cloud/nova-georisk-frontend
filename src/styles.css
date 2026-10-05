@@ -620,3 +620,9 @@ progress { accent-color: var(--teal-600); }
 @media (max-width: 760px) {
   .app-shell, .app-shell.sidebar-is-collapsed { display: block; }.sidebar { left: 0; position: fixed; transform: translateX(-105%); transition: transform .2s ease; width: min(18rem, 85vw); }.mobile-nav-open .sidebar { transform: none; }.mobile-scrim { background: rgba(4,19,30,.55); border: 0; inset: 0; position: fixed; z-index: 25; }.mobile-nav-open .mobile-scrim { display: block; }.mobile-menu { display: grid; }.topbar-start { gap: .6rem; }.organization-picker > span { display: none; }.account-trigger > span:nth-child(2), .search-trigger, .notification-button { display: none; }.content { padding: 1rem; }.project-masthead { align-items: flex-start; flex-direction: column; gap: 1rem; }.project-actions { width: 100%; }.project-actions .button { flex: 1; }.metric-grid, .settings-grid, .method-grid, .review-layout, .analysis-builder__layout, .date-period, .dataset-selection, .review-facts { grid-template-columns: 1fr; }.analysis-summary { position: static; }.bounds-grid { grid-template-columns: repeat(2, 1fr); }.wizard-modal { max-height: 96vh; }.aoi-draw-map { height: 19rem; }
 }
+
+.quantitative-table { overflow-x: auto; margin-block: 1rem; }
+.quantitative-table table { width: 100%; border-collapse: collapse; }
+.quantitative-table th, .quantitative-table td { text-align: left; padding: .65rem; border-bottom: 1px solid #dce8e5; vertical-align: top; }
+.quantitative-table caption { text-align: left; padding: .5rem 0; }
+.metadata-list dd { overflow-wrap: anywhere; white-space: pre-wrap; }

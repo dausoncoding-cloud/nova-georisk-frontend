@@ -38,6 +38,7 @@ describe("FIRRIS parameter payload", () => {
     expect(parameters).not.toHaveProperty("preprocessing");
     expect(parameters.workflow?.preprocessing).toEqual({
       cloud_mask: true,
+      preview_enhancement: false,
       sar_speckle_filter: true,
       sar_speckle_radius_m: 50,
       normalize_projection: true,

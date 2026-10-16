@@ -765,6 +765,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/live/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Events */
+        get: operations["events_api_v1_projects__project_id__live_events_get"];
+        put?: never;
+        /** Ingest */
+        post: operations["ingest_api_v1_projects__project_id__live_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/live/events/{event_id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Feedback History */
+        get: operations["feedback_history_api_v1_projects__project_id__live_events__event_id__feedback_get"];
+        put?: never;
+        /** Feedback */
+        post: operations["feedback_api_v1_projects__project_id__live_events__event_id__feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/live/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream */
+        get: operations["stream_api_v1_projects__project_id__live_stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/results": {
         parameters: {
             query?: never;
@@ -1664,6 +1717,17 @@ export interface components {
              */
             id: string;
         };
+        /** DecisionSupportDashboard */
+        DecisionSupportDashboard: {
+            /** Limitations */
+            limitations: string[];
+            /** Source Identity */
+            source_identity: Record<string, never>;
+            /** Tables */
+            tables: {
+                [key: string]: Record<string, never>[];
+            };
+        };
         /** DeliveryRepresentation */
         DeliveryRepresentation: {
             /** Format */
@@ -2150,6 +2214,127 @@ export interface components {
                 [key: string]: number[];
             };
         };
+        /** LiveEventPage */
+        LiveEventPage: {
+            /**
+             * External Delivery
+             * @default unavailable_not_configured
+             * @constant
+             * @enum {string}
+             */
+            external_delivery: "unavailable_not_configured";
+            /** Items */
+            items: components["schemas"]["LiveEventResponse"][];
+            /** Next Cursor */
+            next_cursor: number;
+        };
+        /** LiveEventRequest */
+        LiveEventRequest: {
+            /** Event Id */
+            event_id: string;
+            /**
+             * Issued At
+             * Format: date-time
+             */
+            issued_at: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "observation" | "nowcast";
+            /** Model Reference */
+            model_reference?: string | null;
+            /**
+             * Policy Dataset Id
+             * Format: uuid
+             */
+            policy_dataset_id: string;
+            /**
+             * Quality Flag
+             * @constant
+             * @enum {string}
+             */
+            quality_flag: "valid";
+            /** Sensor Id */
+            sensor_id: string;
+            /** Source Record Reference */
+            source_record_reference: string;
+            /** Units */
+            units: string;
+            /**
+             * Valid At
+             * Format: date-time
+             */
+            valid_at: string;
+            /** Value */
+            value: number;
+        };
+        /** LiveEventResponse */
+        LiveEventResponse: {
+            /** Alerts */
+            alerts: Record<string, never>[];
+            /**
+             * Delivery Status
+             * @default protected_feed_only
+             * @constant
+             * @enum {string}
+             */
+            delivery_status: "protected_feed_only";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Payload */
+            payload: Record<string, never>;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Sequence */
+            sequence: number;
+            /** Source Snapshot */
+            source_snapshot: Record<string, never>;
+        };
+        /** LiveFeedbackRequest */
+        LiveFeedbackRequest: {
+            /** Evidence References */
+            evidence_references: string[];
+            /** Notes */
+            notes: string;
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "confirmed" | "rejected" | "inconclusive";
+        };
+        /** LiveFeedbackResponse */
+        LiveFeedbackResponse: {
+            /** Actor Id */
+            actor_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /** Evidence References */
+            evidence_references: string[];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes: string;
+            /** Verdict */
+            verdict: string;
+        };
         /** MembershipResponse */
         MembershipResponse: {
             /**
@@ -2232,6 +2417,24 @@ export interface components {
             /** Slug */
             slug: string;
         };
+        /** PredictorModelOptions */
+        PredictorModelOptions: {
+            /** Holdout Fraction */
+            holdout_fraction: number;
+            /** Predictor Order */
+            predictor_order: string[];
+            /** Response */
+            response: string;
+            /**
+             * Split Policy
+             * @default chronological
+             * @constant
+             * @enum {string}
+             */
+            split_policy: "chronological";
+            /** Vif Limit */
+            vif_limit: number;
+        };
         /** ProbabilityRequest */
         ProbabilityRequest: {
             /** Probability */
@@ -2295,6 +2498,30 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /**
+         * ProximityProcessingOptions
+         * @description Must exactly match the reviewed policy bound to both geometry sources.
+         */
+        ProximityProcessingOptions: {
+            /**
+             * Normalization
+             * @constant
+             * @enum {string}
+             */
+            normalization: "aoi_minmax_entropy";
+            /** Policy Reference */
+            policy_reference: string;
+            /**
+             * River Direction
+             * @enum {string}
+             */
+            river_direction: "benefit" | "cost";
+            /**
+             * Service Direction
+             * @enum {string}
+             */
+            service_direction: "benefit" | "cost";
+        };
         /** QuantitativeSeries */
         QuantitativeSeries: {
             /** Basis */
@@ -2312,6 +2539,18 @@ export interface components {
             product_key: string;
             /** Units */
             units: string;
+        };
+        /** RainfallInterpolationOptions */
+        RainfallInterpolationOptions: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "idw" | "ordinary_kriging";
+            /** Power */
+            power?: number | null;
+            /** Variogram Model */
+            variogram_model?: ("spherical" | "exponential" | "gaussian") | null;
         };
         /** RasterGrid */
         RasterGrid: {
@@ -2526,6 +2765,7 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            decision_support?: components["schemas"]["DecisionSupportDashboard"] | null;
             /** Engine Key */
             engine_key: string;
             /** Exports */
@@ -2561,6 +2801,7 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            validation_dashboard?: components["schemas"]["ValidationDashboard"] | null;
             /** Version */
             version: number;
         };
@@ -2568,6 +2809,11 @@ export interface components {
         ReturnPeriodFromProbabilityRequest: {
             /** Annual Probability */
             annual_probability: number[];
+        };
+        /** ReviewedMapOptions */
+        ReviewedMapOptions: {
+            /** Method Reference */
+            method_reference: string;
         };
         /** RiskMapRequest */
         RiskMapRequest: {
@@ -2707,7 +2953,7 @@ export interface components {
              * Module
              * @enum {string}
              */
-            module: "hazard" | "exposure" | "vulnerability" | "insecurity" | "risk" | "resilience" | "flood_depth" | "flood_velocity" | "flood_hazard_product" | "flood_aep" | "flood_return_period" | "flood_duration" | "flood_susceptibility" | "flood_hazard_zonation" | "satellite_preprocessing" | "flood_change";
+            module: "hazard" | "exposure" | "vulnerability" | "insecurity" | "risk" | "resilience" | "flood_depth" | "flood_velocity" | "flood_hazard_product" | "flood_aep" | "flood_return_period" | "flood_duration" | "flood_susceptibility" | "flood_hazard_zonation" | "satellite_preprocessing" | "flood_change" | "rainfall_interpolation" | "river_stage" | "feature_proximity" | "watershed" | "historical_frequency" | "predictor_mlr" | "soil_infiltration" | "continuous_validation" | "classification_validation" | "decision_support" | "prediction_outputs";
             /** Reason */
             reason?: string | null;
             /** Source Ids */
@@ -2729,23 +2975,28 @@ export interface components {
              * Module
              * @enum {string}
              */
-            module: "hazard" | "exposure" | "vulnerability" | "insecurity" | "risk" | "resilience" | "flood_depth" | "flood_velocity" | "flood_hazard_product" | "flood_aep" | "flood_return_period" | "flood_duration" | "flood_susceptibility" | "flood_hazard_zonation" | "satellite_preprocessing" | "flood_change";
+            module: "hazard" | "exposure" | "vulnerability" | "insecurity" | "risk" | "resilience" | "flood_depth" | "flood_velocity" | "flood_hazard_product" | "flood_aep" | "flood_return_period" | "flood_duration" | "flood_susceptibility" | "flood_hazard_zonation" | "satellite_preprocessing" | "flood_change" | "rainfall_interpolation" | "river_stage" | "feature_proximity" | "watershed" | "historical_frequency" | "predictor_mlr" | "soil_infiltration" | "continuous_validation" | "classification_validation" | "decision_support" | "prediction_outputs";
             period: components["schemas"]["TemporalCoverage"];
+            predictor_options?: components["schemas"]["PredictorModelOptions"] | null;
             /**
              * Project Id
              * Format: uuid
              */
             project_id: string;
+            proximity_options?: components["schemas"]["ProximityProcessingOptions"] | null;
+            rainfall_options?: components["schemas"]["RainfallInterpolationOptions"] | null;
             satellite_options?: components["schemas"]["SatellitePreprocessingOptions"] | null;
             /** Sources */
             sources?: {
                 [key: string]: string;
             };
+            susceptibility_options?: components["schemas"]["ReviewedMapOptions"] | null;
             target_grid?: components["schemas"]["RasterGrid"] | null;
             /** Upstream Results */
             upstream_results?: {
                 [key: string]: string;
             };
+            zonation_options?: components["schemas"]["ReviewedMapOptions"] | null;
         };
         /** SourceDatasetRegistered */
         SourceDatasetRegistered: {
@@ -2829,6 +3080,11 @@ export interface components {
              * @default false
              */
             dem_conditioning_verified: boolean;
+            /**
+             * Dss Definitions Verified
+             * @default false
+             */
+            dss_definitions_verified: boolean;
             /** Evidence Refs */
             evidence_refs: string[];
             /**
@@ -2842,11 +3098,31 @@ export interface components {
              */
             hydrologic_coverage_verified: boolean;
             /**
+             * Impact Definition Verified
+             * @default false
+             */
+            impact_definition_verified: boolean;
+            /**
+             * Independent Observations Verified
+             * @default false
+             */
+            independent_observations_verified: boolean;
+            /**
              * Licence Verified
              * @constant
              * @enum {boolean}
              */
             licence_verified: true;
+            /**
+             * Live Policy Verified
+             * @default false
+             */
+            live_policy_verified: boolean;
+            /**
+             * Predictor Catalogue Verified
+             * @default false
+             */
+            predictor_catalogue_verified: boolean;
             /**
              * Provenance Verified
              * @constant
@@ -2860,6 +3136,16 @@ export interface components {
              */
             qa_verified: true;
             /**
+             * Scoring Policy Verified
+             * @default false
+             */
+            scoring_policy_verified: boolean;
+            /**
+             * Susceptibility Method Verified
+             * @default false
+             */
+            susceptibility_method_verified: boolean;
+            /**
              * Temporal Coverage Verified
              * @constant
              * @enum {boolean}
@@ -2871,6 +3157,16 @@ export interface components {
              * @enum {boolean}
              */
             uncertainty_reviewed: true;
+            /**
+             * Validation Definition Verified
+             * @default false
+             */
+            validation_definition_verified: boolean;
+            /**
+             * Zonation Method Verified
+             * @default false
+             */
+            zonation_method_verified: boolean;
         };
         /** SourceReadinessStatus */
         SourceReadinessStatus: {
@@ -3003,6 +3299,28 @@ export interface components {
              * Format: date-time
              */
             start: string;
+        };
+        /** ValidationDashboard */
+        ValidationDashboard: {
+            /** Availability */
+            availability: {
+                [key: string]: Record<string, never>;
+            };
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "continuous" | "binary";
+            /** Limitations */
+            limitations: string[];
+            /** Metrics */
+            metrics: Record<string, never>;
+            /** Plots */
+            plots: string[];
+            /** Scope */
+            scope: string;
+            /** Units */
+            units: string;
         };
         /** VulnerabilityMapRequest */
         VulnerabilityMapRequest: {
@@ -6448,6 +6766,404 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AOIPage"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    events_api_v1_projects__project_id__live_events_get: {
+        parameters: {
+            query: {
+                policy_dataset_id: string;
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveEventPage"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ingest_api_v1_projects__project_id__live_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiveEventRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveEventResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    feedback_history_api_v1_projects__project_id__live_events__event_id__feedback_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveFeedbackResponse"][];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    feedback_api_v1_projects__project_id__live_events__event_id__feedback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiveFeedbackRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveFeedbackResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    stream_api_v1_projects__project_id__live_stream_get: {
+        parameters: {
+            query: {
+                policy_dataset_id: string;
+                cursor?: number;
+                wait_seconds?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded resumable protected event stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
                 };
             };
             /** @description Bad request */

@@ -20,11 +20,11 @@ export function ProjectDetailPage() {
 
   return (
     <div className="page-stack">
-      <header className="page-heading">
+      <header className="page-heading project-overview-heading">
         <div>
           <Link className="back-link" to="/projects">← All projects</Link>
           <span className="eyebrow">{project.data.engine_key}</span>
-          <h1>{project.data.name}</h1>
+          <h2>Project overview</h2>
           <p>{project.data.description ?? "No project description has been provided."}</p>
         </div>
         <Link className="button button--secondary" to={`/projects/${projectId}/edit`}>Edit project</Link>

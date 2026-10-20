@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
+import { fetchTasks } from "./tasksApi";
 import { TaskListPage } from "./TaskListPage";
 
 vi.mock("./tasksApi", async (loadOriginal) => {
@@ -18,4 +19,14 @@ describe("Task center", () => {
     expect(screen.getAllByText("48%").length).toBeGreaterThan(0);
     expect(screen.getByText("firris")).toBeInTheDocument();
   });
+});
+
+
+it("resets pagination when a task status changes", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}><MemoryRouter initialEntries={["/tasks?offset=50"]}><Routes><Route path="/tasks" element={<TaskListPage />} /></Routes></MemoryRouter></QueryClientProvider>);
+  await screen.findByText("Task center");
+  expect(fetchTasks).toHaveBeenCalledWith(expect.objectContaining({ offset: 50 }));
+  fireEvent.click(screen.getByRole("button", { name: "failed" }));
+  await waitFor(() => expect(fetchTasks).toHaveBeenCalledWith(expect.objectContaining({ status: "failed", offset: 0 })));
 });

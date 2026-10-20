@@ -1,3 +1,4 @@
+import { Pagination } from "../../shared/ui/Pagination";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { queryKeys } from "../../shared/api/queryKeys";
@@ -15,7 +16,9 @@ export function TaskListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedStatus = searchParams.get("status");
   const status = statuses.find((item) => item === requestedStatus);
-  const filters: TaskFilters = { project_id: projectId, status, limit: 50, offset: 0 };
+  const requestedOffset = Number(searchParams.get("offset") ?? 0);
+  const offset = Number.isSafeInteger(requestedOffset) && requestedOffset >= 0 ? requestedOffset : 0;
+  const filters: TaskFilters = { project_id: projectId, status, limit: 50, offset };
   const tasks = useQuery({ queryKey: queryKeys.tasks.list(filters), queryFn: () => fetchTasks(filters), refetchInterval: (query) => query.state.data?.items.some((task) => task.status === "queued" || task.status === "running") ? 5_000 : false });
   const project = useQuery({ queryKey: queryKeys.projects.detail(projectId ?? "global"), queryFn: () => fetchProject(projectId as string), enabled: Boolean(projectId) });
 
@@ -26,6 +29,7 @@ export function TaskListPage() {
   const setStatus = (nextStatus?: TaskStatus) => {
     const next = new URLSearchParams(searchParams);
     if (nextStatus) next.set("status", nextStatus); else next.delete("status");
+    next.delete("offset");
     setSearchParams(next);
   };
   const activeCount = tasks.data.items.filter((task) => task.status === "running" || task.status === "queued").length;
@@ -34,10 +38,11 @@ export function TaskListPage() {
   return (
     <div className="page-stack">
       <header className="page-heading"><div>{projectId ? <Link className="back-link" to={`/projects/${projectId}`}>← {project.data?.name}</Link> : null}<span className="eyebrow">Execution operations</span><h1>Task center</h1><p>Monitor persistent analysis jobs, worker progress and recoverable failures.</p></div><button className="button button--quiet" onClick={() => void tasks.refetch()}>Refresh</button></header>
-      <section className="task-summary"><article><span>Total in view</span><strong>{tasks.data.total}</strong></article><article><span>Active</span><strong>{activeCount}</strong></article><article><span>Failed</span><strong>{failedCount}</strong></article><article><span>Worker polling</span><strong>{activeCount ? "Live" : "Idle"}</strong></article></section>
-      <nav className="status-tabs" aria-label="Task status"><button className={!status ? "is-active" : ""} onClick={() => setStatus()}>All</button>{statuses.map((item) => <button className={status === item ? "is-active" : ""} key={item} onClick={() => setStatus(item)}>{item}</button>)}</nav>
+      <section className="task-summary"><article><span>Matching tasks</span><strong>{tasks.data.total}</strong></article><article><span>Active on page</span><strong>{activeCount}</strong></article><article><span>Failed on page</span><strong>{failedCount}</strong></article><article><span>Worker polling</span><strong>{activeCount ? "Live" : "Idle"}</strong></article></section>
+      <nav className="status-tabs" aria-label="Task status"><button className={!status ? "is-active" : ""} aria-pressed={!status} onClick={() => setStatus()}>All</button>{statuses.map((item) => <button className={status === item ? "is-active" : ""} aria-pressed={status === item} key={item} onClick={() => setStatus(item)}>{item}</button>)}</nav>
       <section className="panel">
-        {tasks.data.items.length === 0 ? <div className="empty-state"><div className="empty-icon" aria-hidden="true">↻</div><h3>No tasks found</h3><p>Submit a FIRRIS analysis or change the status filter.</p></div> : <div className="table-wrap"><table><thead><tr><th>Status</th><th>Task</th><th>Engine</th><th>Progress</th><th>Duration</th><th>Created</th></tr></thead><tbody>{tasks.data.items.map((task) => { const start = task.started_at ?? task.created_at; const end = task.completed_at ?? new Date().toISOString(); const duration = Math.max(0, new Date(end).getTime() - new Date(start).getTime()); return <tr key={task.id}><td><TaskStatusBadge status={task.status} /></td><td><Link className="table-link" to={`/tasks/${task.task_id}`}><strong>{task.task_type.replaceAll("_", " ")}</strong></Link><span>{task.task_id}</span></td><td><span className="engine-key">{task.engine_key}</span></td><td><div className="progress-cell"><progress max={100} value={Math.min(100, Math.max(0, task.progress_pct))}>{task.progress_pct}%</progress><small>{task.progress_pct}%</small></div></td><td>{duration < 60_000 ? `${Math.round(duration / 1000)}s` : `${Math.round(duration / 60_000)}m`}</td><td>{formatDate(task.created_at)}</td></tr>; })}</tbody></table></div>}
+        {tasks.data.items.length === 0 ? <div className="empty-state"><div className="empty-icon" aria-hidden="true">↻</div><h3>No tasks found</h3><p>Submit a FIRRIS analysis or change the status filter.</p></div> : <div className="table-wrap"><table className="responsive-table"><thead><tr><th>Status</th><th>Task</th><th>Context</th><th>Progress</th><th>Duration</th><th>Created</th></tr></thead><tbody>{tasks.data.items.map((task) => { const start = task.started_at ?? task.created_at; const end = task.completed_at ?? new Date().toISOString(); const duration = Math.max(0, new Date(end).getTime() - new Date(start).getTime()); return <tr key={task.id}><td data-label="Status"><TaskStatusBadge status={task.status} /></td><td data-label="Task"><Link className="table-link" to={`/tasks/${task.task_id}`}><strong>{task.task_type.replaceAll("_", " ")}</strong></Link><span>{task.task_id}</span></td><td data-label="Context"><span className="engine-key">{task.engine_key}</span><Link to={`/projects/${task.project_id}`}>{project.data?.name ?? `Project ${task.project_id}`}</Link><span>AOI: {task.aoi_id ?? "Not supplied"}</span></td><td data-label="Progress"><div className="progress-cell"><progress aria-label={`Progress for ${task.task_type.replaceAll("_", " ")}`} max={100} value={Math.min(100, Math.max(0, task.progress_pct))}>{task.progress_pct}%</progress><small>{task.progress_pct}%</small></div></td><td data-label="Duration">{duration < 60_000 ? `${Math.round(duration / 1000)}s` : `${Math.round(duration / 60_000)}m`}</td><td data-label="Created">{formatDate(task.created_at)}</td></tr>; })}</tbody></table></div>}
+        <Pagination offset={offset} limit={50} total={tasks.data.total} busy={tasks.isFetching} onChange={nextOffset => { const next = new URLSearchParams(searchParams); next.set("offset", String(nextOffset)); setSearchParams(next); }} />
       </section>
     </div>
   );

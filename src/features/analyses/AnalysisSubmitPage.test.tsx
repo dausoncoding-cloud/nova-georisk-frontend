@@ -56,3 +56,17 @@ describe("FIRRIS analysis builder", () => {
     expect(payload.products).toEqual(["flood_extent"]);
   });
 });
+
+it("validates date fields at the period step and exposes keyboard step navigation", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}><MemoryRouter initialEntries={["/projects/project-1/analysis"]}><Routes><Route path="/projects/:projectId/analysis" element={<AnalysisSubmitPage />} /></Routes></MemoryRouter></QueryClientProvider>);
+  await screen.findByText("Confirm project context");
+  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  const dates = screen.getAllByLabelText("Start");
+  fireEvent.change(dates[0]!, { target: { value: "" } });
+  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  expect(screen.getByRole("alert")).toHaveTextContent("Enter both date ranges");
+  expect(screen.getByRole("button", { name: /Context/ })).not.toBeDisabled();
+  expect(screen.getByRole("button", { name: /Review/ })).toBeDisabled();
+});

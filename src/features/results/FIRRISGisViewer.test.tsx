@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { FIRRISGisViewer } from "./FIRRISGisViewer";
 import type { ResultArtifact, ResultLayer } from "./gisViewer";
@@ -42,4 +42,17 @@ describe("FIRRIS GIS viewer", () => {
     expect(screen.getByText("Product legend unavailable.")).toBeInTheDocument();
   });
 
+});
+
+
+it("shows an actionable error when a protected preview image fails", async () => {
+  render(<FIRRISGisViewer resultId="result-one" layers={[layers[0]!]} artifacts={artifacts} aoi={null} />);
+  const image = await waitFor(() => {
+    const overlay = document.querySelector("img.leaflet-image-layer");
+    expect(overlay).not.toBeNull();
+    return overlay!;
+  });
+  fireEvent.error(image);
+  expect(await screen.findByText("Map preview could not be loaded. Retry or download the GIS artifact.")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
 });

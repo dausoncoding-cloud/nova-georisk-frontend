@@ -11,6 +11,7 @@ export function OrganizationMenu() {
     <label className="organization-picker">
       <span>Organization</span>
       <select
+        aria-label="Organization"
         value={context.current_organization.id}
         onChange={(event) => {
           const organizationId = event.target.value;

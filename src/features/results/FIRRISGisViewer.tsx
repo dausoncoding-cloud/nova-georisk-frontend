@@ -18,6 +18,7 @@ import {
 } from "./gisViewer";
 
 import { deliveredBands, reprojectRaster, reprojectVector, validDisplayBounds, styleDeliveredVector } from "./deliveredGis";
+import { Disclosure } from "../../shared/ui/Disclosure";
 import { DeliveredMetadata } from "./QuantitativeDelivery";
 
 type AOI = { geometry: GeoJsonGeometry; crs: string; name: string };
@@ -116,22 +117,23 @@ function GisLayerPane({ resultId, layer, artifacts, aoi, showAoi }: { resultId: 
     <header><div><span className="engine-key">{layer.layer_type} · {targetCrs ?? "CRS unavailable"}</span><h3>{layer.label}</h3></div><span className={`layer-state ${layer.renderable ? "layer-state--ready" : ""}`}>{layer.renderable ? "Ready" : "Metadata"}</span></header>
     <div className="gis-pane-toolbar"><label>Basemap<select value={basemap} onChange={(event) => setBasemap(event.target.value as typeof basemap)}><option value="light">Light</option><option value="street">Street</option><option value="none">None</option></select></label><label>Opacity<input aria-label={`${layer.label} opacity`} type="range" min="0" max="1" step="0.05" value={opacity} onChange={(event) => setOpacity(Number(event.target.value))} /></label><button type="button" className="button button--quiet button--small" onClick={() => setAttempt((value) => value + 1)}>Refresh layer</button></div>
     <div className="gis-map-frame gis-map-frame--interactive">
-      {loading ? <div className="gis-map-state"><span className="spinner" /><strong>Loading protected layer…</strong></div> : null}
+      {loading ? <div className="gis-map-state" role="status"><span className="spinner" /><strong>Loading protected layer…</strong></div> : null}
       {error ? <div className="gis-map-state gis-map-state--error"><strong>Layer unavailable</strong><p>{error}</p><button className="button button--quiet" type="button" onClick={() => setAttempt((value) => value + 1)}>Retry</button></div> : null}
-      {!loading && !error && mapBounds ? <MapContainer bounds={mapBounds} zoomControl className="leaflet-fill"><MapFitter bounds={mapBounds} />{basemap === "light" ? <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" /> : null}{basemap === "street" ? <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /> : null}{imageUrl ? <ImageOverlay url={imageUrl} bounds={mapBounds} opacity={opacity} /> : null}{preview && !imageUrl ? <ImageOverlay url={protectedProductUrl(resultId, preview.key)} bounds={mapBounds} opacity={opacity} /> : null}{vector ? <GeoJSON data={vector as GeoJSON.FeatureCollection} style={feature => ({ color: feature?.properties?.__displayColor, fillColor: feature?.properties?.__displayColor, fillOpacity: opacity, weight: 2 })} /> : null}{showAoi && aoi && aoi.crs.toUpperCase().includes("4326") ? <GeoJSON data={aoi.geometry as GeoJSON.Geometry} style={{ color: "#ffffff", dashArray: "7 5", fillOpacity: 0, weight: 3 }} /> : null}<ScaleControl imperial={false} /><MapCoordinates /><div className="map-north" aria-label="North">N<span>↑</span></div><div className="map-crs">{targetCrs}</div></MapContainer> : null}
+      {!loading && !error && mapBounds ? <MapContainer bounds={mapBounds} zoomControl className="leaflet-fill"><MapFitter bounds={mapBounds} />{basemap === "light" ? <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" /> : null}{basemap === "street" ? <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /> : null}{imageUrl ? <ImageOverlay url={imageUrl} bounds={mapBounds} opacity={opacity} /> : null}{preview && !imageUrl ? <ImageOverlay url={protectedProductUrl(resultId, preview.key)} bounds={mapBounds} opacity={opacity} eventHandlers={{ error: () => setError("Map preview could not be loaded. Retry or download the GIS artifact.") }} /> : null}{vector ? <GeoJSON data={vector as GeoJSON.FeatureCollection} style={feature => ({ color: feature?.properties?.__displayColor, fillColor: feature?.properties?.__displayColor, fillOpacity: opacity, weight: 2 })} /> : null}{showAoi && aoi && aoi.crs.toUpperCase().includes("4326") ? <GeoJSON data={aoi.geometry as GeoJSON.Geometry} style={{ color: "#ffffff", dashArray: "7 5", fillOpacity: 0, weight: 3 }} /> : null}<ScaleControl imperial={false} /><MapCoordinates /><div className="map-north" aria-label="North">N<span>↑</span></div><div className="map-crs">{targetCrs}</div></MapContainer> : null}
       {!loading && !error && !raster && !vector && !preview ? <div className="gis-map-state"><strong>No renderable artifact</strong><p>{layer.rendering_reason ?? "Download the available product for desktop GIS."}</p></div> : null}
     </div>
     {projectionError ? <div className="inline-alert" role="alert">{projectionError}</div> : null}
     {!bounds ? <p role="alert">Validated WGS84 display bounds unavailable; map display withheld.</p> : null}
     <p>Units: {layer.units ?? "Unavailable"} · Nodata: {String(layer.nodata ?? "Unavailable")}</p>
-    <h4>Source bounds and layer metadata</h4><DeliveredMetadata value={{ source_bounds: layer.bounding_box, units: layer.units, nodata: layer.nodata, spatial_resolution: layer.spatial_resolution }} />
-    <h4>Temporal metadata</h4><DeliveredMetadata value={layer.temporal_metadata} />
     <LayerLegendView layer={layer} raster={raster} />
+    <Disclosure title="Source bounds and layer metadata"><h4>Source bounds and layer metadata</h4><DeliveredMetadata value={{ source_bounds: layer.bounding_box, units: layer.units, nodata: layer.nodata, spatial_resolution: layer.spatial_resolution }} />
+    <h4>Temporal metadata</h4><DeliveredMetadata value={layer.temporal_metadata} />
+    </Disclosure>
     <dl className="gis-pane-facts"><div><dt>Display bounds (WGS84)</dt><dd>{bounds ? `${bounds.west.toFixed(4)}, ${bounds.south.toFixed(4)} → ${bounds.east.toFixed(4)}, ${bounds.north.toFixed(4)}` : "Unavailable"}</dd></div><div><dt>Resolution</dt><dd>{layer.spatial_resolution ? `${String(layer.spatial_resolution.x)} × ${String(layer.spatial_resolution.y)} ${String(layer.spatial_resolution.unit ?? "")}` : raster ? `${raster.width} × ${raster.height} display cells` : "Unavailable"}</dd></div></dl>
   </article>;
 }
 
-export function FIRRISGisViewer({ resultId, layers, artifacts, aoi }: { resultId: string; layers: ResultLayer[]; artifacts: ResultArtifact[]; aoi: AOI | null }) {
+export function FIRRISGisViewer({ resultId, layers, artifacts, aoi, compact = false }: { compact?: boolean; resultId: string; layers: ResultLayer[]; artifacts: ResultArtifact[]; aoi: AOI | null }) {
   const renderable = layers.filter((layer) => layer.renderable);
   const [visibleKeys, setVisibleKeys] = useState<string[]>(() => renderable.slice(0, 1).map((layer) => layer.key));
   const [showAoi, setShowAoi] = useState(true);
@@ -141,15 +143,15 @@ export function FIRRISGisViewer({ resultId, layers, artifacts, aoi }: { resultId
     setVisibleKeys((current) => current.includes(key) ? current.filter((item) => item !== key) : current.length < 2 ? [...current, key] : current);
   }
 
-  return <div className="gis-viewer">
-    <aside className="gis-controls">
+  return <div className={`gis-viewer${compact ? " gis-viewer--compact" : ""}`}>
+    {!compact ? <aside className="gis-controls">
       <div><span className="eyebrow">Layer visibility</span><h3>Compare products</h3><p>Select up to two result layers.</p></div>
       <label className="visibility-option"><input type="checkbox" checked={showAoi} onChange={(event) => setShowAoi(event.target.checked)} /><span>AOI boundary</span></label>
       {layers.map((layer) => {
         const checked = visibleKeys.includes(layer.key);
         return <label className={`visibility-option${!layer.renderable ? " visibility-option--disabled" : ""}`} key={layer.key}><input type="checkbox" checked={checked} disabled={!layer.renderable || (!checked && visibleKeys.length >= 2)} onChange={() => toggleLayer(layer.key)} /><span>{layer.label}<small>{layer.layer_type} · {layer.crs ?? "Unknown CRS"}</small></span></label>;
       })}
-    </aside>
+    </aside> : null}
     <div className={`gis-comparison${visibleLayers.length === 2 ? " gis-comparison--split" : ""}`}>
       {visibleLayers.length === 0 ? <div className="empty-state"><h3>Select a renderable layer</h3><p>Metadata-only products remain available in the download center.</p></div> : visibleLayers.map((layer) => <GisLayerPane key={layer.key} resultId={resultId} layer={layer} artifacts={artifactsForLayer(layer, artifacts)} aoi={aoi} showAoi={showAoi} />)}
     </div>

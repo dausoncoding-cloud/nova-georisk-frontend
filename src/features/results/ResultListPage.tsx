@@ -1,5 +1,6 @@
+import { Pagination } from "../../shared/ui/Pagination";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { queryKeys } from "../../shared/api/queryKeys";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
@@ -12,7 +13,10 @@ const formatDate = (value: string) => new Intl.DateTimeFormat(undefined, { dateS
 
 export function ResultListPage() {
   const { projectId } = useParams();
-  const filters: ResultFilters = { project_id: projectId, limit: 50, offset: 0 };
+  const [params, setParams] = useSearchParams();
+  const requestedOffset = Number(params.get("offset") ?? 0);
+  const offset = Number.isSafeInteger(requestedOffset) && requestedOffset >= 0 ? requestedOffset : 0;
+  const filters: ResultFilters = { project_id: projectId, limit: 50, offset };
   const results = useQuery({ queryKey: queryKeys.results.list(filters), queryFn: () => fetchResults(filters) });
   const tasks = useQuery({
     queryKey: queryKeys.tasks.list({ project_id: projectId, limit: 50, offset: 0 }),
@@ -31,7 +35,8 @@ export function ResultListPage() {
       <header className="page-heading"><div>{projectId ? <Link className="back-link" to={`/projects/${projectId}`}>← {project.data?.name}</Link> : null}<span className="eyebrow">FIRRIS lifecycle</span><h1>Analysis history</h1><p>Submitted runs, worker state, and versioned outputs for the current organization.</p></div><span className="phase-chip">{results.data.total} result{results.data.total === 1 ? "" : "s"}</span></header>
       <section className="panel"><div className="panel-heading"><div><h2>Analysis runs</h2><p>Queued, active, completed, and failed executions.</p></div><span className="count-badge">{tasks.data.total}</span></div>{tasks.data.items.length === 0 ? <div className="empty-state"><h3>No analyses submitted</h3><p>Create an AOI and submit a FIRRIS analysis.</p></div> : <div className="table-wrap"><table><thead><tr><th>Status</th><th>Analysis</th><th>Progress</th><th>Submitted</th></tr></thead><tbody>{tasks.data.items.map((task) => <tr key={task.id}><td><TaskStatusBadge status={task.status} /></td><td><Link className="table-link" to={`/tasks/${task.task_id}`}><strong>{task.task_type.replaceAll("_", " ")}</strong></Link><span>{task.task_id}</span></td><td>{task.progress_pct}%</td><td>{formatDate(task.created_at)}</td></tr>)}</tbody></table></div>}</section>
       <div className="section-heading"><div><span className="eyebrow">Completed outputs</span><h2>Versioned results</h2></div></div>
-      <section className="result-grid">{results.data.items.length === 0 ? <div className="panel empty-state"><div className="empty-icon" aria-hidden="true">□</div><h3>No results yet</h3><p>Completed FIRRIS analyses will appear here.</p></div> : results.data.items.map((result) => <Link className="result-card" to={`/results/${result.id}`} key={result.id}><div><span className="engine-key">{result.engine_key}</span><span className="version-chip">v{result.version}</span></div><h2>{result.result_type.replaceAll("_", " ")}</h2><p>{result.products.length} protected product{result.products.length === 1 ? "" : "s"}</p><footer><span>{formatDate(result.created_at)}</span><strong>View result →</strong></footer></Link>)}</section>
+      <section className="result-grid result-register">{results.data.items.length === 0 ? <div className="panel empty-state"><div className="empty-icon" aria-hidden="true">□</div><h3>No results yet</h3><p>Completed FIRRIS analyses will appear here.</p></div> : results.data.items.map((result) => <Link className="result-card" to={`/results/${result.id}`} key={result.id}><div><span className="engine-key">{result.engine_key}</span><span className="version-chip">v{result.version}</span></div><h2>{result.result_type.replaceAll("_", " ")}</h2><p>{result.products.length} protected product{result.products.length === 1 ? "" : "s"}</p><footer><span>{formatDate(result.created_at)}</span><strong>View result →</strong></footer></Link>)}</section>
+      <Pagination offset={offset} limit={50} total={results.data.total} onChange={nextOffset => { const next = new URLSearchParams(params); next.set("offset", String(nextOffset)); setParams(next); }} />
     </div>
   );
 }

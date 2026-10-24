@@ -1,5 +1,59 @@
 # Frontend production rollout
 
+## Latest production acceptance — 24 October 2026
+
+**ADMIN & EXTERNAL DATA MANAGEMENT PRODUCTION ACCEPTED**
+
+This status supersedes the historical 20 October availability/acceptance blockers below. Those historical records are retained intact.
+
+- Deployed frontend: `b43974e1b514d6e40e12f77fce13b45a84856781`, including UI commit `c22c2b7`. Fresh production image: `sha256:0cc61c0fbf262afe9c04c5d46dc46284a40071086b5143ff9ff0a02d6ac7cd4d`.
+- Matching backend API/BFF/worker: commit `41a7fa2`, image `sha256:25c5e8187827edef8334aa33f6f0c01c81046edaba5a0e8c7eee01f9d028b33d`. Migration `f1a2b3c4d5e6` applied with existing record fingerprints preserved.
+- Approved browser origin remains `https://app.novageorisk.com`; API/gateway health remains `https://api.novageorisk.com/health`. Both HTTPS endpoints return 200 with valid certificates. Nginx routing files are unchanged. Browser → BFF → FastAPI remains intact.
+- Fresh build reran API declaration check, tsc and Vite. Browser contract remains 78 paths; internal 73 with FIRRIS title. Backend/frontend browser contracts match exactly.
+- Frontend layer scan: 9 layers / 1,050 files; two exact public-CA symlinks reviewed against the known public bundle hash, zero unresolved findings. Raw findings retained; scanner policy unchanged. No source maps, private environment or uploaded datasets were introduced into the runtime image.
+- Public JS `index-CUnLxyjc.js` SHA-256 `be4af0f45fa869d1671e7866ac9072478f7d4e3a91a2ac38f0b8d200d575b294`; CSS `index-B0xym_Kt.css` SHA-256 `79ae0b200a1338605e3fd49115c999ee877458975abc4f0e94ce812911a87783`. Both match the live frontend container; no stale asset hash mismatch was found.
+
+### Live acceptance evidence
+
+The approved owner completed checks in their own separate browser. The isolated Firefox automation connection disconnected; no automated authenticated screenshot, console recording or exact-width production measurement is claimed.
+
+Owner confirmed: normal login; Administration owner membership and provisioning audit; Project/Overview/AOI/Tasks; all five External Data tabs, history and private CSV download; Tanzania Result Overview/Maps/Metrics/Data & Files/Validation/Execution/Metadata, map/legend, primary download and narrow/mobile layout. Owner reported CSRF-negative fetch 403, no unexpected JS/chunk/CORS/repeated network errors, and logout protecting routes.
+
+A real browser mutation was additionally corroborated in PostgreSQL: synthetic version 2 `0c66e12c-ce79-459c-8036-87e4533a0679` changed Needs Metadata → Archived at `2026-10-24 16:51:22.938687+00`, actor `3908bc44-da51-42e1-8f65-dd3d6bfaefb5`, correlation `d53c4e2f-f856-4896-bdd2-365b4b38078b`. The initial incomplete confirmation was detected from unchanged server state; guided completion of the checkbox/Confirm change produced the audit event. Metadata was not required or invented for archival.
+
+Both harmless synthetic versions are now Archived with files/history retained. No scientific approval or new analysis was created. Real scientific approval and multi-account role UI comparisons were not fabricated; no second identity was available/created. The previous 98 tests and 45 fixture-backed responsive checks remain local verification evidence, distinct from this owner-operated live acceptance.
+
+Server checks independently verified owner/audit and tenant policy guards, private upload/validation/versioning/storage, protected Tanzania package checksum (54 artifacts / 53 package members), COG 206 delivery, immutable audits, preserved existing records, and all four app-service health checks. PostgreSQL/Redis/TLS ingress were not replaced. Both pre- and post-rollout database backups were actually restored in isolated disposable PostGIS containers.
+
+### Recovery
+
+Old frontend image retained: `sha256:4ba711daab9b19e42e394302946f5386bd15cee19548367c5883623882449d33`, tag `nova-georisk-frontend:rollback-before-management-20261024`. Restricted checkpoint: `/home/deploy/nova-releases/management-41a7fa2-20261024/`.
+
+Validate recovery without changing services:
+
+```sh
+ssh -i /home/dauson/.ssh/id_ed25519 -p 22 -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@172.236.139.113 \
+  'python3 /home/deploy/nova-releases/management-41a7fa2-20261024/rollback.py frontend --check'
+```
+
+If frontend recovery is needed:
+
+```sh
+ssh -i /home/dauson/.ssh/id_ed25519 -p 22 -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@172.236.139.113 \
+  'python3 /home/deploy/nova-releases/management-41a7fa2-20261024/rollback.py frontend'
+```
+
+Retain compatible API/BFF/worker and the upgraded DB. An unconditional old-backend rollback is unsafe after managed records or membership revocations: the guarded full helper now refuses because managed history exists. Do not downgrade the DB/delete history to bypass it; use a compatible validated forward fix. Full backup checksums, exact image identities, acceptance limitations and backend recovery commands are in backend `docs/ADMIN_AND_EXTERNAL_DATA_MANAGEMENT_PRODUCTION.md`.
+
+No rollback was executed. Aggregate quotas, external antivirus, retention policy and off-host disaster-recovery policy remain operational hardening work. No report was committed or pushed.
+
+---
+
+## Historical rollout record — 20 October 2026
+
+All sections below are preserved historical evidence; their blocked labels do not describe the current 24 October release.
+
+
 Date: 20 October 2026 (Africa/Nairobi).
 
 **FRONTEND PRODUCTION ROLLOUT BLOCKED**

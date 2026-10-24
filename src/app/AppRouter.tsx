@@ -22,6 +22,9 @@ const ProjectUtilityPage = lazy(() => import("../features/projects/ProjectUtilit
 const SettingsPage = lazy(() => import("../features/settings/SettingsPage").then((module) => ({ default: module.SettingsPage })));
 const PortfolioCapabilityPage = lazy(() => import("../features/projects/PortfolioCapabilityPage").then((module) => ({ default: module.PortfolioCapabilityPage })));
 
+const AdministrationPage = lazy(() => import("../features/management/AdministrationPage").then(m => ({ default: m.AdministrationPage })));
+const ExternalDataPage = lazy(() => import("../features/management/ExternalDataPage").then(m => ({ default: m.ExternalDataPage })));
+
 export function AppRouter() {
   return (
     <Suspense fallback={<main className="page-shell"><p>Loading NOVA workspace…</p></main>}>
@@ -36,7 +39,7 @@ export function AppRouter() {
             <Route path="projects/:projectId" element={<ProjectWorkspaceLayout />}>
               <Route index element={<ProjectDetailPage />} />
               <Route path="aois" element={<AoiListPage />} />
-              <Route path="data" element={<DataCatalogPage />} />
+              <Route path="data" element={<ExternalDataPage />} />
               <Route path="analysis" element={<AnalysisSubmitPage />} />
               <Route path="tasks" element={<TaskListPage />} />
               <Route path="results" element={<ResultListPage />} />
@@ -55,6 +58,8 @@ export function AppRouter() {
             <Route path="reports" element={<PortfolioCapabilityPage mode="reports" />} />
             <Route path="exports" element={<PortfolioCapabilityPage mode="exports" />} />
             <Route path="data" element={<DataCatalogPage />} />
+            <Route path="administration" element={<AdministrationPage />} />
+            <Route path="external-data" element={<ExternalDataPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>

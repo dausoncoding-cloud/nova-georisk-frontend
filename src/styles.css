@@ -20,8 +20,8 @@
 }
 
 * { box-sizing: border-box; }
-html { min-width: 320px; background: #f3f6f7; }
-body { margin: 0; min-width: 320px; min-height: 100vh; }
+html { min-width: 0; background: #f3f6f7; }
+body { margin: 0; min-width: 0; min-height: 100vh; }
 button, input, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; }
@@ -925,3 +925,18 @@ fieldset { min-width: 0; }
   .result-summary--inline > div:last-child { display: flex; flex-basis: 100%; gap: .5rem; align-items: baseline; }
   .result-summary--inline > div:last-child dt { flex-shrink: 0; }
 }
+
+/* Access and external-data workspaces reuse compact tables, tabs and surfaces. */
+.management-dialog { width: min(640px, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 1.25rem; background: white; border: 1px solid var(--border); border-radius: 8px; display: grid; gap: .8rem; }
+.management-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: .75rem; }
+.confirm-choice { display: flex; align-items: flex-start; gap: .6rem; margin: .7rem 0; line-height: 1.5; }
+.confirm-choice input { width: 1rem; height: 1rem; flex: 0 0 auto; margin-top: .25rem; }
+.break-anywhere, .responsive-table code { overflow-wrap: anywhere; word-break: break-word; }
+.tab-content textarea { width: 100%; min-height: 5rem; max-height: 24rem; resize: vertical; }
+@media (max-width: 767px) { .management-dialog { padding: 1rem; } .management-fields { grid-template-columns: 1fr; } }
+
+.dataset-state[data-status="Needs Metadata"], .dataset-state[data-status="Needs Scientific Review"] { background: #fff3cf; color: #6b581d; }
+.dataset-state[data-status="Rejected"] { background: #fff0ed; color: #9d3025; }
+.dataset-state[data-status="Archived"] { background: #eef1f3; color: #536775; }
+.external-data-workspace .panel-heading > .button { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 767px) { .external-data-workspace .panel-heading { display: grid; gap: .6rem; } .external-data-workspace .panel-heading > .button { justify-self: start; } }

@@ -1,3 +1,4 @@
+import { useOrganizationContext } from "../features/organization/OrganizationContext";
 import { useDialog } from "../shared/ui/useDialog";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -9,17 +10,19 @@ import { fetchTasks } from "../features/tasks/tasksApi";
 import { queryKeys } from "../shared/api/queryKeys";
 import { Icon } from "../shared/ui/Icon";
 
-const nav = [
+const baseNav = [
   ["/", "overview", "Overview"], ["/projects", "projects", "Projects"], ["/aois", "aoi", "AOIs"],
   ["/analyses", "analysis", "Analyses"], ["/tasks", "tasks", "Tasks"], ["/results", "results", "Results"],
   ["/maps", "map", "Maps"], ["/reports", "reports", "Reports"], ["/exports", "exports", "Exports"],
-  ["/data", "data", "Data"], ["/settings", "settings", "Settings"],
+  ["/external-data", "data", "External data"], ["/administration", "settings", "Administration"], ["/data", "data", "Catalogue"], ["/settings", "settings", "Settings"],
 ] as const;
 
 function titleize(segment: string) { return segment.replaceAll("-", " ").replace(/^./, (letter) => letter.toUpperCase()); }
 
 export function AuthenticatedLayout() {
   const session = useSession();
+  const organization = useOrganizationContext();
+  const nav = baseNav.filter(([to]) => to !== "/administration" || ["admin", "owner"].includes(organization.current_role));
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("nova.sidebar") === "collapsed");

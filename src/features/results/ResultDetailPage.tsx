@@ -1,4 +1,5 @@
 import { AccuracyAssessment } from "./AccuracyAssessment";
+import { ResultOverview } from "./ResultOverview";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { queryKeys } from "../../shared/api/queryKeys";
@@ -72,9 +73,10 @@ export function ResultDetailPage() {
     <dl className="result-summary" aria-label="Result summary"><div><dt>Execution status</dt><dd>{typeof summary?.status === "string" ? summary.status : "Not supplied"}</dd></div><div><dt>AOI</dt><dd>{aoi.data?.name ?? (aoiId ? aoi.isError ? "Boundary unavailable" : "Loading…" : "Not supplied")}</dd></div><div><dt>Analysis period</dt><dd>{period}</dd></div><div><dt>Quality gate</dt><dd>{typeof quality?.status === "string" ? quality.status : "Not supplied"}</dd></div></dl>
     <WorkspaceTabs tabs={tabs} value={tab} onChange={navigateTab} label="Result workspace">
       {tab === "overview" ? <div className="page-stack">
+        {data.overview ? <ResultOverview overview={data.overview} /> : null}
         <dl className="result-summary result-summary--inline" aria-label="Delivered output summary"><div><dt>Outputs</dt><dd>{artifacts.length} file{artifacts.length === 1 ? "" : "s"} · {data.layers.length} map layer{data.layers.length === 1 ? "" : "s"}</dd></div><div><dt>CRS</dt><dd>{firstLayer?.crs ?? "Not supplied"}</dd></div><div><dt>Independent validation</dt><dd>{independentText}</dd></div></dl>
         {data.analytics?.class_areas?.length ? <section className="panel content-panel"><h2>Key class areas</h2><div className="table-wrap"><table><thead><tr><th>Product / class</th><th>Area (km²)</th><th>% of valid area</th></tr></thead><tbody>{data.analytics.class_areas.slice(0, 3).map((row, index) => <tr key={index}><td>{row.product_key} · {row.label}</td><td>{deliveredValue(row.area_km2)}</td><td>{deliveredValue(row.percent_of_valid)}</td></tr>)}</tbody></table></div><button className="button button--quiet button--small" onClick={() => navigateTab("metrics")}>All metrics and evidence</button></section> : null}
-        {limitations.length ? <div className="notice" role="note"><strong>Limitations</strong><ul>{limitations.slice(0, 3).map(text => <li key={text}>{text}</li>)}</ul>{limitations.length > 3 ? <button className="button button--quiet button--small" onClick={() => navigateTab("validation")}>View all limitations ({limitations.length})</button> : null}</div> : null}
+        {limitations.length && !data.overview ? <div className="notice" role="note"><strong>Limitations</strong><ul>{limitations.slice(0, 3).map(text => <li key={text}>{text}</li>)}</ul>{limitations.length > 3 ? <button className="button button--quiet button--small" onClick={() => navigateTab("validation")}>View all limitations ({limitations.length})</button> : null}</div> : null}
         {quality?.status === "failed" ? <div className="inline-alert" role="alert">The scientific quality gate failed. Review the delivered checks in Validation before using this result.</div> : null}
         {viewer(true)}
       </div> : null}

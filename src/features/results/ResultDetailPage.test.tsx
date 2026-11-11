@@ -134,3 +134,25 @@ describe("Accuracy tables on the result page (2.2)", () => {
     expect(screen.getByRole("status", { name: "" })).toHaveTextContent("Independent accuracy: not assessable.");
   });
 });
+
+describe("Result overview on the Overview tab (2.3)", () => {
+  it("puts the overview first and does not repeat limitations below it", async () => {
+    vi.mocked(fetchResult).mockResolvedValueOnce({
+      id: "result-1", project_id: "project-1", task_id: "task-1", aoi_id: null, engine_key: "firris", result_type: "flood_mapping", version: 1,
+      created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z", summary: { status: "completed" }, products: [], exports: [], layers: [], provenance: {}, analytics: null,
+      validation_dashboard: { kind: "binary", metrics: {}, availability: {}, plots: [], scope: "s", units: "u", limitations: ["Dashboard limitation."] },
+      overview: {
+        headline: { text: "Model-classified flood candidates cover 1.00 km².", flood_candidate_area_km2: 1, percent_of_valid: 1, valid_area_km2: 100, target_period: null, baseline_period: null },
+        area_accounting: { aoi_cells: 10, valid_cells: 10, excluded_cells: 0, valid_area_km2: 100, aoi_area_km2_estimate: 100, excluded_area_km2_estimate: 0, valid_pct_of_aoi: 100,
+          flood_candidate_area_km2: 1, flood_candidate_pct_of_valid: 1, flood_candidate_pct_of_aoi: 1, missing_cells_by_band: [], method_note: "Method note." },
+        quality_gates: [], data_sources: [], limitations: ["Dashboard limitation."],
+      },
+    } as never);
+    setup();
+    const overview = await screen.findByRole("region", { name: "Result overview" });
+    const summary = screen.getByLabelText("Delivered output summary");
+    expect(overview.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getAllByText("Dashboard limitation.")).toHaveLength(1);
+    expect(overview.closest(".result-workspace")).not.toBeNull();
+  });
+});

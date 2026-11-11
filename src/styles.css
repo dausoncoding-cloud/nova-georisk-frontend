@@ -952,3 +952,11 @@ fieldset { min-width: 0; }
 .accuracy-curves { display: flex; flex-direction: column; gap: 0.75rem; }
 .accuracy-curve { margin: 0; }
 .accuracy-curve figcaption { font-size: 0.8rem; }
+
+/* D4 single-column results layout (client decision 2026-11-11), scoped to result pages */
+.result-workspace .product-delivery__heading, .result-workspace .export-row, .result-workspace .export-card, .result-workspace .gis-pane > header { justify-content: flex-start; flex-wrap: wrap; gap: 0.5rem 1rem; }
+.result-workspace .metadata-columns, .result-workspace .export-groups, .result-workspace .result-exploration, .result-workspace .gis-pane-facts, .result-workspace .result-summary { grid-template-columns: minmax(0, 1fr); }
+.result-workspace .metadata-list > div { grid-template-columns: minmax(0, 1fr); gap: 0.2rem; }
+.result-workspace .result-overview { display: flex; flex-direction: column; gap: 1.25rem; }
+.result-workspace .result-overview table { text-align: left; }
+.result-workspace .result-overview th, .result-workspace .result-overview td { text-align: left; }

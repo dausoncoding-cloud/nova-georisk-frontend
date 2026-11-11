@@ -1711,6 +1711,33 @@ export interface components {
             /** Request Id */
             request_id: string;
         };
+        /** AreaAccounting */
+        AreaAccounting: {
+            /** Aoi Area Km2 Estimate */
+            aoi_area_km2_estimate: number | null;
+            /** Aoi Cells */
+            aoi_cells: number | null;
+            /** Excluded Area Km2 Estimate */
+            excluded_area_km2_estimate: number | null;
+            /** Excluded Cells */
+            excluded_cells: number | null;
+            /** Flood Candidate Area Km2 */
+            flood_candidate_area_km2: number | null;
+            /** Flood Candidate Pct Of Aoi */
+            flood_candidate_pct_of_aoi: number | null;
+            /** Flood Candidate Pct Of Valid */
+            flood_candidate_pct_of_valid: number | null;
+            /** Method Note */
+            method_note: string;
+            /** Missing Cells By Band */
+            missing_cells_by_band: components["schemas"]["MissingCellsByBand"][];
+            /** Valid Area Km2 */
+            valid_area_km2: number | null;
+            /** Valid Cells */
+            valid_cells: number | null;
+            /** Valid Pct Of Aoi */
+            valid_pct_of_aoi: number | null;
+        };
         /** AtlasLegend */
         AtlasLegend: {
             /** Entries */
@@ -2160,6 +2187,19 @@ export interface components {
              * Format: uuid
              */
             id: string;
+        };
+        /** DataSourceRow */
+        DataSourceRow: {
+            /** Credit */
+            credit: string;
+            /** Dataset */
+            dataset: string;
+            /** Resolution */
+            resolution: string;
+            /** Role */
+            role: string;
+            /** Scene Dates */
+            scene_dates: string[];
         };
         /** DatasetEligibility */
         DatasetEligibility: {
@@ -2975,6 +3015,17 @@ export interface components {
          * @enum {string}
          */
         MembershipRole: "owner" | "admin" | "analyst" | "viewer";
+        /** MissingCellsByBand */
+        MissingCellsByBand: {
+            /** Affects Admission */
+            affects_admission: boolean;
+            /** Band */
+            band: string;
+            /** Cells */
+            cells: number;
+            /** Pct Of Aoi */
+            pct_of_aoi: number | null;
+        };
         /** OrganizationContextResponse */
         OrganizationContextResponse: {
             current_organization: components["schemas"]["OrganizationSummary"];
@@ -3041,6 +3092,21 @@ export interface components {
             name: string;
             /** Slug */
             slug: string;
+        };
+        /** OverviewHeadline */
+        OverviewHeadline: {
+            /** Baseline Period */
+            baseline_period: string | null;
+            /** Flood Candidate Area Km2 */
+            flood_candidate_area_km2: number | null;
+            /** Percent Of Valid */
+            percent_of_valid: number | null;
+            /** Target Period */
+            target_period: string | null;
+            /** Text */
+            text: string;
+            /** Valid Area Km2 */
+            valid_area_km2: number | null;
         };
         /** PrPoint */
         PrPoint: {
@@ -3169,6 +3235,20 @@ export interface components {
              * @enum {string}
              */
             service_direction: "benefit" | "cost";
+        };
+        /** QualityGateRow */
+        QualityGateRow: {
+            /** Name */
+            name: string;
+            /** Observed */
+            observed: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pass" | "fail" | "not_recorded" | "not_applicable";
+            /** Threshold */
+            threshold: string;
         };
         /** QuantitativeSeries */
         QuantitativeSeries: {
@@ -3362,6 +3442,20 @@ export interface components {
             /** Units */
             units?: string | null;
         };
+        /**
+         * ResultOverview
+         * @description Plan item 2.3: read-time overview computed from stored summary and provenance.
+         */
+        ResultOverview: {
+            area_accounting: components["schemas"]["AreaAccounting"];
+            /** Data Sources */
+            data_sources: components["schemas"]["DataSourceRow"][];
+            headline: components["schemas"]["OverviewHeadline"];
+            /** Limitations */
+            limitations: string[];
+            /** Quality Gates */
+            quality_gates: components["schemas"]["QualityGateRow"][];
+        };
         /** ResultPage */
         ResultPage: {
             /** Items */
@@ -3452,6 +3546,7 @@ export interface components {
             interpretation_notice?: string | null;
             /** Layers */
             layers: components["schemas"]["ResultLayerResponse"][];
+            overview?: components["schemas"]["ResultOverview"] | null;
             /** Products */
             products: components["schemas"]["ResultProductResponse"][];
             /**

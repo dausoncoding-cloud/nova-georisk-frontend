@@ -67,6 +67,7 @@ export function ResultDetailPage() {
 
   return <div className="page-stack result-workspace">
     <header className="page-heading"><div><Link className="back-link" to={`/projects/${data.project_id}/results`}>← Project results</Link><span className="eyebrow">{data.engine_key} · version {data.version}</span><h1>{data.result_type.replaceAll("_", " ")}</h1><p>Created {formatDate(data.created_at)}</p></div><div className="form-actions"><Link className="button button--secondary" to={`/tasks/${data.task_id}`}>View task</Link>{packageFile ? <a className="button button--primary" href={protectedProductUrl(data.id, packageFile.key)}>Download package</a> : <button className="button button--secondary" onClick={() => navigateTab("files")}>View files</button>}</div></header>
+    {data.interpretation_notice ? <p className="notice" role="status" aria-label="Interpretation notice">{data.interpretation_notice}</p> : null}
     <dl className="result-summary" aria-label="Result summary"><div><dt>Execution status</dt><dd>{typeof summary?.status === "string" ? summary.status : "Not supplied"}</dd></div><div><dt>AOI</dt><dd>{aoi.data?.name ?? (aoiId ? aoi.isError ? "Boundary unavailable" : "Loading…" : "Not supplied")}</dd></div><div><dt>Analysis period</dt><dd>{period}</dd></div><div><dt>Quality gate</dt><dd>{typeof quality?.status === "string" ? quality.status : "Not supplied"}</dd></div></dl>
     <WorkspaceTabs tabs={tabs} value={tab} onChange={navigateTab} label="Result workspace">
       {tab === "overview" ? <div className="page-stack">

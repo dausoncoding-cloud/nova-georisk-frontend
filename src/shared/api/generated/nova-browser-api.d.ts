@@ -3290,6 +3290,8 @@ export interface components {
              */
             id: string;
             interpretation?: components["schemas"]["ResultInterpretation"] | null;
+            /** Interpretation Notice */
+            interpretation_notice?: string | null;
             /** Layers */
             layers: components["schemas"]["ResultLayerResponse"][];
             /** Products */

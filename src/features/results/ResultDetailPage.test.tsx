@@ -75,3 +75,28 @@ describe("Accuracy assessment framing (F2)", () => {
     expect((await screen.findByText("Independent validation")).nextElementSibling).toHaveTextContent("Not performed");
   });
 });
+
+describe("Legacy interpretation notice (1.6)", () => {
+  const notice = "Produced before the JRC never-water correction; analysis was restricted to historically wet pixels. Metrics are internal agreement with SAR screening labels. Downloaded files from this run use older labels (\u201cFlood Probability\u201d, \u201cFlood Risk Index Summary\u201d); the score is a model confidence score, not a probability of flooding.";
+  function result(interpretation_notice: string | null | undefined) {
+    vi.mocked(fetchResult).mockResolvedValueOnce({
+      id: "result-1", project_id: "project-1", task_id: "task-1", aoi_id: null, engine_key: "firris", result_type: "flood_mapping", version: 1,
+      created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z", summary: { status: "completed" },
+      products: [], exports: [], layers: [], provenance: {}, analytics: null, ...(interpretation_notice === undefined ? {} : { interpretation_notice }),
+    } as never);
+  }
+  it("shows the notice as a status banner on every tab of a legacy result", async () => {
+    result(notice);
+    setup();
+    const banner = await screen.findByRole("status", { name: "Interpretation notice" });
+    expect(banner).toHaveTextContent(notice);
+    fireEvent.click(screen.getByRole("tab", { name: "Accuracy assessment" }));
+    expect(screen.getByRole("status", { name: "Interpretation notice" })).toHaveTextContent("model confidence score");
+  });
+  it.each([null, undefined])("shows no banner when the API supplies %s", async (value) => {
+    result(value);
+    setup();
+    await screen.findByRole("tab", { name: "Overview", selected: true });
+    expect(screen.queryByRole("status", { name: "Interpretation notice" })).not.toBeInTheDocument();
+  });
+});

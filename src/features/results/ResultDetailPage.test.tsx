@@ -70,9 +70,17 @@ describe("Accuracy assessment framing (F2)", () => {
     expect(screen.getByText("Independent validation").nextElementSibling).toHaveTextContent("Not performed");
   });
   it("shows Not performed for legacy results without the new fields", async () => {
-    withDashboard({ kind: "binary", metrics: {}, availability: {}, plots: [], scope: "declared_holdout", units: "binary_class_0_1", limitations: [] });
+    const legacy = { kind: "binary", metrics: {}, availability: {}, plots: [], scope: "declared_holdout", units: "binary_class_0_1", limitations: [] };
+    expect(legacy).not.toHaveProperty("reference_basis");
+    expect(legacy).not.toHaveProperty("independent_validation");
+    withDashboard(legacy);
     setup();
     expect((await screen.findByText("Independent validation")).nextElementSibling).toHaveTextContent("Not performed");
+    fireEvent.click(screen.getByRole("tab", { name: "Accuracy assessment" }));
+    expect(screen.getByRole("heading", { name: "Accuracy assessment" })).toBeInTheDocument();
+    expect(screen.getByText("Independent validation: Not performed")).toBeInTheDocument();
+    expect(screen.queryByText("Reference basis")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Internal agreement metrics" })).toBeInTheDocument();
   });
 });
 

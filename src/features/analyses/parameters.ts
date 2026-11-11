@@ -83,7 +83,7 @@ export function buildGeeSatelliteWorkflowParameters(form: SatelliteWorkflowForm)
         scale: form.scale,
         target_crs: "EPSG:4326",
         dem_source: "SRTM",
-        features: ["sar_vv_target", "sar_change", "ndvi", "mndwi", "ndbi", "elevation", "slope", "rainfall"],
+        features: ["sar_vv_target", "sar_change", "elevation", "slope", "rainfall"],
       },
       preprocessing: {
         cloud_mask: form.cloudMask,

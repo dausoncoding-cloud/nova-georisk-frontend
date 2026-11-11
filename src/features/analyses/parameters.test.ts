@@ -26,6 +26,13 @@ describe("FIRRIS parameter payload", () => {
     expect(parameters.workflow?.model).toMatchObject({ algorithm: "random_forest", n_estimators: 200 });
   });
 
+  it("sends only SAR, terrain and rainfall model features; Sentinel-2 is the independent reference", () => {
+    const parameters = buildGeeSatelliteWorkflowParameters(defaultSatelliteWorkflowForm);
+    const source = parameters.workflow?.source as { features: string[] } | undefined;
+    expect(source?.features).toEqual(["sar_vv_target", "sar_change", "elevation", "slope", "rainfall"]);
+    for (const optical of ["ndvi", "mndwi", "ndbi", "ndwi", "ndmi"]) expect(source?.features).not.toContain(optical);
+  });
+
   it("rejects reversed satellite date ranges", () => {
     expect(() => buildGeeSatelliteWorkflowParameters({
       ...defaultSatelliteWorkflowForm,

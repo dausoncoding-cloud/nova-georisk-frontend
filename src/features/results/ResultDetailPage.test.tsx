@@ -108,3 +108,29 @@ describe("Legacy interpretation notice (1.6)", () => {
     expect(screen.queryByRole("status", { name: "Interpretation notice" })).not.toBeInTheDocument();
   });
 });
+
+describe("Accuracy tables on the result page (2.2)", () => {
+  it("renders the Makunga tables when the dashboard carries an accuracy assessment", async () => {
+    const assessment = {
+      independent_status: "not_assessable", independent_reason: "Sentinel-2 baseline: No compliant optical scene in the requested window", independent_wording: null,
+      scopes: [{
+        scope: "internal_screening", title: "Internal agreement with SAR screening labels (held-out pixels)", reference_basis: "SAR screening pseudo-label",
+        method: "held_out_sample", n: 10, n_per_reference_class: { "0": 6, "1": 4 },
+        confusion_matrix: { rows: "classified", columns: "reference",
+          classified: { "1": { reference_1: 4, reference_0: 0, total: 4, users_accuracy: { fraction: "4/4", pct: 100 } }, "0": { reference_1: 0, reference_0: 6, total: 6, users_accuracy: { fraction: "6/6", pct: 100 } } },
+          reference_totals: { "1": 4, "0": 6, all: 10 }, producers_accuracy: { "1": { fraction: "4/4", pct: 100 }, "0": { fraction: "6/6", pct: 100 } } },
+        overall_accuracy_pct: 100, cohens_kappa: 1, f1_flooded: 1, iou_flooded: 1, per_class: [], roc: [], pr: [], prevalence: 0.4,
+        roc_auc: 1, average_precision: 1, roc_auc_note: "binary classifier; micro/macro ROC not applicable",
+        confidence_intervals_95: null, interval_note: "percentile bootstrap over the held-out sample",
+      }],
+    };
+    vi.mocked(fetchResult).mockResolvedValueOnce({
+      id: "result-1", project_id: "project-1", task_id: "task-1", aoi_id: null, engine_key: "firris", result_type: "flood_mapping", version: 1,
+      created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z", summary: { status: "completed" }, products: [], exports: [], layers: [], provenance: {}, analytics: null,
+      validation_dashboard: { kind: "binary", metrics: {}, availability: {}, plots: [], scope: "s", units: "u", limitations: [], independent_validation: "not_assessable", accuracy_assessment: assessment },
+    } as never);
+    setup("/results/result-1?tab=validation");
+    expect(await screen.findByRole("table", { name: /Confusion matrix/ })).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "" })).toHaveTextContent("Independent accuracy: not assessable.");
+  });
+});

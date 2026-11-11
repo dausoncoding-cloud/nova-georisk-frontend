@@ -940,3 +940,15 @@ fieldset { min-width: 0; }
 .dataset-state[data-status="Archived"] { background: #eef1f3; color: #536775; }
 .external-data-workspace .panel-heading > .button { flex-shrink: 0; white-space: nowrap; }
 @media (max-width: 767px) { .external-data-workspace .panel-heading { display: grid; gap: .6rem; } .external-data-workspace .panel-heading > .button { justify-self: start; } }
+
+/* 2.2 accuracy assessment tables and curves (scoped) */
+.accuracy-assessment { display: flex; flex-direction: column; gap: 1.25rem; }
+.accuracy-scope { display: flex; flex-direction: column; gap: 0.75rem; }
+.accuracy-table-wrap { overflow-x: auto; max-width: 100%; }
+.accuracy-table { border-collapse: collapse; min-width: 32rem; font-size: 0.85rem; }
+.accuracy-table caption { text-align: left; font-weight: 700; padding-bottom: 0.4rem; }
+.accuracy-table th, .accuracy-table td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--line, #d9e2ea); }
+.accuracy-table td { font-variant-numeric: tabular-nums; }
+.accuracy-curves { display: flex; flex-direction: column; gap: 0.75rem; }
+.accuracy-curve { margin: 0; }
+.accuracy-curve figcaption { font-size: 0.8rem; }

@@ -1503,6 +1503,90 @@ export interface components {
             /** Name */
             name: string;
         };
+        /**
+         * AccuracyAssessment
+         * @description Plan item 2.2: independent assessment first (when assessed), internal agreement second.
+         */
+        AccuracyAssessment: {
+            /** Independent Reason */
+            independent_reason: string | null;
+            /**
+             * Independent Status
+             * @enum {string}
+             */
+            independent_status: "not_performed" | "assessed" | "not_assessable" | "insufficient_reference_samples";
+            /** Independent Wording */
+            independent_wording: string | null;
+            /** Scopes */
+            scopes: components["schemas"]["AccuracyScope"][];
+        };
+        /** AccuracyIntervals */
+        AccuracyIntervals: {
+            /** Cohens Kappa */
+            cohens_kappa: number[] | null;
+            /** Method */
+            method: string;
+            /** Overall Accuracy Pct */
+            overall_accuracy_pct: number[] | null;
+            /** Roc Auc */
+            roc_auc: number[] | null;
+        };
+        /** AccuracyRatio */
+        AccuracyRatio: {
+            /** Fraction */
+            fraction: string;
+            /** Pct */
+            pct: number | null;
+        };
+        /** AccuracyScope */
+        AccuracyScope: {
+            /** Average Precision */
+            average_precision: number | null;
+            /** Cohens Kappa */
+            cohens_kappa: number | null;
+            confidence_intervals_95: components["schemas"]["AccuracyIntervals"] | null;
+            confusion_matrix: components["schemas"]["ConfusionMatrixTable"];
+            /** F1 Flooded */
+            f1_flooded: number | null;
+            /** Interval Note */
+            interval_note: string;
+            /** Iou Flooded */
+            iou_flooded: number | null;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "census" | "held_out_sample";
+            /** N */
+            n: number;
+            /** N Per Reference Class */
+            n_per_reference_class: {
+                [key: string]: number;
+            };
+            /** Overall Accuracy Pct */
+            overall_accuracy_pct: number | null;
+            /** Per Class */
+            per_class: components["schemas"]["ClassAccuracySummary"][];
+            /** Pr */
+            pr: components["schemas"]["PrPoint"][];
+            /** Prevalence */
+            prevalence: number | null;
+            /** Reference Basis */
+            reference_basis: string;
+            /** Roc */
+            roc: components["schemas"]["RocPoint"][];
+            /** Roc Auc */
+            roc_auc: number | null;
+            /** Roc Auc Note */
+            roc_auc_note: string;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "independent_optical" | "internal_screening" | "internal_supplied";
+            /** Title */
+            title: string;
+        };
         /** AdministrativeBoundaryAOICreate */
         AdministrativeBoundaryAOICreate: {
             /**
@@ -1878,6 +1962,31 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /**
+         * ClassAccuracySummary
+         * @description Makunga et al. (2025) Table 8 row.
+         */
+        ClassAccuracySummary: {
+            /** Area Ha */
+            area_ha: number | null;
+            /**
+             * Class Label
+             * @enum {string}
+             */
+            class_label: "1" | "0";
+            /** Class Name */
+            class_name: string;
+            /** Commission Error Pct */
+            commission_error_pct: number | null;
+            /** F1 Score */
+            f1_score: number | null;
+            /** Omission Error Pct */
+            omission_error_pct: number | null;
+            /** Producers Accuracy Pct */
+            producers_accuracy_pct: number | null;
+            /** Users Accuracy Pct */
+            users_accuracy_pct: number | null;
+        };
         /** ClassArea */
         ClassArea: {
             /** Area Ha */
@@ -1986,6 +2095,46 @@ export interface components {
             tn: number;
             /** Tp */
             tp: number;
+        };
+        /**
+         * ConfusionMatrixTable
+         * @description Makunga et al. (2025) Table 1 layout: classified rows x reference columns.
+         */
+        ConfusionMatrixTable: {
+            /** Classified */
+            classified: {
+                [key: string]: components["schemas"]["ConfusionRow"];
+            };
+            /**
+             * Columns
+             * @constant
+             * @enum {string}
+             */
+            columns: "reference";
+            /** Producers Accuracy */
+            producers_accuracy: {
+                [key: string]: components["schemas"]["AccuracyRatio"];
+            };
+            /** Reference Totals */
+            reference_totals: {
+                [key: string]: number;
+            };
+            /**
+             * Rows
+             * @constant
+             * @enum {string}
+             */
+            rows: "classified";
+        };
+        /** ConfusionRow */
+        ConfusionRow: {
+            /** Reference 0 */
+            reference_0: number;
+            /** Reference 1 */
+            reference_1: number;
+            /** Total */
+            total: number;
+            users_accuracy: components["schemas"]["AccuracyRatio"];
         };
         /** CriRequest */
         CriRequest: {
@@ -2893,6 +3042,15 @@ export interface components {
             /** Slug */
             slug: string;
         };
+        /** PrPoint */
+        PrPoint: {
+            /** Precision */
+            precision: number | null;
+            /** Recall */
+            recall: number | null;
+            /** Threshold */
+            threshold: number;
+        };
         /** PredictorModelOptions */
         PredictorModelOptions: {
             /** Holdout Fraction */
@@ -3339,6 +3497,15 @@ export interface components {
             hazard: number[];
             /** Vulnerability */
             vulnerability: number[];
+        };
+        /** RocPoint */
+        RocPoint: {
+            /** Fpr */
+            fpr: number | null;
+            /** Threshold */
+            threshold: number | null;
+            /** Tpr */
+            tpr: number | null;
         };
         /** SatellitePreprocessingOptions */
         SatellitePreprocessingOptions: {
@@ -3818,6 +3985,7 @@ export interface components {
         };
         /** ValidationDashboard */
         ValidationDashboard: {
+            accuracy_assessment?: components["schemas"]["AccuracyAssessment"] | null;
             /** Availability */
             availability: {
                 [key: string]: Record<string, never>;

@@ -8,7 +8,7 @@ const { submitAnalysisMock } = vi.hoisted(() => ({ submitAnalysisMock: vi.fn() }
 
 vi.mock("../projects/projectsApi", () => ({ fetchProject: vi.fn().mockResolvedValue({ id: "project-1", name: "Lower Basin", description: "Flood study", organization_id: "org-1", engine_key: "firris", analysis_module: "flood_mapping", crs: "EPSG:4326", created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z" }) }));
 vi.mock("../aois/aoisApi", () => ({ fetchProjectAois: vi.fn().mockResolvedValue({ total: 1, limit: 200, offset: 0, items: [{ id: "aoi-1", project_id: "project-1", name: "Floodplain", source_type: "geojson", crs: "EPSG:4326", geometry: { type: "Polygon", coordinates: [[[36, -1], [37, -1], [37, 0], [36, -1]]] }, stats: { area_km2: 42, perimeter_m: 1000 }, created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z" }] }) }));
-vi.mock("../engines/engineQueries", () => ({ useAvailableEngines: () => ({ data: [{ key: "firris", name: "FIRRIS", version: "1.0", access: true }], isPending: false, isError: false }), useEngineContract: () => ({ data: { engine_name: "FIRRIS", engine_version: "1.0", products: [{ key: "flood_extent", label: "Flood Extent", available_delivery_types: ["cog", "vector"], planned_delivery_types: [] }] }, isPending: false, isError: false }) }));
+vi.mock("../engines/engineQueries", () => ({ useAvailableEngines: () => ({ data: [{ key: "firris", name: "FIRRIS", version: "1.0", access: true }], isPending: false, isError: false }), useEngineContract: () => ({ data: { engine_name: "FIRRIS", engine_version: "1.0", products: [{ key: "flood_extent", label: "Flood Extent", available_delivery_types: ["cog", "vector"], planned_delivery_types: [] }, { key: "flood_probability", label: "Model confidence score (Random Forest vote fraction)", available_delivery_types: ["cog"], planned_delivery_types: [] }] }, isPending: false, isError: false }) }));
 vi.mock("./analysisApi", () => ({ submitAnalysis: submitAnalysisMock }));
 
 describe("FIRRIS analysis builder", () => {
@@ -69,4 +69,18 @@ it("validates date fields at the period step and exposes keyboard step navigatio
   expect(screen.getByRole("alert")).toHaveTextContent("Enter both date ranges");
   expect(screen.getByRole("button", { name: /Context/ })).not.toBeDisabled();
   expect(screen.getByRole("button", { name: /Review/ })).toBeDisabled();
+});
+
+it("names the classifier score from the engine contract, never as a flood probability", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}><MemoryRouter initialEntries={["/projects/project-1/analysis"]}><Routes><Route path="/projects/:projectId/analysis" element={<AnalysisSubmitPage />} /></Routes></MemoryRouter></QueryClientProvider>);
+  await screen.findByText("Confirm project context");
+  for (let step = 0; step < 6; step += 1) fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: /Model confidence score \(Random Forest vote fraction\)/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  expect(screen.getByText("Review and submit")).toBeInTheDocument();
+  const products = screen.getByText("Products", { selector: ".review-facts dt" }).nextElementSibling;
+  expect(products).toHaveTextContent("Model confidence score (Random Forest vote fraction)");
+  expect(document.body).not.toHaveTextContent(/flood probability/i);
 });

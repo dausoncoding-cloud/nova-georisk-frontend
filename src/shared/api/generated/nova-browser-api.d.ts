@@ -3059,6 +3059,30 @@ export interface components {
             /** Width */
             width: number;
         };
+        /**
+         * ReferenceBasis
+         * @description What the reported agreement metrics were computed against (F2).
+         */
+        ReferenceBasis: {
+            /** Features Overlapping Rule */
+            features_overlapping_rule: string[];
+            /** Label Source */
+            label_source: string;
+            /** N Test Per Class */
+            n_test_per_class: {
+                [key: string]: number;
+            };
+            /** N Train Per Class */
+            n_train_per_class: {
+                [key: string]: number;
+            };
+            /** Rule */
+            rule?: string | null;
+            /** Split Method */
+            split_method: string;
+            /** Statement */
+            statement: string;
+        };
         /** RegressionValidationRequest */
         RegressionValidationRequest: {
             /** Observed */
@@ -3796,6 +3820,8 @@ export interface components {
             availability: {
                 [key: string]: Record<string, never>;
             };
+            /** Independent Validation */
+            independent_validation?: ("not_performed" | "assessed" | "not_assessable" | "insufficient_reference_samples") | null;
             /**
              * Kind
              * @enum {string}
@@ -3807,6 +3833,7 @@ export interface components {
             metrics: Record<string, never>;
             /** Plots */
             plots: string[];
+            reference_basis?: components["schemas"]["ReferenceBasis"] | null;
             /** Scope */
             scope: string;
             /** Units */

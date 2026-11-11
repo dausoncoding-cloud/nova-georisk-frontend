@@ -15,10 +15,19 @@ import { fetchResult, protectedProductUrl } from "./resultsApi";
 const tabs = [
   { key: "overview", label: "Overview" }, { key: "maps", label: "Maps" },
   { key: "metrics", label: "Metrics" }, { key: "files", label: "Data & Files" },
-  { key: "validation", label: "Validation" }, { key: "execution", label: "Execution" },
+  { key: "validation", label: "Accuracy assessment" }, { key: "execution", label: "Execution" },
   { key: "metadata", label: "Metadata" },
 ] as const;
 const formatDate = (value: string) => new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+const independentValidationText: Record<string, string> = {
+  not_performed: "Not performed", assessed: "Assessed against an independent reference",
+  not_assessable: "Not assessable", insufficient_reference_samples: "Insufficient reference samples",
+};
+const fallbackAgreementStatement = "Metrics are internal agreement with the analysis labels — not independent flood-map accuracy.";
+function classCounts(counts: Record<string, number>) {
+  const entries = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b));
+  return `n = ${entries.reduce((total, [, value]) => total + value, 0)} (${entries.map(([label, value]) => `class ${label}: ${value}`).join(", ")})`;
+}
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
@@ -43,6 +52,10 @@ export function ResultDetailPage() {
   const firstLayer = data.layers.find(layer => layer.renderable);
   const targetPeriod = asRecord(provenance?.target_period);
   const period = targetPeriod ? `${deliveredValue(targetPeriod.start)} → ${deliveredValue(targetPeriod.end)}` : "Not supplied";
+  const referenceBasis = data.validation_dashboard?.reference_basis ?? null;
+  const independentStatus = data.validation_dashboard?.independent_validation ?? (typeof validation?.independent_validation === "string" ? validation.independent_validation : null);
+  const independentText = independentStatus ? independentValidationText[independentStatus] ?? independentStatus : "Not performed";
+  const agreementStatement = referenceBasis?.statement ?? fallbackAgreementStatement;
   const limitations = Array.from(new Set([...(data.analytics?.limitations ?? []), ...(data.validation_dashboard?.limitations ?? [])]));
   const navigateTab = (key: string) => { const next = new URLSearchParams(params); next.set("tab", key); setParams(next); };
   const viewer = (preview: boolean) => <section className={`panel viewer-panel${preview ? " viewer-panel--preview" : ""}`}>
@@ -57,7 +70,7 @@ export function ResultDetailPage() {
     <dl className="result-summary" aria-label="Result summary"><div><dt>Execution status</dt><dd>{typeof summary?.status === "string" ? summary.status : "Not supplied"}</dd></div><div><dt>AOI</dt><dd>{aoi.data?.name ?? (aoiId ? aoi.isError ? "Boundary unavailable" : "Loading…" : "Not supplied")}</dd></div><div><dt>Analysis period</dt><dd>{period}</dd></div><div><dt>Quality gate</dt><dd>{typeof quality?.status === "string" ? quality.status : "Not supplied"}</dd></div></dl>
     <WorkspaceTabs tabs={tabs} value={tab} onChange={navigateTab} label="Result workspace">
       {tab === "overview" ? <div className="page-stack">
-        <dl className="result-summary result-summary--inline" aria-label="Delivered output summary"><div><dt>Outputs</dt><dd>{artifacts.length} file{artifacts.length === 1 ? "" : "s"} · {data.layers.length} map layer{data.layers.length === 1 ? "" : "s"}</dd></div><div><dt>CRS</dt><dd>{firstLayer?.crs ?? "Not supplied"}</dd></div><div><dt>Independent validation</dt><dd>{typeof validation?.independent_validation === "string" ? validation.independent_validation : "Not supplied"}</dd></div></dl>
+        <dl className="result-summary result-summary--inline" aria-label="Delivered output summary"><div><dt>Outputs</dt><dd>{artifacts.length} file{artifacts.length === 1 ? "" : "s"} · {data.layers.length} map layer{data.layers.length === 1 ? "" : "s"}</dd></div><div><dt>CRS</dt><dd>{firstLayer?.crs ?? "Not supplied"}</dd></div><div><dt>Independent validation</dt><dd>{independentText}</dd></div></dl>
         {data.analytics?.class_areas?.length ? <section className="panel content-panel"><h2>Key class areas</h2><div className="table-wrap"><table><thead><tr><th>Product / class</th><th>Area (km²)</th><th>% of valid area</th></tr></thead><tbody>{data.analytics.class_areas.slice(0, 3).map((row, index) => <tr key={index}><td>{row.product_key} · {row.label}</td><td>{deliveredValue(row.area_km2)}</td><td>{deliveredValue(row.percent_of_valid)}</td></tr>)}</tbody></table></div><button className="button button--quiet button--small" onClick={() => navigateTab("metrics")}>All metrics and evidence</button></section> : null}
         {limitations.length ? <div className="notice" role="note"><strong>Limitations</strong><ul>{limitations.slice(0, 3).map(text => <li key={text}>{text}</li>)}</ul>{limitations.length > 3 ? <button className="button button--quiet button--small" onClick={() => navigateTab("validation")}>View all limitations ({limitations.length})</button> : null}</div> : null}
         {quality?.status === "failed" ? <div className="inline-alert" role="alert">The scientific quality gate failed. Review the delivered checks in Validation before using this result.</div> : null}
@@ -66,7 +79,7 @@ export function ResultDetailPage() {
       {tab === "maps" ? viewer(false) : null}
       {tab === "metrics" ? <QuantitativeDelivery analytics={data.analytics} products={products} change={asRecord(summary?.change_statistics)} /> : null}
       {tab === "files" ? <ExportCenter resultId={data.id} artifacts={artifacts} createdAt={data.created_at} /> : null}
-      {tab === "validation" ? <section className="panel content-panel"><h2>Scientific validation</h2><p className="notice">Quality gate approval and held-out accuracy do not establish independent scientific validation.</p><h3>Quality gate checks</h3><DeliveredMetadata value={quality} /><h3>Validation metrics</h3><DeliveredMetadata value={validation} />{data.validation_dashboard ? <Disclosure title="Accuracy dashboard and availability"><DeliveredMetadata value={data.validation_dashboard as unknown as Record<string, unknown>} /></Disclosure> : null}<h3>Limitations</h3>{limitations.length ? <ul>{limitations.map(text => <li key={text}>{text}</li>)}</ul> : <p>No validation limitations were supplied.</p>}</section> : null}
+      {tab === "validation" ? <section className="panel content-panel"><h2>Accuracy assessment</h2><p className="notice">{agreementStatement}</p><p>Independent validation: {independentText}</p>{referenceBasis ? <dl className="metadata-list"><div><dt>Reference basis</dt><dd>{referenceBasis.label_source}</dd></div>{referenceBasis.rule ? <div><dt>Label rule</dt><dd>{referenceBasis.rule}</dd></div> : null}{referenceBasis.features_overlapping_rule.length ? <div><dt>Model features that also define the labels</dt><dd>{referenceBasis.features_overlapping_rule.join(", ")}</dd></div> : null}<div><dt>Split</dt><dd>{referenceBasis.split_method}</dd></div><div><dt>Samples</dt><dd>Held-out {classCounts(referenceBasis.n_test_per_class)}; Training {classCounts(referenceBasis.n_train_per_class)}</dd></div></dl> : null}<h3>Quality gate checks</h3><DeliveredMetadata value={quality} /><h3>Internal agreement metrics</h3><DeliveredMetadata value={validation} />{data.validation_dashboard ? <Disclosure title="Accuracy dashboard and availability"><DeliveredMetadata value={data.validation_dashboard as unknown as Record<string, unknown>} /></Disclosure> : null}<h3>Limitations</h3>{limitations.length ? <ul>{limitations.map(text => <li key={text}>{text}</li>)}</ul> : <p>No validation limitations were supplied.</p>}</section> : null}
       {tab === "execution" ? <TaskArchive key={data.task_id} taskId={data.task_id} /> : null}
       {tab === "metadata" ? <section className="panel content-panel"><h2>Metadata & provenance</h2><h3>Spatial and temporal reference</h3>{data.layers.map(layer => <Disclosure title={layer.label} key={layer.key}><DeliveredMetadata value={{ crs: layer.crs, resolution: layer.spatial_resolution, bounds: layer.bounding_box, acquisition: layer.temporal_metadata, units: layer.units, nodata: layer.nodata }} /></Disclosure>)}<Disclosure title="Source datasets and processing provenance"><DeliveredMetadata value={provenance} /></Disclosure><Disclosure title="Model configuration"><DeliveredMetadata value={asRecord(summary?.model)} /></Disclosure><Disclosure title="Product metadata"><DeliveredMetadata value={products} /></Disclosure><Disclosure title="Raw result summary"><pre>{JSON.stringify(summary, null, 2)}</pre></Disclosure></section> : null}
     </WorkspaceTabs>

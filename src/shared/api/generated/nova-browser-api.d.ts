@@ -3476,6 +3476,8 @@ export interface components {
             artifact_type: "raster" | "vector" | "preview" | "metadata" | "report" | "package";
             /** Checksum Sha256 */
             checksum_sha256?: string | null;
+            /** Deliverable Group */
+            deliverable_group?: ("client_deliverable" | "gis_data" | "figures" | "audit") | null;
             /** Delivery Type */
             delivery_type: string;
             /** File Size Bytes */

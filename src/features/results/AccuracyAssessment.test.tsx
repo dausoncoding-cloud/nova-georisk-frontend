@@ -62,13 +62,21 @@ describe("Accuracy assessment tables (2.2)", () => {
     render(<AccuracyAssessment assessment={{ ...assessed, scopes: [assessed.scopes[0]!] }} />);
     const table = screen.getByRole("table", { name: /Confusion matrix/ });
     const rows = within(table).getAllByRole("row");
-    expect(within(table).getByRole("columnheader", { name: "Reference: flood candidate" })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: "Reference: new open water (optical)" })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: "Reference: no new open water" })).toBeInTheDocument();
     expect(within(table).getByRole("rowheader", { name: "Classified: flood candidate" })).toBeInTheDocument();
     expect(within(table).getByText("393/407 (96.6%)")).toBeInTheDocument();
     expect(within(table).getByText("393/413 (95.2%)")).toBeInTheDocument();
     expect(within(table).getByText("500/514 (97.3%)")).toBeInTheDocument();
     expect(within(table).getByText("927")).toBeInTheDocument();
     expect(rows.length).toBe(5);
+  });
+
+  it("names the internal scope's columns after the SAR screening label", () => {
+    render(<AccuracyAssessment assessment={{ ...assessed, scopes: [assessed.scopes[1]!] }} />);
+    const table = screen.getByRole("table", { name: /Confusion matrix/ });
+    expect(within(table).getByRole("columnheader", { name: "SAR screening label: flood candidate" })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: "SAR screening label: not flood candidate" })).toBeInTheDocument();
   });
 
   it("renders the per-class summary (Table 8) with area, omission, commission, UA, PA, F1, OA and Kappa", () => {

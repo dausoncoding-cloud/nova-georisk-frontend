@@ -12,13 +12,21 @@ const statusText: Record<string, string> = {
   not_assessable: "not assessable", insufficient_reference_samples: "insufficient reference samples", not_performed: "not performed",
 };
 
+// Same names as the report tables, CSV headers and figures (backend accuracy_tables.reference_columns).
+const REFERENCE_COLUMNS: Record<string, [string, string]> = {
+  independent_optical: ["Reference: new open water (optical)", "Reference: no new open water"],
+  internal_screening: ["SAR screening label: flood candidate", "SAR screening label: not flood candidate"],
+  internal_supplied: ["Supplied label: flood", "Supplied label: not flood"],
+};
+
 function ConfusionMatrix({ scope }: { scope: Scope }) {
+  const [referenceFlood, referenceOther] = REFERENCE_COLUMNS[scope.scope] ?? ["Reference: flood candidate", "Reference: not flood candidate"];
   const matrix = scope.confusion_matrix;
   const rows = [{ key: "1" as const, label: "Classified: flood candidate" }, { key: "0" as const, label: "Classified: not flood candidate" }];
   return (
     <div className="accuracy-table-wrap"><table className="accuracy-table">
       <caption>Confusion matrix (classified × reference), n = {count.format(scope.n)}</caption>
-      <thead><tr><th scope="col">Classified \ Reference</th><th scope="col">Reference: flood candidate</th><th scope="col">Reference: not flood candidate</th><th scope="col">Total</th><th scope="col">User's accuracy</th></tr></thead>
+      <thead><tr><th scope="col">Classified \ Reference</th><th scope="col">{referenceFlood}</th><th scope="col">{referenceOther}</th><th scope="col">Total</th><th scope="col">User's accuracy</th></tr></thead>
       <tbody>
         {rows.map(row => {
           const values = matrix.classified[row.key]!;

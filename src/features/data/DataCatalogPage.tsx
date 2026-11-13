@@ -1,5 +1,5 @@
 const datasets = [
-  { name: "Sentinel-1 GRD", kind: "SAR", resolution: "10 m", use: "Flood extent and backscatter change", status: "Active" },
+  { name: "Sentinel-1 GRD", kind: "SAR", resolution: "10 m", use: "Flood-candidate mapping (model-classified) and backscatter change", status: "Active" },
   { name: "Sentinel-2 SR", kind: "Optical", resolution: "10–20 m", use: "Cloud-masked spectral features", status: "Active" },
   { name: "CHIRPS Daily", kind: "Precipitation", resolution: "0.05°", use: "Rainfall accumulation", status: "Active" },
   { name: "SRTM / ALOS", kind: "Elevation", resolution: "30 m", use: "Terrain and hydrologic features", status: "Active" },

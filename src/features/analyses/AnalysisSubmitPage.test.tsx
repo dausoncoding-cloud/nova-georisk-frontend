@@ -8,7 +8,7 @@ const { submitAnalysisMock } = vi.hoisted(() => ({ submitAnalysisMock: vi.fn() }
 
 vi.mock("../projects/projectsApi", () => ({ fetchProject: vi.fn().mockResolvedValue({ id: "project-1", name: "Lower Basin", description: "Flood study", organization_id: "org-1", engine_key: "firris", analysis_module: "flood_mapping", crs: "EPSG:4326", created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z" }) }));
 vi.mock("../aois/aoisApi", () => ({ fetchProjectAois: vi.fn().mockResolvedValue({ total: 1, limit: 200, offset: 0, items: [{ id: "aoi-1", project_id: "project-1", name: "Floodplain", source_type: "geojson", crs: "EPSG:4326", geometry: { type: "Polygon", coordinates: [[[36, -1], [37, -1], [37, 0], [36, -1]]] }, stats: { area_km2: 42, perimeter_m: 1000 }, created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z" }] }) }));
-vi.mock("../engines/engineQueries", () => ({ useAvailableEngines: () => ({ data: [{ key: "firris", name: "FIRRIS", version: "1.0", access: true }], isPending: false, isError: false }), useEngineContract: () => ({ data: { engine_name: "FIRRIS", engine_version: "1.0", products: [{ key: "flood_extent", label: "Flood Extent", available_delivery_types: ["cog", "vector"], planned_delivery_types: [] }, { key: "flood_probability", label: "Model confidence score (Random Forest vote fraction)", available_delivery_types: ["cog"], planned_delivery_types: [] }] }, isPending: false, isError: false }) }));
+vi.mock("../engines/engineQueries", () => ({ useAvailableEngines: () => ({ data: [{ key: "firris", name: "FIRRIS", version: "1.0", access: true }], isPending: false, isError: false }), useEngineContract: () => ({ data: { engine_name: "FIRRIS", engine_version: "1.0", products: [{ key: "flood_extent", label: "Flood-candidate extent (model-classified)", available_delivery_types: ["cog", "vector"], planned_delivery_types: [] }, { key: "flood_probability", label: "Model confidence score (Random Forest vote fraction)", available_delivery_types: ["cog"], planned_delivery_types: [] }] }, isPending: false, isError: false }) }));
 vi.mock("./analysisApi", () => ({ submitAnalysis: submitAnalysisMock }));
 
 describe("FIRRIS analysis builder", () => {
@@ -34,7 +34,7 @@ describe("FIRRIS analysis builder", () => {
 
     for (let step = 0; step < 6; step += 1) fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Select products")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("checkbox", { name: /Flood Extent/i }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Flood-candidate extent/i }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Validation and output")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

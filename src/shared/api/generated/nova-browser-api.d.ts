@@ -38,6 +38,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/analyses/preflight": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preflight Analysis
+         * @description Metadata-only availability check for a FIRRIS satellite analysis. Never creates a task or result.
+         */
+        post: operations["preflight_analysis_api_v1_analyses_preflight_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/analyses/source-bindings/contract": {
         parameters: {
             query?: never;
@@ -1674,6 +1694,73 @@ export interface components {
              */
             start: string;
         };
+        /** AnalysisPreflightCapacity */
+        AnalysisPreflightCapacity: {
+            /** Bbox Pixels */
+            bbox_pixels: number;
+            /** Estimated Request Bytes */
+            estimated_request_bytes: number;
+            /** Limit Bytes */
+            limit_bytes: number;
+            /** Ratio */
+            ratio: number;
+            /** Scale M */
+            scale_m: number;
+            /** Suggested Scale M */
+            suggested_scale_m?: number | null;
+        };
+        /**
+         * AnalysisPreflightIssue
+         * @description A blocking reason or a warning, in plain language.
+         */
+        AnalysisPreflightIssue: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+            /** Period */
+            period?: ("target" | "baseline") | null;
+        };
+        /** AnalysisPreflightPeriod */
+        AnalysisPreflightPeriod: {
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Nearest Pass After */
+            nearest_pass_after?: string | null;
+            /** Nearest Pass Before */
+            nearest_pass_before?: string | null;
+            /** Relative Orbits */
+            relative_orbits?: number[];
+            /** Sentinel1 Pass Dates */
+            sentinel1_pass_dates?: string[];
+            /** Sentinel2 Compliant Scenes */
+            sentinel2_compliant_scenes?: number | null;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+        };
+        /**
+         * AnalysisPreflightResponse
+         * @description Metadata-only availability check (plan items 4.1, 4.4, 4.6). Never creates a task or result.
+         */
+        AnalysisPreflightResponse: {
+            baseline?: components["schemas"]["AnalysisPreflightPeriod"] | null;
+            /** Blocking */
+            blocking?: components["schemas"]["AnalysisPreflightIssue"][];
+            capacity?: components["schemas"]["AnalysisPreflightCapacity"] | null;
+            /** Ok */
+            ok: boolean;
+            /** Shared Relative Orbits */
+            shared_relative_orbits?: number[];
+            target?: components["schemas"]["AnalysisPreflightPeriod"] | null;
+            /** Warnings */
+            warnings?: components["schemas"]["AnalysisPreflightIssue"][];
+        };
         /** AnalysisSubmitRequest */
         AnalysisSubmitRequest: {
             /**
@@ -1698,6 +1785,8 @@ export interface components {
         };
         /** AnalysisSubmitResponse */
         AnalysisSubmitResponse: {
+            /** Preflight Warnings */
+            preflight_warnings?: components["schemas"]["AnalysisPreflightIssue"][];
             task: components["schemas"]["TaskStatusResponse"];
         };
         /** ApiError */
@@ -4221,6 +4310,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EngineExecutionContract"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    preflight_analysis_api_v1_analyses_preflight_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalysisSubmitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisPreflightResponse"];
                 };
             };
             /** @description Bad request */

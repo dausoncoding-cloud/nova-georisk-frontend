@@ -12,14 +12,15 @@ function addDays(iso: string, days: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-/** The nearest Sentinel-1 pass to an empty window, and the one-day window that contains it. */
+/** The nearest Sentinel-1 pass to an empty window, and the current window extended to include it (end exclusive). */
 export function nearestPassWindow(period: AnalysisPreflightPeriod): { pass: string; start: string; end: string } | null {
   const before = period.nearest_pass_before ?? null;
   const after = period.nearest_pass_after ?? null;
   if (!before && !after) return null;
   const distance = (day: string, edge: string) => Math.abs(Date.parse(day) - Date.parse(edge));
   const pass = !after ? before! : !before ? after : distance(before, period.start) <= distance(after, period.end) ? before : after;
-  return { pass, start: pass, end: addDays(pass, 1) };
+  const passEnd = addDays(pass, 1);
+  return { pass, start: pass < period.start ? pass : period.start, end: passEnd > period.end ? passEnd : period.end };
 }
 
 type Props = {

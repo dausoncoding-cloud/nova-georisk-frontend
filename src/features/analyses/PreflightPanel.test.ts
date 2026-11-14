@@ -23,9 +23,10 @@ describe("UTC 'today' for date bounds (the server rejects windows ending after t
 
 describe("nearest pass window", () => {
   const period = { start: "2024-05-21", end: "2024-05-23", sentinel1_pass_dates: [], relative_orbits: [], sentinel2_compliant_scenes: 0 };
-  it("chooses the closer pass and returns a one-day window that contains it", () => {
-    expect(nearestPassWindow({ ...period, nearest_pass_before: "2024-05-13", nearest_pass_after: "2024-05-25" })).toEqual({ pass: "2024-05-25", start: "2024-05-25", end: "2024-05-26" });
-    expect(nearestPassWindow({ ...period, nearest_pass_before: "2024-05-20", nearest_pass_after: "2024-06-06" })).toEqual({ pass: "2024-05-20", start: "2024-05-20", end: "2024-05-21" });
+  it("extends the current window to include the closer pass instead of replacing it", () => {
+    // 2024-05-25 is 2 days after the end; 2024-05-13 is 8 days before the start. End dates are exclusive.
+    expect(nearestPassWindow({ ...period, nearest_pass_before: "2024-05-13", nearest_pass_after: "2024-05-25" })).toEqual({ pass: "2024-05-25", start: "2024-05-21", end: "2024-05-26" });
+    expect(nearestPassWindow({ ...period, nearest_pass_before: "2024-05-20", nearest_pass_after: "2024-06-06" })).toEqual({ pass: "2024-05-20", start: "2024-05-20", end: "2024-05-23" });
     expect(nearestPassWindow({ ...period, nearest_pass_before: null, nearest_pass_after: null })).toBeNull();
   });
 });

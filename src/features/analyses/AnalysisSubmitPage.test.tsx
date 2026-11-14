@@ -137,14 +137,14 @@ describe("satellite availability on the analysis-period step (plan 4.1/4.4)", ()
   it("blocks submission, explains why, and offers the nearest pass", async () => {
     const blocked = { ...okResult, ok: false, target: period("2024-05-21", "2024-05-23", { sentinel1_pass_dates: [], relative_orbits: [], nearest_pass_before: "2024-05-13", nearest_pass_after: "2024-05-25" }), shared_relative_orbits: [],
       blocking: [{ code: "no_sentinel1_pass", period: "target", message: "No Sentinel-1 pass over this area between 2024-05-21 and 2024-05-23 (end date exclusive). Nearest usable passes: before 2024-05-13, after 2024-05-25." }] };
-    preflightAnalysisMock.mockImplementation(async (body) => body.parameters.workflow.source.target_period.start === "2024-05-25" ? { ...okResult, target: period("2024-05-25", "2024-05-26") } : blocked);
+    preflightAnalysisMock.mockImplementation(async (body) => body.parameters.workflow.source.target_period.end === "2024-05-26" ? { ...okResult, target: period("2024-05-21", "2024-05-26") } : blocked);
     await renderAt();
     const alert = await screen.findByRole("alert", { name: "Blocking reasons" });
     expect(alert).toHaveTextContent("No Sentinel-1 pass over this area between 2024-05-21 and 2024-05-23");
     // Continue is truly disabled while the period is blocked, with a hint.
     expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
     expect(screen.getByText("Resolve the blocked items above to continue")).toBeInTheDocument();
-    // The nearest-pass action moves the target window onto 2024-05-25 (closer to the window end than 2024-05-13 is to its start).
+    // The nearest-pass action extends the target window to include 2024-05-25 (closer to the end than 2024-05-13 is to the start).
     fireEvent.click(screen.getByRole("button", { name: "Use nearest pass (2024-05-25)" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled());
     expect(screen.queryByText("Resolve the blocked items above to continue")).toBeNull();
@@ -153,9 +153,32 @@ describe("satellite availability on the analysis-period step (plan 4.1/4.4)", ()
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Submit FIRRIS analysis" })).toBeEnabled());
-    expect(screen.getByText("2024-05-25 → 2024-05-26", { selector: ".review-facts dd" })).toBeInTheDocument();
+    expect(screen.getByText("2024-05-21 → 2024-05-26", { selector: ".review-facts dd" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Submit FIRRIS analysis" }));
     await waitFor(() => expect(submitAnalysisMock).toHaveBeenCalledOnce());
-    expect(submitAnalysisMock.mock.calls[0]?.[0].parameters.workflow.source.target_period).toEqual({ start: "2024-05-25", end: "2024-05-26" });
+    expect(submitAnalysisMock.mock.calls[0]?.[0].parameters.workflow.source.target_period).toEqual({ start: "2024-05-21", end: "2024-05-26" });
+  });
+});
+
+
+describe("nearest pass that loses the compliant Sentinel-2 scene (r3.1)", () => {
+  it("re-runs the check and shows the Sentinel-2 warning next to Continue", async () => {
+    const blocked = { ...okResult, ok: false, target: period("2024-05-26", "2024-05-27", { sentinel1_pass_dates: [], relative_orbits: [], nearest_pass_before: "2024-05-25", nearest_pass_after: "2024-06-06" }), shared_relative_orbits: [],
+      blocking: [{ code: "no_sentinel1_pass", period: "target", message: "No Sentinel-1 pass over this area between 2024-05-26 and 2024-05-27 (end date exclusive). Nearest usable passes: before 2024-05-25, after 2024-06-06." }] };
+    const extendedNoOptical = { ...okResult, target: period("2024-05-25", "2024-05-27", { sentinel2_compliant_scenes: 0 }),
+      warnings: [{ code: "no_compliant_sentinel2", period: "target", message: "No Sentinel-2 scene with cloud ≤ 20% and degraded MSI ≤ 0.1% in the target window: the analysis can run, but its independent accuracy will be not assessable." }] };
+    submitAnalysisMock.mockReset(); preflightAnalysisMock.mockReset();
+    preflightAnalysisMock.mockImplementation(async (body) => body.parameters.workflow.source.target_period.start === "2024-05-25" ? extendedNoOptical : blocked);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><MemoryRouter initialEntries={["/projects/project-1/analysis"]}><Routes><Route path="/projects/:projectId/analysis" element={<AnalysisSubmitPage />} /></Routes></MemoryRouter></QueryClientProvider>);
+    await screen.findByText("Confirm project context");
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Use nearest pass (2024-05-25)" }));
+    await waitFor(() => expect(preflightAnalysisMock.mock.calls.at(-1)?.[0].parameters.workflow.source.target_period).toEqual({ start: "2024-05-25", end: "2024-05-27" }));
+    expect(await screen.findByRole("note", { name: "Warnings" })).toHaveTextContent("independent accuracy will be not assessable");
+    const footerHint = screen.getByRole("status", { name: "Before you continue" });
+    expect(footerHint).toHaveTextContent("Independent accuracy will be not assessable for this window");
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 });

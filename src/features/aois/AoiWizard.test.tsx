@@ -12,10 +12,10 @@ vi.mock("./aoisApi", () => ({
   createAoiFromAdministrativeBoundary: vi.fn(),
 }));
 
-function renderWizard() {
+function renderWizard(projectName: string | null = "Rufiji") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   const onClose = vi.fn();
-  render(<QueryClientProvider client={client}><ToastProvider><AoiWizard projectId="00000000-0000-0000-0000-000000000001" onClose={onClose} /></ToastProvider></QueryClientProvider>);
+  render(<QueryClientProvider client={client}><ToastProvider><AoiWizard projectId="00000000-0000-0000-0000-000000000001" projectName={projectName ?? undefined} onClose={onClose} /></ToastProvider></QueryClientProvider>);
   return { onClose };
 }
 
@@ -30,6 +30,34 @@ const boundary: components["schemas"]["AdministrativeBoundaryChoice"] = {
 
 describe("AOI creation wizard", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("names a new AOI after the project instead of 'Untitled AOI'", () => {
+    renderWizard("Rufiji");
+    fireEvent.click(screen.getByRole("button", { name: /GeoJSON/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByRole("textbox", { name: "AOI name" })).toHaveValue("Rufiji");
+    expect(screen.queryByDisplayValue("Untitled AOI")).toBeNull();
+  });
+
+  it("uses the uploaded file's base name unless the user already typed a name", async () => {
+    const geojson = JSON.stringify({ type: "Polygon", coordinates: [[[38.92, -7.99], [39.01, -7.99], [39.01, -7.9], [38.92, -7.9], [38.92, -7.99]]] });
+    renderWizard("Rufiji");
+    fireEvent.click(screen.getByRole("button", { name: /GeoJSON/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.change(document.querySelector('input[type="file"]')!, { target: { files: [new File([geojson], "rufiji-2024-aoi.geojson", { type: "application/geo+json" })] } });
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "AOI name" })).toHaveValue("rufiji-2024-aoi"));
+    fireEvent.change(screen.getByRole("textbox", { name: "AOI name" }), { target: { value: "Ikwiriri floodplain" } });
+    fireEvent.change(document.querySelector('input[type="file"]')!, { target: { files: [new File([geojson], "other.geojson", { type: "application/geo+json" })] } });
+    await waitFor(() => expect(screen.getByText("other.geojson")).toBeInTheDocument());
+    expect(screen.getByRole("textbox", { name: "AOI name" })).toHaveValue("Ikwiriri floodplain");
+  });
+
+  it("falls back to a neutral name when the project name is unknown", () => {
+    renderWizard(null);
+    fireEvent.click(screen.getByRole("button", { name: /GeoJSON/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByRole("textbox", { name: "AOI name" })).toHaveValue("Area of interest");
+  });
 
   it("exposes GeoPackage upload and approved administrative boundaries", () => {
     renderWizard();
@@ -116,7 +144,7 @@ describe("AOI creation wizard", () => {
     vi.mocked(searchAdministrativeBoundaries).mockResolvedValue({ items: [boundary], total: 1, limit: 25, offset: 0 });
     vi.mocked(createAoiFromAdministrativeBoundary).mockResolvedValue({
       id: "00000000-0000-0000-0000-000000000003", project_id: "00000000-0000-0000-0000-000000000001",
-      name: "Untitled AOI", source_type: "admin_boundary", geometry: boundary.geometry, crs: "EPSG:4326",
+      name: "Rufiji", source_type: "admin_boundary", geometry: boundary.geometry, crs: "EPSG:4326",
       stats: { area_m2: 1, area_hectares: 0.0001, area_km2: 0.000001, perimeter_m: 4 },
       created_at: "2026-09-22T00:00:00Z", source_lineage: { dataset_id: boundary.dataset_id, sha256: boundary.source_sha256 },
     });
@@ -136,7 +164,7 @@ describe("AOI creation wizard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create AOI" }));
     await waitFor(() => expect(createAoiFromAdministrativeBoundary).toHaveBeenCalledWith({
       project_id: "00000000-0000-0000-0000-000000000001", dataset_id: boundary.dataset_id,
-      spatial_unit_id: "ward-7", name: "Untitled AOI",
+      spatial_unit_id: "ward-7", name: "Rufiji",
     }));
     expect(createAoi).not.toHaveBeenCalled();
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());

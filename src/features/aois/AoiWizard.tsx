@@ -29,14 +29,21 @@ function sourceFor(method: Method): SourceType {
   return ({ draw: "drawn_polygon", rectangle: "rectangle_from_coords", geojson: "geojson", shapefile: "shapefile", kml: "kml", gpkg: "gpkg", admin: "admin_boundary" } as const)[method];
 }
 
-export function AoiWizard({ projectId, onClose }: { projectId: string; onClose: () => void }) {
+function fileBaseName(fileName: string): string {
+  const base = fileName.replace(/^.*[\\/]/, "").replace(/\.[^.]+$/, "").trim();
+  return base.slice(0, 255);
+}
+
+export function AoiWizard({ projectId, projectName, onClose }: { projectId: string; projectName?: string; onClose: () => void }) {
   const dialog = useDialog(true, onClose);
   const queryClient = useQueryClient();
   const { notify } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
   const [method, setMethod] = useState<Method>("draw");
-  const [name, setName] = useState("Untitled AOI");
+  // Default to the project name; an uploaded file's base name replaces it until the user types a name.
+  const [name, setName] = useState(projectName?.trim() || "Area of interest");
+  const [nameEdited, setNameEdited] = useState(false);
   const [geometry, setGeometry] = useState<GeoJsonGeometry | null>(null);
   const [featureCount, setFeatureCount] = useState(0);
   const [file, setFile] = useState<File | null>(null);
@@ -98,6 +105,7 @@ export function AoiWizard({ projectId, onClose }: { projectId: string; onClose: 
 
   async function loadFile(selected: File) {
     setError(null); setFile(selected); setGpkgLayers([]); setSelectedGpkgLayer("");
+    if (!nameEdited && fileBaseName(selected.name)) setName(fileBaseName(selected.name));
     try {
       if (selected.size > 20 * 1024 * 1024) throw new Error("AOI files must be 20 MB or smaller.");
       if (method === "geojson") {
@@ -167,7 +175,7 @@ export function AoiWizard({ projectId, onClose }: { projectId: string; onClose: 
         <ol className="wizard-steps">{["Source", "Configure", "Review"].map((label, index) => <li className={index === step ? "is-active" : index < step ? "is-done" : ""} aria-current={index === step ? "step" : undefined} key={label}><span>{index < step ? "✓" : index + 1}</span>{label}</li>)}</ol>
         <div className="wizard-body">
           {step === 0 ? <div className="method-grid">{methods.map((item) => <button type="button" key={item.key} disabled={!item.enabled} className={`method-card${method === item.key ? " is-selected" : ""}`} onClick={() => { setMethod(item.key); setGeometry(null); setFile(null); setGpkgLayers([]); setSelectedGpkgLayer(""); setBoundaryQuery(""); setSubmittedBoundaryQuery(""); setBoundaryOffset(0); setSelectedBoundary(null); setError(null); }}><Icon name={item.key === "draw" || item.key === "rectangle" ? "aoi" : "upload"} /><span><strong>{item.title}</strong><small>{item.description}</small></span>{item.badge ? <em>{item.badge}</em> : null}</button>)}</div> : null}
-          {step === 1 ? <div className="wizard-config"><label className="field"><span>AOI name</span><input value={name} maxLength={255} onChange={(event) => setName(event.target.value)} /></label>{method === "draw" ? <><AoiDrawingMap points={points} onChange={prepareDraw} /><button type="button" className="button button--quiet button--small" onClick={() => prepareDraw([])}>Clear vertices</button></> : null}{method === "rectangle" ? <div className="bounds-grid">{(["west", "south", "east", "north"] as const).map((key) => <label className="field" key={key}><span>{key}</span><input type="number" step="any" value={bounds[key]} onChange={(event) => setBounds((current) => ({ ...current, [key]: event.target.value }))} /></label>)}</div> : null}{["geojson", "shapefile", "kml", "gpkg"].includes(method) ? <div className="upload-zone" role="button" tabIndex={0} aria-label="Choose AOI file" onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); inputRef.current?.click(); } }} onClick={() => inputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const selected = event.dataTransfer.files[0]; if (selected) void loadFile(selected); }}><Icon name="upload" /><strong>{file?.name ?? "Drop a file here or browse"}</strong><span>{method === "shapefile" ? "ZIP · SHP + SHX + DBF · maximum 20 MB" : method === "geojson" ? "GeoJSON · Polygon or MultiPolygon" : method === "gpkg" ? "GeoPackage · one polygon layer · maximum 20 MB" : "KML · polygon placemarks"}</span><input ref={inputRef} hidden type="file" accept={method === "shapefile" ? ".zip" : method === "geojson" ? ".json,.geojson" : method === "gpkg" ? ".gpkg" : ".kml"} onChange={(event) => { const selected = event.target.files?.[0]; if (selected) void loadFile(selected); }} /></div> : null}{method === "gpkg" && file ? <p className="notice">The GeoPackage boundary is previewed after server validation; source CRS and polygon topology are checked on upload.</p> : null}{geometry ? <AoiGeometryPreview geometry={geometry} crs="EPSG:4326" title="AOI import preview" /> : null}</div> : null}
+          {step === 1 ? <div className="wizard-config"><label className="field"><span>AOI name</span><input value={name} maxLength={255} onChange={(event) => { setName(event.target.value); setNameEdited(true); }} /></label>{method === "draw" ? <><AoiDrawingMap points={points} onChange={prepareDraw} /><button type="button" className="button button--quiet button--small" onClick={() => prepareDraw([])}>Clear vertices</button></> : null}{method === "rectangle" ? <div className="bounds-grid">{(["west", "south", "east", "north"] as const).map((key) => <label className="field" key={key}><span>{key}</span><input type="number" step="any" value={bounds[key]} onChange={(event) => setBounds((current) => ({ ...current, [key]: event.target.value }))} /></label>)}</div> : null}{["geojson", "shapefile", "kml", "gpkg"].includes(method) ? <div className="upload-zone" role="button" tabIndex={0} aria-label="Choose AOI file" onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); inputRef.current?.click(); } }} onClick={() => inputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const selected = event.dataTransfer.files[0]; if (selected) void loadFile(selected); }}><Icon name="upload" /><strong>{file?.name ?? "Drop a file here or browse"}</strong><span>{method === "shapefile" ? "ZIP · SHP + SHX + DBF · maximum 20 MB" : method === "geojson" ? "GeoJSON · Polygon or MultiPolygon" : method === "gpkg" ? "GeoPackage · one polygon layer · maximum 20 MB" : "KML · polygon placemarks"}</span><input ref={inputRef} hidden type="file" accept={method === "shapefile" ? ".zip" : method === "geojson" ? ".json,.geojson" : method === "gpkg" ? ".gpkg" : ".kml"} onChange={(event) => { const selected = event.target.files?.[0]; if (selected) void loadFile(selected); }} /></div> : null}{method === "gpkg" && file ? <p className="notice">The GeoPackage boundary is previewed after server validation; source CRS and polygon topology are checked on upload.</p> : null}{geometry ? <AoiGeometryPreview geometry={geometry} crs="EPSG:4326" title="AOI import preview" /> : null}</div> : null}
           {step === 1 && method === "admin" ? (
             <section className="wizard-config" aria-label="Administrative boundary catalogue">
               <div className="notice">Searches only approved boundaries registered to this FIRRIS project. Selection is revalidated by the server when the AOI is created and when analysis runs.</div>

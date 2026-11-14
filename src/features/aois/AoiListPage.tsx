@@ -75,7 +75,7 @@ export function AoiListPage() {
   return (
     <div className="page-stack">
       <header className="page-heading"><div><Link className="back-link" to={`/projects/${projectId}`}>← {project.data.name}</Link><span className="eyebrow">Spatial inputs</span><h1>Areas of interest</h1><p>Create, validate and manage analysis-ready spatial boundaries.</p></div><button className="button button--primary" type="button" onClick={() => setShowCreate(true)}>+ New AOI</button></header>
-      {showCreate ? <AoiWizard projectId={projectId} onClose={() => setShowCreate(false)} /> : null}
+      {showCreate ? <AoiWizard projectId={projectId} projectName={project.data.name} onClose={() => setShowCreate(false)} /> : null}
 
       <section className="aoi-list" aria-label="Project areas of interest">
         {aois.data.items.length === 0 ? <div className="panel empty-state"><div className="empty-icon" aria-hidden="true">◇</div><h3>No AOIs yet</h3><p>Create a GeoJSON boundary before submitting a FIRRIS analysis.</p></div> : aois.data.items.map((aoi) => <AoiRow key={aoi.id} aoi={aoi} projectId={projectId} />)}

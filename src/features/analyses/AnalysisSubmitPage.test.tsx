@@ -118,6 +118,8 @@ describe("satellite availability on the analysis-period step (plan 4.1/4.4)", ()
     preflightAnalysisMock.mockResolvedValue(okResult);
     await renderAt();
     expect(await screen.findByText(/Ready: Sentinel-1 orbit 57 in both windows/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
+    expect(screen.queryByText("Resolve the blocked items above to continue")).toBeNull();
     expect(screen.getByText(/Sentinel-1 pass 2024-05-24 · orbit 57/)).toBeInTheDocument();
     expect(preflightAnalysisMock.mock.calls[0]?.[0].parameters.workflow.source.provider).toBe("gee");
   });
@@ -129,6 +131,7 @@ describe("satellite availability on the analysis-period step (plan 4.1/4.4)", ()
     const warning = await screen.findByRole("note", { name: "Warnings" });
     expect(warning).toHaveTextContent("independent accuracy will be not assessable");
     expect(screen.queryByRole("alert", { name: "Blocking reasons" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 
   it("blocks submission, explains why, and offers the nearest pass", async () => {
@@ -138,14 +141,17 @@ describe("satellite availability on the analysis-period step (plan 4.1/4.4)", ()
     await renderAt();
     const alert = await screen.findByRole("alert", { name: "Blocking reasons" });
     expect(alert).toHaveTextContent("No Sentinel-1 pass over this area between 2024-05-21 and 2024-05-23");
-    // Submit stays disabled while the request is blocked.
+    // Continue is truly disabled while the period is blocked, with a hint.
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    expect(screen.getByText("Resolve the blocked items above to continue")).toBeInTheDocument();
+    // The nearest-pass action moves the target window onto 2024-05-25 (closer to the window end than 2024-05-13 is to its start).
+    fireEvent.click(screen.getByRole("button", { name: "Use nearest pass (2024-05-25)" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled());
+    expect(screen.queryByText("Resolve the blocked items above to continue")).toBeNull();
     for (let step = 2; step < 6; step += 1) fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("checkbox", { name: /Flood-candidate extent/i }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("button", { name: "Submit FIRRIS analysis" })).toBeDisabled();
-    // The nearest-pass action moves the target window onto 2024-05-25 (closer to the window end than 2024-05-13 is to its start).
-    fireEvent.click(screen.getByRole("button", { name: "Use nearest pass (2024-05-25)" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Submit FIRRIS analysis" })).toBeEnabled());
     expect(screen.getByText("2024-05-25 → 2024-05-26", { selector: ".review-facts dd" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Submit FIRRIS analysis" }));

@@ -60,6 +60,8 @@ h1, h2, h3 { color: var(--navy-950); font-family: Inter, ui-sans-serif, system-u
 }
 .button--primary { background: var(--teal-600); box-shadow: 0 8px 20px rgba(7, 150, 141, 0.22); color: #fff; }
 .button--primary:not(:disabled):hover { background: var(--teal-700); }
+.button--primary:disabled { background: #9fb3b6; box-shadow: none; color: #f4f7f8; }
+.builder-actions__hint { margin-left: auto; margin-right: 0.75rem; align-self: center; color: #a63b35; font-size: 0.9rem; }
 .button--quiet { background: #edf3f5; color: var(--navy-800); min-height: 2.3rem; padding: 0.5rem 0.8rem; }
 .button--secondary { background: #e2edef; color: var(--navy-900); }
 .button--danger { background: #a63b35; color: #fff; }

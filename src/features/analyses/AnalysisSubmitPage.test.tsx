@@ -126,10 +126,10 @@ describe("satellite availability on the analysis-period step (plan 4.1/4.4)", ()
 
   it("shows a Sentinel-2 warning without blocking submission", async () => {
     preflightAnalysisMock.mockResolvedValue({ ...okResult, target: period("2024-04-18", "2024-04-20", { sentinel2_compliant_scenes: 0 }),
-      warnings: [{ code: "no_compliant_sentinel2", period: "target", message: "No Sentinel-2 scene with cloud ≤ 20% and degraded MSI ≤ 0.1% in the target window: the analysis can run, but its independent accuracy will be not assessable." }] });
+      warnings: [{ code: "no_compliant_sentinel2", period: "target", message: "No Sentinel-2 scene with cloud ≤ 20% and degraded MSI ≤ 0.1% in the target window: the analysis can run, but its independent accuracy will not be assessable." }] });
     await renderAt();
     const warning = await screen.findByRole("note", { name: "Warnings" });
-    expect(warning).toHaveTextContent("independent accuracy will be not assessable");
+    expect(warning).toHaveTextContent("independent accuracy will not be assessable");
     expect(screen.queryByRole("alert", { name: "Blocking reasons" })).toBeNull();
     expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
@@ -166,7 +166,7 @@ describe("nearest pass that loses the compliant Sentinel-2 scene (r3.1)", () => 
     const blocked = { ...okResult, ok: false, target: period("2024-05-26", "2024-05-27", { sentinel1_pass_dates: [], relative_orbits: [], nearest_pass_before: "2024-05-25", nearest_pass_after: "2024-06-06" }), shared_relative_orbits: [],
       blocking: [{ code: "no_sentinel1_pass", period: "target", message: "No Sentinel-1 pass over this area between 2024-05-26 and 2024-05-27 (end date exclusive). Nearest usable passes: before 2024-05-25, after 2024-06-06." }] };
     const extendedNoOptical = { ...okResult, target: period("2024-05-25", "2024-05-27", { sentinel2_compliant_scenes: 0 }),
-      warnings: [{ code: "no_compliant_sentinel2", period: "target", message: "No Sentinel-2 scene with cloud ≤ 20% and degraded MSI ≤ 0.1% in the target window: the analysis can run, but its independent accuracy will be not assessable." }] };
+      warnings: [{ code: "no_compliant_sentinel2", period: "target", message: "No Sentinel-2 scene with cloud ≤ 20% and degraded MSI ≤ 0.1% in the target window: the analysis can run, but its independent accuracy will not be assessable." }] };
     submitAnalysisMock.mockReset(); preflightAnalysisMock.mockReset();
     preflightAnalysisMock.mockImplementation(async (body) => body.parameters.workflow.source.target_period.start === "2024-05-25" ? extendedNoOptical : blocked);
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -176,9 +176,9 @@ describe("nearest pass that loses the compliant Sentinel-2 scene (r3.1)", () => 
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(await screen.findByRole("button", { name: "Use nearest pass (2024-05-25)" }));
     await waitFor(() => expect(preflightAnalysisMock.mock.calls.at(-1)?.[0].parameters.workflow.source.target_period).toEqual({ start: "2024-05-25", end: "2024-05-27" }));
-    expect(await screen.findByRole("note", { name: "Warnings" })).toHaveTextContent("independent accuracy will be not assessable");
+    expect(await screen.findByRole("note", { name: "Warnings" })).toHaveTextContent("independent accuracy will not be assessable");
     const footerHint = screen.getByRole("status", { name: "Before you continue" });
-    expect(footerHint).toHaveTextContent("Independent accuracy will be not assessable for this window");
+    expect(footerHint).toHaveTextContent("Independent accuracy will not be assessable for this window");
     expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 });

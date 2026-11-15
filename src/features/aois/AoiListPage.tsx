@@ -78,7 +78,7 @@ export function AoiListPage() {
       {showCreate ? <AoiWizard projectId={projectId} projectName={project.data.name} onClose={() => setShowCreate(false)} /> : null}
 
       <section className="aoi-list" aria-label="Project areas of interest">
-        {aois.data.items.length === 0 ? <div className="panel empty-state"><div className="empty-icon" aria-hidden="true">◇</div><h3>No AOIs yet</h3><p>Create a GeoJSON boundary before submitting a FRRIS analysis.</p></div> : aois.data.items.map((aoi) => <AoiRow key={aoi.id} aoi={aoi} projectId={projectId} />)}
+        {aois.data.items.length === 0 ? <div className="panel empty-state"><div className="empty-icon" aria-hidden="true">◇</div><h3>No AOIs yet</h3><p>Create a GeoJSON boundary before submitting the FRRIS analysis.</p></div> : aois.data.items.map((aoi) => <AoiRow key={aoi.id} aoi={aoi} projectId={projectId} />)}
       </section>
     </div>
   );

@@ -73,7 +73,7 @@ export function ProjectFormPage() {
     event.preventDefault();
     setFormError(null);
     if (!name.trim() || !crs.trim() || (!isEditing && !engineKey)) {
-      setFormError("Name, CRS, and a FRRIS engine are required.");
+      setFormError("Name, CRS, and the FRRIS engine are required.");
       return;
     }
     save.mutate();

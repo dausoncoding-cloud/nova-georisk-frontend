@@ -49,7 +49,7 @@ export interface paths {
         put?: never;
         /**
          * Preflight Analysis
-         * @description Metadata-only availability check for a FRRIS satellite analysis. Never creates a task or result.
+         * @description Metadata-only availability check before the FRRIS satellite analysis is submitted. Never creates a task or result.
          */
         post: operations["preflight_analysis_api_v1_analyses_preflight_post"];
         delete?: never;

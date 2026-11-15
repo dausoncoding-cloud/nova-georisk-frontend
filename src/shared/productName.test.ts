@@ -9,6 +9,8 @@ import { displayEngineKey, displayModuleName, FRRIS_ENGINE_KEY } from "./product
 
 const ROOT = join(__dirname, "..", "..");
 const WORD = /\bFIRRIS\b/;
+// Client style (2026-11-15): no article before the name; write "the/this FRRIS analysis".
+const ARTICLE = /\b(?:a|an)\s+FRRIS\b/i;
 // Kept on purpose: the mapping from the stored value "FIRRIS" to the display name.
 const KEPT = new Set(["src/shared/productName.ts"]);
 
@@ -26,8 +28,8 @@ describe("FRRIS product name", () => {
       .filter((path) => /\.(tsx?|html|json|svg|txt|webmanifest|css)$/.test(path) && !/\.test\.tsx?$/.test(path));
     const offenders = sources.flatMap((path) => {
       const rel = relative(ROOT, path).split("\\").join("/");
-      if (KEPT.has(rel)) return [];
-      return readFileSync(path, "utf8").split("\n").flatMap((line, index) => WORD.test(line) ? [`${rel}:${index + 1}: ${line.trim().slice(0, 100)}`] : []);
+      return readFileSync(path, "utf8").split("\n").flatMap((line, index) =>
+        (WORD.test(line) && !KEPT.has(rel)) || ARTICLE.test(line) ? [`${rel}:${index + 1}: ${line.trim().slice(0, 100)}`] : []);
     });
     expect(offenders).toEqual([]);
   });
@@ -37,6 +39,11 @@ describe("FRRIS product name", () => {
     const offenders = files(join(ROOT, "src")).filter((path) => path.endsWith(".tsx") && !path.endsWith(".test.tsx"))
       .flatMap((path) => readFileSync(path, "utf8").split("\n").flatMap((line, index) => raw.test(line) ? [`${relative(ROOT, path)}:${index + 1}`] : []));
     expect(offenders).toEqual([]);
+  });
+
+  it("article rule catches a/an before the name", () => {
+    for (const bad of ["Submit a FRRIS analysis", "an FRRIS project", "A  FRRIS run"]) expect(ARTICLE.test(bad)).toBe(true);
+    for (const good of ["the FRRIS analysis", "this FRRIS analysis", "data FRRIS"]) expect(ARTICLE.test(good)).toBe(false);
   });
 
   it("keeps its listed exceptions", () => {

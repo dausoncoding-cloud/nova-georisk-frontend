@@ -1736,8 +1736,16 @@ export interface components {
             relative_orbits?: number[];
             /** Sentinel1 Pass Dates */
             sentinel1_pass_dates?: string[];
+            /** Sentinel2 Aoi Coverage Pct */
+            sentinel2_aoi_coverage_pct?: number | null;
             /** Sentinel2 Compliant Scenes */
             sentinel2_compliant_scenes?: number | null;
+            /** Sentinel2 Dates */
+            sentinel2_dates?: string[];
+            /** Sentinel2 Summary */
+            sentinel2_summary?: string | null;
+            /** Sentinel2 Tiles */
+            sentinel2_tiles?: string[];
             /**
              * Start
              * Format: date

@@ -30,13 +30,25 @@ type Props = {
   onUseNearestPass: (period: "target" | "baseline", start: string, end: string) => void;
 };
 
+/** "Sentinel-2 3 granules on 2 dates (2 tiles: 36LZR, 37MBM), 88% of the area", as assessed by the run's own rule. */
+export function sentinel2Text(period: AnalysisPreflightPeriod): string {
+  const tiles = period.sentinel2_tiles ?? [];
+  if (period.sentinel2_summary) {
+    const summary = tiles.length ? `${period.sentinel2_summary.slice(0, -1)}: ${tiles.join(", ")})` : period.sentinel2_summary;
+    const coverage = period.sentinel2_aoi_coverage_pct;
+    return ` · Sentinel-2 ${summary}${coverage != null ? `, ${coverage}% of the area` : ""}`;
+  }
+  const count = period.sentinel2_compliant_scenes;
+  return count != null ? ` · ${count} compliant Sentinel-2 ${count === 1 ? "scene" : "scenes"}` : "";
+}
+
 function PeriodLine({ label, period }: { label: string; period?: AnalysisPreflightPeriod | null }) {
   if (!period) return null;
   const passes = period.sentinel1_pass_dates ?? [];
   return <div><dt>{label}</dt><dd>
     {passes.length ? `Sentinel-1 ${passes.length === 1 ? "pass" : "passes"} ${passes.join(", ")}` : "No Sentinel-1 pass"}
     {period.relative_orbits?.length ? ` · orbit ${period.relative_orbits.join(", ")}` : ""}
-    {period.sentinel2_compliant_scenes != null ? ` · ${period.sentinel2_compliant_scenes} compliant Sentinel-2 ${period.sentinel2_compliant_scenes === 1 ? "scene" : "scenes"}` : ""}
+    {sentinel2Text(period)}
   </dd></div>;
 }
 

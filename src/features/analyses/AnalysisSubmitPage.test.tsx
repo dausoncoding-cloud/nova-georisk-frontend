@@ -134,6 +134,18 @@ describe("satellite availability on the analysis-period step (plan 4.1/4.4)", ()
     expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 
+  it("warns before submit when Sentinel-2 covers only part of the area (Kilombero May 2024)", async () => {
+    preflightAnalysisMock.mockResolvedValue({ ...okResult,
+      target: period("2024-05-01", "2024-06-01", { sentinel2_compliant_scenes: 3, sentinel2_tiles: ["36LZR", "37MBM"], sentinel2_dates: ["2024-05-02", "2024-05-17"], sentinel2_aoi_coverage_pct: 88, sentinel2_summary: "3 granules on 2 dates (2 tiles)" }),
+      warnings: [{ code: "sentinel2_partial_coverage", period: "target", message: "The compliant Sentinel-2 scenes in the target window cover only 88% of the area: 3 granules on 2 dates (2 tiles: 36LZR, 37MBM). The analysis can run, but its independent accuracy will not be assessable: the reference must cover the whole area. Widen the window to include a clear date over every tile, or continue." }] });
+    await renderAt();
+    expect(await screen.findByText(/Sentinel-2 3 granules on 2 dates \(2 tiles: 36LZR, 37MBM\), 88% of the area/)).toBeInTheDocument();
+    expect(screen.getByRole("note", { name: "Warnings" })).toHaveTextContent("cover only 88% of the area");
+    expect(screen.getByRole("status", { name: "Before you continue" })).toHaveTextContent("for the target window (Sentinel-2 does not cover the whole area)");
+    expect(screen.queryByRole("alert", { name: "Blocking reasons" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
+  });
+
   it("blocks submission, explains why, and offers the nearest pass", async () => {
     const blocked = { ...okResult, ok: false, target: period("2024-05-21", "2024-05-23", { sentinel1_pass_dates: [], relative_orbits: [], nearest_pass_before: "2024-05-13", nearest_pass_after: "2024-05-25" }), shared_relative_orbits: [],
       blocking: [{ code: "no_sentinel1_pass", period: "target", message: "No Sentinel-1 pass over this area between 2024-05-21 and 2024-05-23 (end date exclusive). Nearest usable passes: before 2024-05-13, after 2024-05-25." }] };
@@ -178,7 +190,7 @@ describe("nearest pass that loses the compliant Sentinel-2 scene (r3.1)", () => 
     await waitFor(() => expect(preflightAnalysisMock.mock.calls.at(-1)?.[0].parameters.workflow.source.target_period).toEqual({ start: "2024-05-25", end: "2024-05-27" }));
     expect(await screen.findByRole("note", { name: "Warnings" })).toHaveTextContent("independent accuracy will not be assessable");
     const footerHint = screen.getByRole("status", { name: "Before you continue" });
-    expect(footerHint).toHaveTextContent("Independent accuracy will not be assessable for this window");
+    expect(footerHint).toHaveTextContent("Independent accuracy will not be assessable for the target window");
     expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 });

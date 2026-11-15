@@ -5,6 +5,7 @@ import { getErrorMessage } from "../../shared/api/errors";
 import { queryKeys } from "../../shared/api/queryKeys";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
+import { FRRIS_ENGINE_KEY } from "../../shared/productName";
 import { useAvailableEngines } from "../engines/engineQueries";
 import { createProject, deleteProject, fetchProject, updateProject } from "./projectsApi";
 
@@ -19,7 +20,7 @@ export function ProjectFormPage() {
     queryFn: () => fetchProject(projectId as string),
     enabled: isEditing,
   });
-  const firrisEngines = (engines.data ?? []).filter((engine) => engine.name.trim().toUpperCase() === "FIRRIS" && engine.access !== false);
+  const firrisEngines = (engines.data ?? []).filter((engine) => engine.key === FRRIS_ENGINE_KEY && engine.access !== false);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -72,7 +73,7 @@ export function ProjectFormPage() {
     event.preventDefault();
     setFormError(null);
     if (!name.trim() || !crs.trim() || (!isEditing && !engineKey)) {
-      setFormError("Name, CRS, and a FIRRIS engine are required.");
+      setFormError("Name, CRS, and a FRRIS engine are required.");
       return;
     }
     save.mutate();
@@ -92,13 +93,13 @@ export function ProjectFormPage() {
           <label className="field"><span>Coordinate reference system</span><input value={crs} maxLength={32} required onChange={(event) => setCrs(event.target.value)} /></label>
           <label className="field"><span>Analysis engine</span>
             <select value={engineKey} disabled={isEditing || engines.isPending} required={!isEditing} onChange={(event) => setEngineKey(event.target.value)}>
-              <option value="">Select FIRRIS</option>
+              <option value="">Select FRRIS</option>
               {firrisEngines.map((engine) => <option key={engine.key} value={engine.key}>{engine.name} · {engine.version}</option>)}
               {isEditing && engineKey && !firrisEngines.some((engine) => engine.key === engineKey) ? <option value={engineKey}>{engineKey}</option> : null}
             </select>
           </label>
         </div>
-        {!isEditing && engines.isSuccess && firrisEngines.length === 0 ? <div className="inline-alert" role="alert">FIRRIS is not currently available to this organization.</div> : null}
+        {!isEditing && engines.isSuccess && firrisEngines.length === 0 ? <div className="inline-alert" role="alert">FRRIS is not currently available to this organization.</div> : null}
         {formError ? <div className="inline-alert" role="alert">{formError}</div> : null}
         <div className="form-actions"><button className="button button--primary" type="submit" disabled={save.isPending || (!isEditing && firrisEngines.length === 0)}>{save.isPending ? "Saving…" : isEditing ? "Save changes" : "Create project"}</button><Link className="button button--quiet" to={isEditing ? `/projects/${projectId}` : "/projects"}>Cancel</Link></div>
       </form>

@@ -12,10 +12,10 @@ const okResult = { ok: true, target: period("2024-05-24", "2024-05-26"), baselin
 
 vi.mock("../projects/projectsApi", () => ({ fetchProject: vi.fn().mockResolvedValue({ id: "project-1", name: "Lower Basin", description: "Flood study", organization_id: "org-1", engine_key: "firris", analysis_module: "flood_mapping", crs: "EPSG:4326", created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z" }) }));
 vi.mock("../aois/aoisApi", () => ({ fetchProjectAois: vi.fn().mockResolvedValue({ total: 1, limit: 200, offset: 0, items: [{ id: "aoi-1", project_id: "project-1", name: "Floodplain", source_type: "geojson", crs: "EPSG:4326", geometry: { type: "Polygon", coordinates: [[[36, -1], [37, -1], [37, 0], [36, -1]]] }, stats: { area_km2: 42, perimeter_m: 1000 }, created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z" }] }) }));
-vi.mock("../engines/engineQueries", () => ({ useAvailableEngines: () => ({ data: [{ key: "firris", name: "FIRRIS", version: "1.0", access: true }], isPending: false, isError: false }), useEngineContract: () => ({ data: { engine_name: "FIRRIS", engine_version: "1.0", products: [{ key: "flood_extent", label: "Flood-candidate extent (model-classified)", available_delivery_types: ["cog", "vector"], planned_delivery_types: [] }, { key: "flood_probability", label: "Model confidence score (Random Forest vote fraction)", available_delivery_types: ["cog"], planned_delivery_types: [] }] }, isPending: false, isError: false }) }));
+vi.mock("../engines/engineQueries", () => ({ useAvailableEngines: () => ({ data: [{ key: "firris", name: "FRRIS", version: "1.0", access: true }], isPending: false, isError: false }), useEngineContract: () => ({ data: { engine_name: "FRRIS", engine_version: "1.0", products: [{ key: "flood_extent", label: "Flood-candidate extent (model-classified)", available_delivery_types: ["cog", "vector"], planned_delivery_types: [] }, { key: "flood_probability", label: "Model confidence score (Random Forest vote fraction)", available_delivery_types: ["cog"], planned_delivery_types: [] }] }, isPending: false, isError: false }) }));
 vi.mock("./analysisApi", () => ({ submitAnalysis: submitAnalysisMock, preflightAnalysis: preflightAnalysisMock }));
 
-describe("FIRRIS analysis builder", () => {
+describe("FRRIS analysis builder", () => {
   beforeEach(() => {
     submitAnalysisMock.mockReset();
     submitAnalysisMock.mockResolvedValue({ task: { task_id: "task-1" } });
@@ -45,7 +45,7 @@ describe("FIRRIS analysis builder", () => {
     expect(screen.getByText("Validation and output")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Review and submit")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Submit FIRRIS analysis" }));
+    fireEvent.click(screen.getByRole("button", { name: "Submit FRRIS analysis" }));
 
     await waitFor(() => expect(submitAnalysisMock).toHaveBeenCalledOnce());
     const payload = submitAnalysisMock.mock.calls[0]?.[0];
@@ -152,9 +152,9 @@ describe("satellite availability on the analysis-period step (plan 4.1/4.4)", ()
     fireEvent.click(screen.getByRole("checkbox", { name: /Flood-candidate extent/i }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Submit FIRRIS analysis" })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: "Submit FRRIS analysis" })).toBeEnabled());
     expect(screen.getByText("2024-05-21 → 2024-05-26", { selector: ".review-facts dd" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Submit FIRRIS analysis" }));
+    fireEvent.click(screen.getByRole("button", { name: "Submit FRRIS analysis" }));
     await waitFor(() => expect(submitAnalysisMock).toHaveBeenCalledOnce());
     expect(submitAnalysisMock.mock.calls[0]?.[0].parameters.workflow.source.target_period).toEqual({ start: "2024-05-21", end: "2024-05-26" });
   });

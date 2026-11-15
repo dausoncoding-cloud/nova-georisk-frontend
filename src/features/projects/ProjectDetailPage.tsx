@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { queryKeys } from "../../shared/api/queryKeys";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
+import { displayEngineKey, displayModuleName } from "../../shared/productName";
 import { fetchProject } from "./projectsApi";
 
 const formatDate = (value: string) => new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -23,7 +24,7 @@ export function ProjectDetailPage() {
       <header className="page-heading project-overview-heading">
         <div>
           <Link className="back-link" to="/projects">← All projects</Link>
-          <span className="eyebrow">{project.data.engine_key}</span>
+          <span className="eyebrow">{displayEngineKey(project.data.engine_key)}</span>
           <h2>Project overview</h2>
           <p>{project.data.description ?? "No project description has been provided."}</p>
         </div>
@@ -32,7 +33,7 @@ export function ProjectDetailPage() {
 
       <section className="detail-grid" aria-label="Project metadata">
         <article className="metric-card"><span>CRS</span><strong>{project.data.crs}</strong></article>
-        <article className="metric-card"><span>Analysis module</span><strong>{project.data.analysis_module}</strong></article>
+        <article className="metric-card"><span>Analysis module</span><strong>{displayModuleName(project.data.analysis_module)}</strong></article>
         <article className="metric-card"><span>Created</span><strong>{formatDate(project.data.created_at)}</strong></article>
         <article className="metric-card"><span>Last updated</span><strong>{formatDate(project.data.updated_at)}</strong></article>
       </section>
@@ -42,7 +43,7 @@ export function ProjectDetailPage() {
           <span className="workflow-number">01</span><h2>Areas of interest</h2><p>Create and manage analysis boundaries.</p><strong>Manage AOIs →</strong>
         </Link>
         <Link className="workflow-card" to={`/projects/${projectId}/analysis`}>
-          <span className="workflow-number">02</span><h2>FIRRIS analysis</h2><p>Select an AOI and flood products to submit.</p><strong>Configure analysis →</strong>
+          <span className="workflow-number">02</span><h2>FRRIS analysis</h2><p>Select an AOI and flood products to submit.</p><strong>Configure analysis →</strong>
         </Link>
         <Link className="workflow-card" to={`/projects/${projectId}/tasks`}>
           <span className="workflow-number">03</span><h2>Tasks</h2><p>Track queued and running analysis jobs.</p><strong>View tasks →</strong>

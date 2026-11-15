@@ -6,6 +6,7 @@ import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
 import { OrganizationSummaryCard } from "../organization/OrganizationSummaryCard";
 import { fetchProjects } from "./projectsApi";
+import { displayEngineKey } from "../../shared/productName";
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   year: "numeric",
@@ -21,7 +22,7 @@ export function ProjectListPage() {
     staleTime: 30_000,
   });
 
-  const filtered = (projects.data ?? []).filter(project => `${project.name} ${project.description ?? ""} ${project.crs} ${project.engine_key}`.toLowerCase().includes(query.trim().toLowerCase()));
+  const filtered = (projects.data ?? []).filter(project => `${project.name} ${project.description ?? ""} ${project.crs} ${project.engine_key} ${displayEngineKey(project.engine_key)}`.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
     <div className="page-stack">
@@ -58,7 +59,7 @@ export function ProjectListPage() {
           <div className="empty-state">
             <div className="empty-icon" aria-hidden="true">◇</div>
             <h3>No projects yet</h3>
-            <p>Create the first FIRRIS project for this organization.</p>
+            <p>Create the first FRRIS project for this organization.</p>
           </div>
         ) : null}
         {projects.data && projects.data.length > 0 ? (
@@ -79,7 +80,7 @@ export function ProjectListPage() {
                       <Link className="table-link" to={`/projects/${project.id}`}><strong>{project.name}</strong></Link>
                       <span>{project.description ?? "No description"}</span>
                     </td>
-                    <td data-label="Engine"><span className="engine-key">{project.engine_key}</span></td>
+                    <td data-label="Engine"><span className="engine-key">{displayEngineKey(project.engine_key)}</span></td>
                     <td data-label="CRS">{project.crs}</td>
                     <td data-label="Updated">{dateFormatter.format(new Date(project.updated_at))}</td><td data-label="Quick access"><div className="row-links"><Link to={`/projects/${project.id}/analysis`}>New analysis<span className="sr-only"> for {project.name}</span></Link><Link to={`/projects/${project.id}/tasks`}>Tasks<span className="sr-only"> for {project.name}</span></Link></div></td>
                   </tr>

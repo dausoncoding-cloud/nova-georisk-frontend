@@ -54,7 +54,7 @@ export function AuthenticatedLayout() {
       <aside ref={navigationDialog} id="primary-sidebar" className="sidebar" role={mobileOpen ? "dialog" : undefined} aria-modal={mobileOpen || undefined} aria-label={mobileOpen ? "Navigation" : undefined} tabIndex={-1} inert={mobileViewport && !mobileOpen}>
         <button className="mobile-nav-close button button--quiet" onClick={() => setMobileOpen(false)}>Close navigation</button><div className="sidebar-brand"><div className="brand-mark brand-mark--small" aria-hidden="true">N</div><div className="brand-copy"><strong>NOVA</strong><span>GeoRisk intelligence</span></div><button className="sidebar-toggle" onClick={toggleSidebar} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}><Icon name="chevron" /></button></div>
         <nav aria-label="Primary navigation">{nav.map(([to, icon, label]) => <NavLink end={to === "/"} to={to} key={to} className={({ isActive }) => `nav-link${isActive ? " nav-link--active" : ""}`} title={label} aria-label={label}><Icon name={icon} /><span>{label}</span>{label === "Tasks" && (tasks.data?.total ?? 0) > 0 ? <em>{tasks.data?.total}</em> : null}</NavLink>)}</nav>
-        <div className="sidebar-help"><span>Reference engine</span><strong>FIRRIS</strong><small>Flood Risk & Resilience Intelligence System</small></div>
+        <div className="sidebar-help"><span>Reference engine</span><strong>FRRIS</strong><small>Flood Risk & Resilience Intelligence System</small></div>
       </aside>
 
       <div className="workspace">

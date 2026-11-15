@@ -15,7 +15,7 @@ const CURATED: Array<Omit<ExportGroup, "artifacts">> = [
 
 // Fallback for responses without deliverable_group (older API versions).
 const LEGACY: Array<Omit<ExportGroup, "artifacts">> = [
-  { key: "reports", label: "Reports", description: "Human-readable FIRRIS analysis reports." },
+  { key: "reports", label: "Reports", description: "Human-readable FRRIS analysis reports." },
   { key: "tabular", label: "Tables and samples", description: "CSV and Excel data for review and downstream analysis." },
   { key: "gis", label: "GIS products", description: "Native raster and vector files for desktop GIS." },
   { key: "package", label: "Complete package", description: "The versioned result package with delivered products and reports." },

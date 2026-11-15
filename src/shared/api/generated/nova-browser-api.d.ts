@@ -49,7 +49,7 @@ export interface paths {
         put?: never;
         /**
          * Preflight Analysis
-         * @description Metadata-only availability check for a FIRRIS satellite analysis. Never creates a task or result.
+         * @description Metadata-only availability check for a FRRIS satellite analysis. Never creates a task or result.
          */
         post: operations["preflight_analysis_api_v1_analyses_preflight_post"];
         delete?: never;
@@ -542,7 +542,7 @@ export interface paths {
          * Flood Hazard Map
          * @description Hazard Index = Depth x Velocity, quantile-classified — Doc 2 Map 4.
          *     Distinct from /firas/hazard: this is the raw depth*velocity product
-         *     map, not the entropy-weighted FIRRIS Hazard Index (H).
+         *     map, not the entropy-weighted FRRIS Hazard Index (H).
          */
         post: operations["flood_hazard_map_api_v1_maps_hazard_post"];
         delete?: never;

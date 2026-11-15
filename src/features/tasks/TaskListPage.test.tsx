@@ -17,7 +17,8 @@ describe("Task center", () => {
     expect(await screen.findByText("Task center")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "running" })).toBeInTheDocument();
     expect(screen.getAllByText("48%").length).toBeGreaterThan(0);
-    expect(screen.getByText("firris")).toBeInTheDocument();
+    expect(screen.getByText("FRRIS")).toBeInTheDocument();
+    expect(screen.queryByText("firris")).not.toBeInTheDocument();
   });
 });
 

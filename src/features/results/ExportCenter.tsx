@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { protectedProductUrl } from "./resultsApi";
 import { groupResultExports } from "./exportGroups";
+import { formatSize } from "./resultView";
 import { Pagination } from "../../shared/ui/Pagination";
 import type { ResultArtifact } from "./gisViewer";
 
-function formatBytes(value: number | null | undefined) {
-  if (value == null) return "Not supplied";
-  if (value < 1024) return `${value} B`;
-  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
-  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
-}
+// Binary units, as everywhere in FRRIS (backlog §4.7 item 3).
+const formatBytes = (value: number | null | undefined) => formatSize(value) ?? "Not supplied";
 const columns = [{ key: "label", label: "Artifact" }, { key: "artifact_type", label: "Type" }, { key: "format", label: "Format" }, { key: "file_size_bytes", label: "Size" }] as const;
 type SortKey = typeof columns[number]["key"];
 

@@ -188,7 +188,9 @@ describe("FRRIS analysis builder", () => {
     expect(alert).toHaveTextContent("Cloud cover must be between 0 and 100 percent.");
     expect(alert).toHaveTextContent("Enter a whole sample size between 10 and 1,000,000 and a training fraction between 0.5 and 0.99.");
     expect(alert).toHaveTextContent("Output scale must be between 1 and 1,000 metres.");
-    expect(screen.getByRole("checkbox", { name: /Flood depth/ })).toBeDisabled();
+    // A product whose module is not approved is listed as "Coming soon", with no checkbox.
+    expect(screen.queryByRole("checkbox", { name: /Flood depth/ })).toBeNull();
+    expect(screen.getByText("Flood depth").nextElementSibling).toHaveTextContent("Coming soon");
     expect(submitAnalysisMock).not.toHaveBeenCalled();
   });
 
@@ -257,7 +259,7 @@ describe("satellite availability (plan 4.1/4.4)", () => {
     renderBuilder();
     expect(await screen.findByText("Sentinel-2 3 granules on 2 dates (2 tiles: 36LZR, 37MBM), 88% of the area")).toBeInTheDocument();
     expect(screen.getByRole("note", { name: "Warnings" })).toHaveTextContent("cover only 88% of the area");
-    expect(screen.getByRole("status", { name: "Before you continue" })).toHaveTextContent("for the target window (Sentinel-2 does not cover the whole area)");
+    expect(screen.getByRole("status", { name: "Before you continue" })).toHaveTextContent("Independent accuracy not assessable for the target window (see the warning above).");
     expect(screen.queryByRole("alert", { name: "Blocking reasons" })).toBeNull();
     expect(screen.getByRole("button", { name: "Run analysis" })).toBeEnabled();
   });
@@ -266,7 +268,7 @@ describe("satellite availability (plan 4.1/4.4)", () => {
     const none = { code: "no_compliant_sentinel2", message: "No Sentinel-2 scene … independent accuracy will not be assessable." };
     preflightAnalysisMock.mockResolvedValue({ ...okResult, warnings: [{ ...none, period: "target" }, { ...none, period: "baseline" }] });
     renderBuilder();
-    expect(await screen.findByRole("status", { name: "Before you continue" })).toHaveTextContent("for both windows (no compliant Sentinel-2 scene)");
+    expect(await screen.findByRole("status", { name: "Before you continue" })).toHaveTextContent("Independent accuracy not assessable for both windows (see the warning above).");
   });
 
   it("blocked: red box, Run disabled with the hint, and 'Use nearest pass' extends the window", async () => {
@@ -309,7 +311,7 @@ describe("satellite availability (plan 4.1/4.4)", () => {
     await waitFor(() => expect(lastPreflight().parameters.workflow.source.target_period).toEqual({ start: "2024-05-25", end: "2024-05-27" }));
     expect(dates().targetLast).toHaveValue("2024-05-26");
     expect(await screen.findByRole("note", { name: "Warnings" })).toHaveTextContent("independent accuracy will not be assessable");
-    expect(screen.getByRole("status", { name: "Before you continue" })).toHaveTextContent("Independent accuracy will not be assessable for the target window");
+    expect(screen.getByRole("status", { name: "Before you continue" })).toHaveTextContent("Independent accuracy not assessable for the target window");
     expect(screen.getByRole("button", { name: "Run analysis" })).toBeEnabled();
   });
 

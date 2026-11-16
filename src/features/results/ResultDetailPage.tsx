@@ -1,92 +1,96 @@
-import { AccuracyAssessment } from "./AccuracyAssessment";
-import { ResultOverview } from "./ResultOverview";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { FRRIS_ROUTES } from "../../app/routes";
 import { queryKeys } from "../../shared/api/queryKeys";
+import { displayEngineKey } from "../../shared/productName";
 import { ErrorState } from "../../shared/ui/ErrorState";
+import { Icon } from "../../shared/ui/Icon";
 import { LoadingState } from "../../shared/ui/LoadingState";
-import { Disclosure } from "../../shared/ui/Disclosure";
 import { WorkspaceTabs } from "../../shared/ui/WorkspaceTabs";
 import { fetchAoi } from "../aois/aoisApi";
 import { TaskArchive } from "../tasks/TaskArchive";
-import { DeliveredMetadata, deliveredValue, QuantitativeDelivery } from "./QuantitativeDelivery";
-import { ExportCenter } from "./ExportCenter";
 import { FIRRISGisViewer } from "./FIRRISGisViewer";
+import { QuantitativeDelivery } from "./QuantitativeDelivery";
+import { ResultAccuracyTab } from "./ResultAccuracyTab";
+import { ResultDownloadsTab } from "./ResultDownloadsTab";
+import { ResultOverviewTab } from "./ResultOverviewTab";
+import { ResultProvenanceTab } from "./ResultProvenanceTab";
 import { fetchResult, protectedProductUrl } from "./resultsApi";
-import { displayEngineKey } from "../../shared/productName";
+import { asRecord, INDEPENDENT_STATUS_TEXT, radarSummary, resolutionMetres, resultPeriods } from "./resultView";
 
+// The design's four sections first; the existing map viewer, metrics and execution archive stay available.
 const tabs = [
-  { key: "overview", label: "Overview" }, { key: "maps", label: "Maps" },
-  { key: "metrics", label: "Metrics" }, { key: "files", label: "Data & Files" },
-  { key: "validation", label: "Accuracy assessment" }, { key: "execution", label: "Execution" },
-  { key: "metadata", label: "Metadata" },
+  { key: "overview", label: "Overview" }, { key: "accuracy", label: "Accuracy assessment" },
+  { key: "downloads", label: "Downloads & GIS layers" }, { key: "provenance", label: "Provenance" },
+  { key: "maps", label: "Map viewer" }, { key: "metrics", label: "Metrics" }, { key: "execution", label: "Execution" },
 ] as const;
-const formatDate = (value: string) => new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-const independentValidationText: Record<string, string> = {
-  not_performed: "Not performed", assessed: "Assessed against an independent reference",
-  not_assessable: "Not assessable", insufficient_reference_samples: "Insufficient reference samples",
-};
-const fallbackAgreementStatement = "Metrics are internal agreement with the analysis labels — not independent flood-map accuracy.";
-function classCounts(counts: Record<string, number>) {
-  const entries = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b));
-  return `n = ${entries.reduce((total, [, value]) => total + value, 0)} (${entries.map(([label, value]) => `class ${label}: ${value}`).join(", ")})`;
-}
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
-}
+// Links from before the refresh (?tab=validation|files|metadata) open the matching section.
+const TAB_ALIASES: Record<string, string> = { validation: "accuracy", files: "downloads", metadata: "provenance" };
 
 export function ResultDetailPage() {
   const { resultId = "" } = useParams();
   const [params, setParams] = useSearchParams();
-  const tab = tabs.find(item => item.key === params.get("tab"))?.key ?? "overview";
+  const requested = params.get("tab") ?? "";
+  const tab = tabs.find((item) => item.key === (TAB_ALIASES[requested] ?? requested))?.key ?? "overview";
   const result = useQuery({ queryKey: queryKeys.results.detail(resultId), queryFn: () => fetchResult(resultId), enabled: Boolean(resultId) });
   const aoiId = result.data?.aoi_id ?? "";
   const aoi = useQuery({ queryKey: queryKeys.aois.detail(aoiId), queryFn: () => fetchAoi(aoiId), enabled: Boolean(aoiId) });
   if (result.isPending) return <LoadingState label="Loading result…" />;
   if (result.isError) return <ErrorState title="Result could not be loaded" error={result.error} onRetry={() => void result.refetch()} />;
+
   const data = result.data;
   const summary = asRecord(data.summary);
-  const quality = asRecord(summary?.quality);
-  const validation = asRecord(summary?.validation);
-  const provenance = asRecord(data.provenance);
   const products = asRecord(summary?.products);
-  const artifacts = Array.from(new Map([...data.products, ...data.exports].map(item => [item.key, item])).values());
-  const packageFile = artifacts.find(item => item.artifact_type === "package");
-  const firstLayer = data.layers.find(layer => layer.renderable);
-  const targetPeriod = asRecord(provenance?.target_period);
-  const period = targetPeriod ? `${deliveredValue(targetPeriod.start)} → ${deliveredValue(targetPeriod.end)}` : "Not supplied";
-  const referenceBasis = data.validation_dashboard?.reference_basis ?? null;
-  const independentStatus = data.validation_dashboard?.independent_validation ?? (typeof validation?.independent_validation === "string" ? validation.independent_validation : null);
-  const independentText = independentStatus ? independentValidationText[independentStatus] ?? independentStatus : "Not performed";
-  const agreementStatement = referenceBasis?.statement ?? fallbackAgreementStatement;
-  const limitations = Array.from(new Set([...(data.analytics?.limitations ?? []), ...(data.validation_dashboard?.limitations ?? [])]));
+  const provenance = asRecord(data.provenance);
+  const artifacts = Array.from(new Map([...data.products, ...data.exports].map((item) => [item.key, item])).values());
+  const firstLayer = data.layers.find((layer) => layer.renderable);
+  const periods = resultPeriods(data);
+  const radar = radarSummary(provenance);
+  const scale = resolutionMetres(provenance);
+  const reports = ["scientific_report_word", "scientific_report_pdf"].map((key) => artifacts.find((item) => item.key === key)).filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const assessment = data.validation_dashboard?.accuracy_assessment ?? null;
+  const title = aoi.data?.name ?? data.result_type.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
   const navigateTab = (key: string) => { const next = new URLSearchParams(params); next.set("tab", key); setParams(next); };
-  const viewer = (preview: boolean) => <section className={`panel viewer-panel${preview ? " viewer-panel--preview" : ""}`}>
-    <div className="panel-heading"><h2>{preview ? "Primary map" : "Map workspace"}</h2>{preview ? <button className="button button--quiet button--small" onClick={() => navigateTab("maps")}>Explore maps</button> : <span className="count-badge">{data.layers.length}</span>}</div>
+  const meta = [periods.target ? `Target ${periods.target}` : null, periods.baseline ? `Baseline ${periods.baseline}` : null, radar, scale ? `${scale} m` : null].filter(Boolean);
+
+  const viewer = (preview: boolean) => <section className="fr-card fr-section viewer-panel">
+    <div className="fr-section__head"><h3>{preview ? "Primary map" : "Map viewer"}</h3>{preview ? <button type="button" className="fr-link-button" onClick={() => navigateTab("maps")}>Explore maps</button> : null}</div>
     {aoiId && aoi.isPending ? <LoadingState label="Loading AOI boundary…" /> : null}
-    {aoi.isError ? <div className="inline-alert" role="alert">The AOI boundary could not be loaded. Result layers remain available.</div> : null}
+    {aoi.isError ? <div className="fr-box fr-box--danger" role="alert">The AOI boundary could not be loaded. Result layers remain available.</div> : null}
     {(!aoiId || !aoi.isPending) ? <FIRRISGisViewer key={`${data.id}-${preview}`} compact={preview} resultId={data.id} layers={preview ? firstLayer ? [firstLayer] : [] : data.layers} artifacts={data.products} aoi={aoi.data ? { geometry: aoi.data.geometry, crs: aoi.data.crs, name: aoi.data.name } : null} /> : null}
   </section>;
 
-  return <div className="page-stack result-workspace">
-    <header className="page-heading"><div><Link className="back-link" to={`/projects/${data.project_id}/results`}>← Project results</Link><span className="eyebrow">{displayEngineKey(data.engine_key)} · version {data.version}</span><h1>{data.result_type.replaceAll("_", " ")}</h1><p>Created {formatDate(data.created_at)}</p></div><div className="form-actions"><Link className="button button--secondary" to={`/tasks/${data.task_id}`}>View task</Link>{packageFile ? <a className="button button--primary" href={protectedProductUrl(data.id, packageFile.key)}>Download package</a> : <button className="button button--secondary" onClick={() => navigateTab("files")}>View files</button>}</div></header>
-    {data.interpretation_notice ? <p className="notice" role="status" aria-label="Interpretation notice">{data.interpretation_notice}</p> : null}
-    <dl className="result-summary" aria-label="Result summary"><div><dt>Execution status</dt><dd>{typeof summary?.status === "string" ? summary.status : "Not supplied"}</dd></div><div><dt>AOI</dt><dd>{aoi.data?.name ?? (aoiId ? aoi.isError ? "Boundary unavailable" : "Loading…" : "Not supplied")}</dd></div><div><dt>Analysis period</dt><dd>{period}</dd></div><div><dt>Quality gate</dt><dd>{typeof quality?.status === "string" ? quality.status : "Not supplied"}</dd></div></dl>
-    <WorkspaceTabs tabs={tabs} value={tab} onChange={navigateTab} label="Result workspace">
-      {tab === "overview" ? <div className="page-stack">
-        {data.overview ? <ResultOverview overview={data.overview} /> : null}
-        <dl className="result-summary result-summary--inline" aria-label="Delivered output summary"><div><dt>Outputs</dt><dd>{artifacts.length} file{artifacts.length === 1 ? "" : "s"} · {data.layers.length} map layer{data.layers.length === 1 ? "" : "s"}</dd></div><div><dt>CRS</dt><dd>{firstLayer?.crs ?? "Not supplied"}</dd></div><div><dt>Independent validation</dt><dd>{independentText}</dd></div></dl>
-        {data.analytics?.class_areas?.length ? <section className="panel content-panel"><h2>Key class areas</h2><div className="table-wrap"><table><thead><tr><th>Product / class</th><th>Area (km²)</th><th>% of valid area</th></tr></thead><tbody>{data.analytics.class_areas.slice(0, 3).map((row, index) => <tr key={index}><td>{row.product_key} · {row.label}</td><td>{deliveredValue(row.area_km2)}</td><td>{deliveredValue(row.percent_of_valid)}</td></tr>)}</tbody></table></div><button className="button button--quiet button--small" onClick={() => navigateTab("metrics")}>All metrics and evidence</button></section> : null}
-        {limitations.length && !data.overview ? <div className="notice" role="note"><strong>Limitations</strong><ul>{limitations.slice(0, 3).map(text => <li key={text}>{text}</li>)}</ul>{limitations.length > 3 ? <button className="button button--quiet button--small" onClick={() => navigateTab("validation")}>View all limitations ({limitations.length})</button> : null}</div> : null}
-        {quality?.status === "failed" ? <div className="inline-alert" role="alert">The scientific quality gate failed. Review the delivered checks in Validation before using this result.</div> : null}
-        {viewer(true)}
-      </div> : null}
+  return <div className="fr-result result-workspace">
+    <header className="fr-result__header">
+      <Link className="fr-back" to={FRRIS_ROUTES.analyses}>← Analyses</Link>
+      <div className="fr-result__title">
+        <div>
+          <span className="fr-overline">{displayEngineKey(data.engine_key)} · result version {data.version}</span>
+          <h1>{title}</h1>
+        </div>
+        <div className="fr-page-header__actions">
+          {reports.map((report) => <a key={report.key} className="fr-button fr-button--secondary" href={protectedProductUrl(data.id, report.key)}>
+            <Icon name="reports" width={16} height={16} strokeWidth={2} />{report.format === "docx" ? "Report (Word)" : "Report (PDF)"}</a>)}
+          <Link className="fr-button fr-button--secondary" to={`/tasks/${data.task_id}`}>View task</Link>
+        </div>
+      </div>
+      {meta.length ? <p className="fr-result__meta">{meta.join(" · ")}</p> : null}
+      <Link className="fr-result__project" to={`/projects/${data.project_id}/results`}>Project results</Link>
+    </header>
+    {data.interpretation_notice ? <p className="fr-box fr-box--warning" role="status" aria-label="Interpretation notice">{data.interpretation_notice}</p> : null}
+    {assessment?.independent_status === "assessed" && assessment.independent_wording
+      ? <p className="fr-box fr-box--info" role="note" aria-label="Accuracy basis"><Icon name="check" width={18} height={18} strokeWidth={2} />The flood-candidate extent is model-classified from Sentinel-1 radar. {assessment.independent_wording}</p>
+      : assessment && assessment.independent_status !== "assessed"
+        ? <p className="fr-box fr-box--warning" role="note" aria-label="Accuracy basis"><Icon name="warning" width={18} height={18} strokeWidth={2} /><span><strong>Independent accuracy {INDEPENDENT_STATUS_TEXT[assessment.independent_status] ?? assessment.independent_status}.</strong>{assessment.independent_reason ? ` ${assessment.independent_reason.replace(/[.!?]?$/, ".")}` : ""} No map-accuracy figures are available for this analysis.</span></p>
+        : null}
+    <WorkspaceTabs tabs={tabs} value={tab} onChange={navigateTab} label="Result sections">
+      {tab === "overview" ? <ResultOverviewTab data={data} artifacts={artifacts} aoiName={aoi.data?.name ?? null} viewer={viewer(true)} onOpenTab={navigateTab} /> : null}
+      {tab === "accuracy" ? <ResultAccuracyTab data={data} artifacts={artifacts} /> : null}
+      {tab === "downloads" ? <ResultDownloadsTab resultId={data.id} artifacts={artifacts} createdAt={data.created_at} /> : null}
+      {tab === "provenance" ? <ResultProvenanceTab data={data} /> : null}
       {tab === "maps" ? viewer(false) : null}
       {tab === "metrics" ? <QuantitativeDelivery analytics={data.analytics} products={products} change={asRecord(summary?.change_statistics)} /> : null}
-      {tab === "files" ? <ExportCenter resultId={data.id} artifacts={artifacts} createdAt={data.created_at} /> : null}
-      {tab === "validation" ? <section className="panel content-panel"><h2>Accuracy assessment</h2><p className="notice">{agreementStatement}</p><p>Independent validation: {independentText}</p>{referenceBasis ? <dl className="metadata-list"><div><dt>Reference basis</dt><dd>{referenceBasis.label_source}</dd></div>{referenceBasis.rule ? <div><dt>Label rule</dt><dd>{referenceBasis.rule}</dd></div> : null}{referenceBasis.features_overlapping_rule.length ? <div><dt>Model features that also define the labels</dt><dd>{referenceBasis.features_overlapping_rule.join(", ")}</dd></div> : null}<div><dt>Split</dt><dd>{referenceBasis.split_method}</dd></div><div><dt>Samples</dt><dd>Held-out {classCounts(referenceBasis.n_test_per_class)}; Training {classCounts(referenceBasis.n_train_per_class)}</dd></div></dl> : null}{data.validation_dashboard?.accuracy_assessment ? <AccuracyAssessment assessment={data.validation_dashboard.accuracy_assessment} /> : null}<h3>Quality gate checks</h3><DeliveredMetadata value={quality} /><h3>Internal agreement metrics</h3><DeliveredMetadata value={validation} />{data.validation_dashboard ? <Disclosure title="Accuracy dashboard and availability"><DeliveredMetadata value={data.validation_dashboard as unknown as Record<string, unknown>} /></Disclosure> : null}<h3>Limitations</h3>{limitations.length ? <ul>{limitations.map(text => <li key={text}>{text}</li>)}</ul> : <p>No validation limitations were supplied.</p>}</section> : null}
       {tab === "execution" ? <TaskArchive key={data.task_id} taskId={data.task_id} /> : null}
-      {tab === "metadata" ? <section className="panel content-panel"><h2>Metadata & provenance</h2><h3>Spatial and temporal reference</h3>{data.layers.map(layer => <Disclosure title={layer.label} key={layer.key}><DeliveredMetadata value={{ crs: layer.crs, resolution: layer.spatial_resolution, bounds: layer.bounding_box, acquisition: layer.temporal_metadata, units: layer.units, nodata: layer.nodata }} /></Disclosure>)}<Disclosure title="Source datasets and processing provenance"><DeliveredMetadata value={provenance} /></Disclosure><Disclosure title="Model configuration"><DeliveredMetadata value={asRecord(summary?.model)} /></Disclosure><Disclosure title="Product metadata"><DeliveredMetadata value={products} /></Disclosure><Disclosure title="Raw result summary"><pre>{JSON.stringify(summary, null, 2)}</pre></Disclosure></section> : null}
     </WorkspaceTabs>
   </div>;
 }

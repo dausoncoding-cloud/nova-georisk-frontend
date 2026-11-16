@@ -7,14 +7,14 @@ const cells = new Intl.NumberFormat("en-US");
 const num = (value: number | null | undefined, digits = 2) => (value === null || value === undefined || !Number.isFinite(value) ? DASH : value.toFixed(digits));
 const statusLabel: Record<string, string> = { pass: "Pass", fail: "Fail", not_recorded: "Not recorded", not_applicable: "Not applicable" };
 
-export function ResultOverview({ overview }: { overview: Overview }) {
+export function ResultOverview({ overview, showHeadline = true }: { overview: Overview; showHeadline?: boolean }) {
   const area = overview.area_accounting;
   return (
     <section className="result-overview" aria-label="Result overview">
-      <section data-section="headline" aria-label="What this result shows">
+      {showHeadline ? <section data-section="headline" aria-label="What this result shows">
         <h2>What this result shows</h2>
         <p>{overview.headline.text}</p>
-      </section>
+      </section> : null}
       <section data-section="area" aria-label="Area accounting">
         <h2>Area accounting</h2>
         <dl className="metadata-list">

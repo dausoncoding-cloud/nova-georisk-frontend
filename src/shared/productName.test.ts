@@ -5,7 +5,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
-import { displayEngineKey, displayModuleName, FRRIS_ENGINE_KEY } from "./productName";
+import { displayEngineKey, displayModuleName, displayProductText, FRRIS_ENGINE_KEY } from "./productName";
 
 const ROOT = join(__dirname, "..", "..");
 const WORD = /\bFIRRIS\b/;
@@ -25,7 +25,8 @@ function files(dir: string): string[] {
 describe("FRRIS product name", () => {
   it("never shows FIRRIS in user-visible sources", () => {
     const sources = [...files(join(ROOT, "src")), ...files(join(ROOT, "public")), join(ROOT, "index.html")]
-      .filter((path) => /\.(tsx?|html|json|svg|txt|webmanifest|css)$/.test(path) && !/\.test\.tsx?$/.test(path));
+      // Test fixtures (*.test.ts[x] and testdata/ copies of API responses) mirror stored data and are not shipped.
+      .filter((path) => /\.(tsx?|html|json|svg|txt|webmanifest|css)$/.test(path) && !/\.test\.tsx?$/.test(path) && !/[\\/]testdata[\\/]/.test(path));
     const offenders = sources.flatMap((path) => {
       const rel = relative(ROOT, path).split("\\").join("/");
       return readFileSync(path, "utf8").split("\n").flatMap((line, index) =>
@@ -57,5 +58,7 @@ describe("FRRIS product name", () => {
     expect(FRRIS_ENGINE_KEY).toBe("firris");
     expect(displayEngineKey("firris")).toBe("FRRIS");
     expect(displayEngineKey("wras")).toBe("wras");
+    expect(displayProductText("FIRRIS analysis workbook")).toBe("FRRIS analysis workbook");
+    expect(displayProductText("firris-science-2")).toBe("firris-science-2");
   });
 });

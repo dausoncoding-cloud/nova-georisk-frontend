@@ -22,7 +22,8 @@ describe("Result workspace", () => {
     setup();
     expect(await screen.findByRole("tab", { name: "Overview", selected: true })).toBeInTheDocument();
     expect(screen.getByText(/scientific quality gate failed/)).toBeInTheDocument();
-    expect(screen.getByText("2025-03-01 → 2025-04-01")).toBeInTheDocument();
+    // Shown inclusive: API window 2025-03-01 → 2025-04-01 (exclusive) is 1–31 March 2025.
+    expect(screen.getByText("Target 1–31 Mar 2025")).toBeInTheDocument();
     expect(screen.queryByText("Execution archive content")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Quantitative analytics" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "Execution" }));
@@ -35,6 +36,8 @@ describe("Result workspace", () => {
     expect(screen.getByText("Coverage too low")).toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
     fireEvent.keyDown(validation, { key: "ArrowRight" });
+    expect(screen.getByRole("tab", { name: "Downloads & GIS layers", selected: true })).toHaveFocus();
+    fireEvent.keyDown(screen.getByRole("tab", { name: "Downloads & GIS layers" }), { key: "End" });
     expect(screen.getByRole("tab", { name: "Execution", selected: true })).toHaveFocus();
     expect(screen.getByText("Execution archive content")).toBeInTheDocument();
   });
@@ -130,8 +133,16 @@ describe("Accuracy tables on the result page (2.2)", () => {
       validation_dashboard: { kind: "binary", metrics: {}, availability: {}, plots: [], scope: "s", units: "u", limitations: [], independent_validation: "not_assessable", accuracy_assessment: assessment },
     } as never);
     setup("/results/result-1?tab=validation");
-    expect(await screen.findByRole("table", { name: /Confusion matrix/ })).toBeInTheDocument();
-    expect(screen.getByRole("status", { name: "" })).toHaveTextContent("Independent accuracy: not assessable.");
+    // Not assessable: the reason is prominent and no figure is presented as map accuracy.
+    const box = await screen.findByRole("region", { name: "Independent accuracy not assessable" });
+    expect(box).toHaveTextContent("Sentinel-2 baseline: No compliant optical scene in the requested window");
+    expect(screen.queryByRole("region", { name: "Accuracy metrics" })).toBeNull();
+    expect(screen.getByRole("note", { name: "Accuracy basis" })).toHaveTextContent("Independent accuracy not assessable.");
+    // Internal agreement tables stay available, labelled as not map accuracy.
+    const internal = screen.getByRole("region", { name: /Internal agreement/ });
+    expect(internal).toHaveTextContent("not map accuracy");
+    fireEvent.click(screen.getByText("Internal agreement tables and curves"));
+    expect(screen.getByRole("table", { name: /Confusion matrix/ })).toBeInTheDocument();
   });
 });
 

@@ -51,7 +51,8 @@ function ClassSummary({ scope }: { scope: Scope }) {
           ))}
         </tbody>
       </table></div>
-      <p>Overall accuracy {fixed(scope.overall_accuracy_pct, 1)}% · Kappa {fixed(scope.cohens_kappa, 3)} · F1 (flood candidate) {fixed(scope.f1_flooded, 3)} · IoU {fixed(scope.iou_flooded, 3)}</p>
+      {/* Internal scopes measure agreement with the training labels, not map accuracy. */}
+      <p>{scope.scope === "independent_optical" ? "Overall accuracy" : "Overall agreement"} {fixed(scope.overall_accuracy_pct, 1)}% · Kappa {fixed(scope.cohens_kappa, 3)} · F1 (flood candidate) {fixed(scope.f1_flooded, 3)} · IoU {fixed(scope.iou_flooded, 3)}</p>
     </>
   );
 }
@@ -99,10 +100,10 @@ function Intervals({ scope }: { scope: Scope }) {
   return <p>95% interval: OA {range(intervals.overall_accuracy_pct, 1, "%")} · Kappa {range(intervals.cohens_kappa, 3)} · AUC {range(intervals.roc_auc, 3)} ({intervals.method})</p>;
 }
 
-export function AccuracyAssessment({ assessment }: { assessment: Assessment }) {
+export function AccuracyAssessment({ assessment, showStatus = true }: { assessment: Assessment; showStatus?: boolean }) {
   return (
     <section className="accuracy-assessment" aria-label="Accuracy assessment tables">
-      {assessment.independent_status !== "assessed" ? (
+      {showStatus && assessment.independent_status !== "assessed" ? (
         <p className="notice" role="status">Independent accuracy: {statusText[assessment.independent_status] ?? assessment.independent_status}.{assessment.independent_reason ? ` ${assessment.independent_reason}` : ""}</p>
       ) : null}
       {assessment.scopes.map(scope => (

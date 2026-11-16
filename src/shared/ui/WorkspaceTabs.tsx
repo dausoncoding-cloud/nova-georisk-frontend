@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from "react";
+import { useEdgeFade } from "./useEdgeFade";
 
 export function WorkspaceTabs({ tabs, value, onChange, children, label }: {
   tabs: readonly { key: string; label: string }[];
@@ -8,8 +9,9 @@ export function WorkspaceTabs({ tabs, value, onChange, children, label }: {
   label: string;
 }) {
   const id = useId();
+  const { ref, fade, onScroll } = useEdgeFade<HTMLDivElement>();
   return <div className="tab-workspace">
-    <div className="workspace-tabs result-tabs" role="tablist" aria-label={label}>
+    <div className="workspace-tabs result-tabs" role="tablist" aria-label={label} ref={ref} onScroll={onScroll} data-fade={fade}>
       {tabs.map((tab, index) => <button type="button" key={tab.key} id={`${id}-${tab.key}`} role="tab"
         aria-selected={value === tab.key} aria-controls={`${id}-panel`} tabIndex={value === tab.key ? 0 : -1}
         className={value === tab.key ? "is-active" : ""} onClick={() => onChange(tab.key)}

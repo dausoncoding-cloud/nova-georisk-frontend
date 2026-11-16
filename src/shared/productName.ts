@@ -17,3 +17,8 @@ export function displayEngineKey(key: string | null | undefined): string {
   const value = key ?? "";
   return ENGINE_DISPLAY_NAMES[value] ?? value;
 }
+
+// Labels stored with older results (for example "FIRRIS analysis workbook") are shown with the product name.
+export function displayProductText(text: string): string {
+  return text.replace(/\bFIRRIS\b/g, "FRRIS");
+}

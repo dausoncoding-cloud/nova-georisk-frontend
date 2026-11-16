@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import { useEdgeFade } from "../../shared/ui/useEdgeFade";
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { FRRIS_ROUTES } from "../../app/routes";
@@ -37,19 +38,7 @@ export function AnalysesListPage() {
   const [search, setSearch] = useState("");
   const searchId = useId();
   // Mobile: the status filters are one scrollable row; the edge fade shows on the side(s) with more filters.
-  const filterRow = useRef<HTMLDivElement>(null);
-  const [filterFade, setFilterFade] = useState<"none" | "start" | "end" | "both">("none");
-  const updateFilterFade = useCallback(() => {
-    const row = filterRow.current;
-    if (!row) return;
-    const more = { start: row.scrollLeft > 1, end: row.scrollLeft + row.clientWidth < row.scrollWidth - 1 };
-    setFilterFade(more.start && more.end ? "both" : more.start ? "start" : more.end ? "end" : "none");
-  }, []);
-  useEffect(() => {
-    updateFilterFade();
-    window.addEventListener("resize", updateFilterFade);
-    return () => window.removeEventListener("resize", updateFilterFade);
-  });
+  const { ref: filterRow, fade: filterFade, onScroll: updateFilterFade } = useEdgeFade<HTMLDivElement>();
   const requestedStatus = searchParams.get("status");
   const status = STATUS_FILTERS.find((item) => item.value && item.value === requestedStatus)?.value;
   const requestedOffset = Number(searchParams.get("offset") ?? 0);

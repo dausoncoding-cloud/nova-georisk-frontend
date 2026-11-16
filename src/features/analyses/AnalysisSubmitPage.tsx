@@ -217,9 +217,11 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
             {availableProducts.map((product) => {
               const ready = product.available_delivery_types.length > 0 && SATELLITE_PRODUCTS.has(product.key);
               const checked = products.includes(product.key as FirrisProduct);
-              return <label key={product.key} className={`fr-choice${checked ? " is-selected" : ""}${ready ? "" : " is-disabled"}`}>
-                <input type="checkbox" disabled={!ready} checked={checked} onChange={() => setProducts((current) => checked ? current.filter((key) => key !== product.key) : [...current, product.key as FirrisProduct])} />
-                <span><strong>{product.label}</strong><small>{ready ? product.available_delivery_types.join(" · ") : `Planned · ${product.planned_delivery_types.join(" · ") || "delivery unavailable"}`}</small></span>
+              // Products whose module is not approved are listed without a control until they can be delivered.
+              if (!ready) return <div key={product.key} className="fr-choice is-disabled"><span><strong>{product.label}</strong><small>Coming soon</small></span></div>;
+              return <label key={product.key} className={`fr-choice${checked ? " is-selected" : ""}`}>
+                <input type="checkbox" checked={checked} onChange={() => setProducts((current) => checked ? current.filter((key) => key !== product.key) : [...current, product.key as FirrisProduct])} />
+                <span><strong>{product.label}</strong><small>{product.available_delivery_types.join(" · ")}</small></span>
               </label>;
             })}
           </fieldset>
@@ -271,7 +273,7 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
           {problems.length ? <div className="fr-box fr-box--danger" role="alert"><ul>{problems.map((problem) => <li key={problem}>{problem}</li>)}</ul></div> : null}
           <button type="button" className="fr-button fr-button--primary fr-summary__run" disabled={blocked || submit.isPending} onClick={run}>{submit.isPending ? "Submitting…" : "Run analysis"}</button>
           {blocked ? <span className="fr-summary__hint" role="status">Resolve the blocked dates above to continue.</span> : null}
-          {!blocked && opticalWarnings.length ? <span className="fr-summary__hint fr-summary__hint--warning" role="status" aria-label="Before you continue">Independent accuracy will not be assessable for {opticalWhere} ({opticalReason}). Widen the window to include clear dates over the whole area, or run the analysis anyway.</span> : null}
+          {!blocked && opticalWarnings.length ? <span className="fr-summary__hint fr-summary__hint--warning" role="status" aria-label="Before you continue">Independent accuracy not assessable for {opticalWhere} (see the warning above).</span> : null}
           <Link className="fr-button fr-button--secondary" to={embedded ? `/projects/${projectId}` : FRRIS_ROUTES.analyses}>Cancel</Link>
         </section>
         <p className="fr-summary__tip"><strong>Tip</strong> Choose a baseline from the dry season close to the event. Large areas may need to be split to stay under the download limit.</p>

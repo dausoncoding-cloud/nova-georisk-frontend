@@ -4,6 +4,7 @@ import { AppProviders } from "./app/AppProviders";
 import { AppRouter } from "./app/AppRouter";
 import "leaflet/dist/leaflet.css";
 import "./styles.css";
+import "./styles/frris-refresh.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("NOVA application root was not found.");

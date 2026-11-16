@@ -6,7 +6,9 @@ The NOVA browser application is the organization-scoped WebGIS workspace for FIR
 
 ## Information architecture
 
-The persistent application shell provides Overview, Projects, Task center, Results, Data catalog, and Settings. A selected project opens a persistent workspace with these tabs:
+After sign-in, `/` is the NOVA-GeoRisk suite home ("Your systems"). FRRIS opens when the organization has access to the `firris` engine (`GET /api/v1/engines`); WRRIS and MEGIS are shown as "In development" and are not links.
+
+The FRRIS shell has a white sidebar: the NOVA-GeoRisk brand (link to the suite home), a system switcher (FRRIS current; WRRIS and MEGIS listed as "In development", not clickable), the primary FRRIS pages (Analyses, New analysis, Data catalog, Exports), a "Workspace" disclosure with every other page (Overview at `/frris`, Projects, AOIs, Results, Maps, Reports, External data, Administration for admins and owners, Settings), page search (Ctrl/⌘ K), and the account (user, organization · role, organization picker when there are several memberships, Sign out). A selected project opens a persistent workspace with these tabs:
 
 1. Overview
 2. AOI
@@ -18,7 +20,7 @@ The persistent application shell provides Overview, Projects, Task center, Resul
 8. Reports
 9. Exports
 
-The responsive sidebar collapses on desktop and becomes an off-canvas navigation surface on narrow screens. The header contains organization context, breadcrumbs, command navigation, live-task visibility, and the authenticated-user menu.
+From 900 px the sidebar is sticky beside the content. Below 900 px it is stacked above the content, with the Workspace group closed.
 
 ## Supported product journeys
 

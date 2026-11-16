@@ -1,10 +1,11 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Outlet, Route, Routes } from "react-router-dom";
 import { RequireSession } from "../features/auth/RequireSession";
 import { LoginPage } from "../features/auth/LoginPage";
 import { OrganizationContextProvider } from "../features/organization/OrganizationContext";
 import { AuthenticatedLayout } from "./AuthenticatedLayout";
 import { NotFoundPage } from "./NotFoundPage";
+import { SuiteHomePage } from "./SuiteHomePage";
 
 const ProjectListPage = lazy(() => import("../features/projects/ProjectListPage").then((module) => ({ default: module.ProjectListPage })));
 const ProjectDetailPage = lazy(() => import("../features/projects/ProjectDetailPage").then((module) => ({ default: module.ProjectDetailPage })));
@@ -31,36 +32,39 @@ export function AppRouter() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireSession />}>
-          <Route element={<OrganizationContextProvider><AuthenticatedLayout /></OrganizationContextProvider>}>
-            <Route index element={<DashboardPage />} />
-            <Route path="projects" element={<ProjectListPage />} />
-            <Route path="projects/new" element={<ProjectFormPage />} />
-            <Route path="projects/:projectId/edit" element={<ProjectFormPage />} />
-            <Route path="projects/:projectId" element={<ProjectWorkspaceLayout />}>
-              <Route index element={<ProjectDetailPage />} />
-              <Route path="aois" element={<AoiListPage />} />
-              <Route path="data" element={<ExternalDataPage />} />
-              <Route path="analysis" element={<AnalysisSubmitPage />} />
+          <Route element={<OrganizationContextProvider><Outlet /></OrganizationContextProvider>}>
+            <Route index element={<SuiteHomePage />} />
+            <Route element={<AuthenticatedLayout />}>
+              <Route path="frris" element={<DashboardPage />} />
+              <Route path="projects" element={<ProjectListPage />} />
+              <Route path="projects/new" element={<ProjectFormPage />} />
+              <Route path="projects/:projectId/edit" element={<ProjectFormPage />} />
+              <Route path="projects/:projectId" element={<ProjectWorkspaceLayout />}>
+                <Route index element={<ProjectDetailPage />} />
+                <Route path="aois" element={<AoiListPage />} />
+                <Route path="data" element={<ExternalDataPage />} />
+                <Route path="analysis" element={<AnalysisSubmitPage />} />
+                <Route path="tasks" element={<TaskListPage />} />
+                <Route path="results" element={<ResultListPage />} />
+                <Route path="map" element={<ProjectUtilityPage mode="map" />} />
+                <Route path="reports" element={<ProjectUtilityPage mode="reports" />} />
+                <Route path="exports" element={<ProjectUtilityPage mode="exports" />} />
+              </Route>
+              <Route path="projects/:projectId/analyze" element={<AnalysisSubmitPage />} />
               <Route path="tasks" element={<TaskListPage />} />
+              <Route path="tasks/:taskId" element={<TaskDetailPage />} />
               <Route path="results" element={<ResultListPage />} />
-              <Route path="map" element={<ProjectUtilityPage mode="map" />} />
-              <Route path="reports" element={<ProjectUtilityPage mode="reports" />} />
-              <Route path="exports" element={<ProjectUtilityPage mode="exports" />} />
+              <Route path="results/:resultId" element={<ResultDetailPage />} />
+              <Route path="aois" element={<PortfolioCapabilityPage mode="aois" />} />
+              <Route path="analyses" element={<PortfolioCapabilityPage mode="analysis" />} />
+              <Route path="maps" element={<PortfolioCapabilityPage mode="map" />} />
+              <Route path="reports" element={<PortfolioCapabilityPage mode="reports" />} />
+              <Route path="exports" element={<PortfolioCapabilityPage mode="exports" />} />
+              <Route path="data" element={<DataCatalogPage />} />
+              <Route path="administration" element={<AdministrationPage />} />
+              <Route path="external-data" element={<ExternalDataPage />} />
+              <Route path="settings" element={<SettingsPage />} />
             </Route>
-            <Route path="projects/:projectId/analyze" element={<AnalysisSubmitPage />} />
-            <Route path="tasks" element={<TaskListPage />} />
-            <Route path="tasks/:taskId" element={<TaskDetailPage />} />
-            <Route path="results" element={<ResultListPage />} />
-            <Route path="results/:resultId" element={<ResultDetailPage />} />
-            <Route path="aois" element={<PortfolioCapabilityPage mode="aois" />} />
-            <Route path="analyses" element={<PortfolioCapabilityPage mode="analysis" />} />
-            <Route path="maps" element={<PortfolioCapabilityPage mode="map" />} />
-            <Route path="reports" element={<PortfolioCapabilityPage mode="reports" />} />
-            <Route path="exports" element={<PortfolioCapabilityPage mode="exports" />} />
-            <Route path="data" element={<DataCatalogPage />} />
-            <Route path="administration" element={<AdministrationPage />} />
-            <Route path="external-data" element={<ExternalDataPage />} />
-            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />

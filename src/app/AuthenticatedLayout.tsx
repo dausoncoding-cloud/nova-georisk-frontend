@@ -1,70 +1,147 @@
-import { useOrganizationContext } from "../features/organization/OrganizationContext";
-import { useDialog } from "../shared/ui/useDialog";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSession } from "../features/auth/authQueries";
 import { LogoutButton } from "../features/auth/LogoutButton";
+import { useOrganizationContext } from "../features/organization/OrganizationContext";
 import { OrganizationMenu } from "../features/organization/OrganizationMenu";
 import { fetchTasks } from "../features/tasks/tasksApi";
 import { queryKeys } from "../shared/api/queryKeys";
 import { Icon } from "../shared/ui/Icon";
+import { useDialog } from "../shared/ui/useDialog";
+import { roleLabel, SuiteBrand } from "./SuiteBrand";
+import { FRRIS_SYSTEM, SUITE_SYSTEMS } from "./suiteSystems";
 
-const baseNav = [
-  ["/", "overview", "Overview"], ["/projects", "projects", "Projects"], ["/aois", "aoi", "AOIs"],
-  ["/analyses", "analysis", "Analyses"], ["/tasks", "tasks", "Tasks"], ["/results", "results", "Results"],
-  ["/maps", "map", "Maps"], ["/reports", "reports", "Reports"], ["/exports", "exports", "Exports"],
-  ["/external-data", "data", "External data"], ["/administration", "settings", "Administration"], ["/data", "data", "Catalogue"], ["/settings", "settings", "Settings"],
-] as const;
+type NavItem = { to: string; icon: Parameters<typeof Icon>[0]["name"]; label: string; end?: boolean; adminOnly?: boolean };
 
-function titleize(segment: string) { return segment.replaceAll("-", " ").replace(/^./, (letter) => letter.toUpperCase()); }
+// Primary FRRIS navigation, as in the design. Routes are the existing ones; nothing was removed.
+export const PRIMARY_NAV: readonly NavItem[] = [
+  { to: "/tasks", icon: "overview", label: "Analyses" },
+  { to: "/analyses", icon: "plus", label: "New analysis" },
+  { to: "/data", icon: "data", label: "Data catalog" },
+  { to: "/exports", icon: "exports", label: "Exports" },
+];
+
+// Every other existing workspace page stays reachable.
+export const WORKSPACE_NAV: readonly NavItem[] = [
+  { to: "/frris", icon: "overview", label: "Overview", end: true },
+  { to: "/projects", icon: "projects", label: "Projects" },
+  { to: "/aois", icon: "aoi", label: "AOIs" },
+  { to: "/results", icon: "results", label: "Results" },
+  { to: "/maps", icon: "map", label: "Maps" },
+  { to: "/reports", icon: "reports", label: "Reports" },
+  { to: "/external-data", icon: "data", label: "External data" },
+  { to: "/administration", icon: "settings", label: "Administration", adminOnly: true },
+  { to: "/settings", icon: "settings", label: "Settings" },
+];
+
+function SystemSwitcher() {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const listId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => setOpen(false), [location.pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") { setOpen(false); triggerRef.current?.focus(); } };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  return (
+    <div className={`fr-switcher${open ? " is-open" : ""}`}>
+      <button ref={triggerRef} type="button" className="fr-switcher__trigger" aria-expanded={open} aria-controls={listId}
+        aria-label={`Switch system. Current system: ${FRRIS_SYSTEM.name}, ${FRRIS_SYSTEM.domain.toLowerCase()}`} onClick={() => setOpen((value) => !value)}>
+        <span className="fr-switcher__swatch fr-switcher__swatch--frris" aria-hidden="true" />
+        <span className="fr-switcher__name"><strong>{FRRIS_SYSTEM.name}</strong><span>{FRRIS_SYSTEM.domain}</span></span>
+        <Icon name="updown" width={16} height={16} />
+      </button>
+      <div id={listId} className="fr-switcher__panel" hidden={!open}>
+        <ul aria-label="Systems">
+          {SUITE_SYSTEMS.map((system) => system.route
+            ? <li key={system.key}><Link className="fr-switcher__option" to={system.route} aria-current="true">
+                <span className={`fr-switcher__swatch fr-switcher__swatch--${system.key}`} aria-hidden="true" />
+                <span className="fr-switcher__name"><strong>{system.name}</strong><span>{system.domain} · <span className="fr-switcher__state">Current</span></span></span></Link></li>
+            : <li key={system.key}><span className="fr-switcher__option fr-switcher__option--inert">
+                <span className={`fr-switcher__swatch fr-switcher__swatch--${system.key}`} aria-hidden="true" />
+                <span className="fr-switcher__name"><strong>{system.name}</strong><span>{system.domain} · <span className="fr-switcher__state">In development</span></span></span></span></li>)}
+        </ul>
+        <Link className="fr-switcher__all" to="/">All systems</Link>
+      </div>
+    </div>
+  );
+}
+
+function NavList({ items, runningTasks }: { items: readonly NavItem[]; runningTasks: number }) {
+  return (
+    <ul className="fr-nav__list">
+      {items.map((item) => (
+        <li key={item.to}>
+          <NavLink end={item.end} to={item.to} className={({ isActive }) => `fr-nav__link${isActive ? " is-active" : ""}`}>
+            <Icon name={item.icon} width={18} height={18} strokeWidth={2} />
+            <span>{item.label}</span>
+            {item.to === "/tasks" && runningTasks > 0 ? <em aria-label={`${runningTasks} running`}>{runningTasks}</em> : null}
+          </NavLink>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function AuthenticatedLayout() {
   const session = useSession();
   const organization = useOrganizationContext();
-  const nav = baseNav.filter(([to]) => to !== "/administration" || ["admin", "owner"].includes(organization.current_role));
   const location = useLocation();
   const navigate = useNavigate();
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem("nova.sidebar") === "collapsed");
-  const [mobileViewport, setMobileViewport] = useState(() => window.matchMedia("(max-width: 767px)").matches);
-  useEffect(() => { const query = window.matchMedia("(max-width: 767px)"); const update = () => { setMobileViewport(query.matches); if (!query.matches) setMobileOpen(false); }; query.addEventListener("change", update); return () => query.removeEventListener("change", update); }, []);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
-  useEffect(() => { if (!accountOpen) return; const dismiss = (event: KeyboardEvent) => { if (event.key === "Escape") setAccountOpen(false); }; document.addEventListener("keydown", dismiss); return () => document.removeEventListener("keydown", dismiss); }, [accountOpen]);
+  const isAdmin = ["admin", "owner"].includes(organization.current_role);
+  const workspaceNav = WORKSPACE_NAV.filter((item) => !item.adminOnly || isAdmin);
+  const allNav = [...PRIMARY_NAV, ...workspaceNav];
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchDialog = useDialog(searchOpen, () => setSearchOpen(false));
-  const navigationDialog = useDialog(mobileOpen, () => setMobileOpen(false));
-  const displayName = session.data?.user?.displayName ?? session.data?.user?.email ?? "NOVA user";
+  const workspaceListId = useId();
+  const userName = session.data?.user?.displayName || session.data?.user?.email || organization.user.display_name || organization.user.email || null;
   const tasks = useQuery({ queryKey: queryKeys.tasks.list({ status: "running", limit: 20 }), queryFn: () => fetchTasks({ status: "running", limit: 20 }), refetchInterval: 10_000 });
-  const crumbs = useMemo(() => location.pathname.split("/").filter(Boolean).map((segment, index, all) => ({ label: index === 1 && all[0] === "projects" && /^[0-9a-f-]{36}$/i.test(segment) ? "Project" : titleize(segment), href: `/${all.slice(0, index + 1).join("/")}` })), [location.pathname]);
+  const matches = allNav.filter((item) => item.label.toLowerCase().includes(searchQuery.trim().toLowerCase()));
 
-  useEffect(() => { setMobileOpen(false); setAccountOpen(false); setSearchOpen(false); }, [location.pathname]);
+  const onWorkspacePage = workspaceNav.some((item) => item.end ? location.pathname === item.to : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`));
+  // Desktop: the Workspace group opens when one of its pages is current. Mobile: it stays closed so the page
+  // content is not pushed below a long list (the sidebar is stacked above the content there).
+  useEffect(() => { setSearchOpen(false); setWorkspaceOpen(onWorkspacePage && window.matchMedia?.("(min-width: 900px)").matches === true); }, [location.pathname, onWorkspacePage]);
   useEffect(() => {
-    const listener = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setMobileOpen(false); setSearchOpen(true); } };
-    window.addEventListener("keydown", listener); return () => window.removeEventListener("keydown", listener);
+    const listener = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setSearchOpen(true); } };
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
   }, []);
 
-  function toggleSidebar() { setCollapsed((current) => { localStorage.setItem("nova.sidebar", current ? "expanded" : "collapsed"); return !current; }); }
-
   return (
-    <div className={`app-shell${collapsed ? " sidebar-is-collapsed" : ""}${mobileOpen ? " mobile-nav-open" : ""}`}>
-      <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
+    <div className="fr-shell">
       <a className="skip-link" href="#main-content">Skip to content</a>
-      <aside ref={navigationDialog} id="primary-sidebar" className="sidebar" role={mobileOpen ? "dialog" : undefined} aria-modal={mobileOpen || undefined} aria-label={mobileOpen ? "Navigation" : undefined} tabIndex={-1} inert={mobileViewport && !mobileOpen}>
-        <button className="mobile-nav-close button button--quiet" onClick={() => setMobileOpen(false)}>Close navigation</button><div className="sidebar-brand"><div className="brand-mark brand-mark--small" aria-hidden="true">N</div><div className="brand-copy"><strong>NOVA</strong><span>GeoRisk intelligence</span></div><button className="sidebar-toggle" onClick={toggleSidebar} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}><Icon name="chevron" /></button></div>
-        <nav aria-label="Primary navigation">{nav.map(([to, icon, label]) => <NavLink end={to === "/"} to={to} key={to} className={({ isActive }) => `nav-link${isActive ? " nav-link--active" : ""}`} title={label} aria-label={label}><Icon name={icon} /><span>{label}</span>{label === "Tasks" && (tasks.data?.total ?? 0) > 0 ? <em>{tasks.data?.total}</em> : null}</NavLink>)}</nav>
-        <div className="sidebar-help"><span>Reference engine</span><strong>FRRIS</strong><small>Flood Risk & Resilience Intelligence System</small></div>
-      </aside>
-
-      <div className="workspace">
-        <header className="topbar">
-          <div className="topbar-start"><button className="mobile-menu" onClick={() => setMobileOpen(true)} aria-label="Open navigation" aria-expanded={mobileOpen} aria-controls="primary-sidebar"><Icon name="menu" /></button><OrganizationMenu /><div className="breadcrumbs" aria-label="Breadcrumb">{crumbs.length === 0 ? <span>Overview</span> : crumbs.map((crumb, index) => <span key={crumb.href}>{index ? <i>/</i> : null}{index === crumbs.length - 1 ? crumb.label : <Link to={crumb.href}>{crumb.label}</Link>}</span>)}</div></div>
-          <div className="topbar-actions"><button className="search-trigger" aria-label="Find workspace page" onClick={() => { setMobileOpen(false); setSearchOpen(true); }}><Icon name="search" /><span>Search workspace</span><kbd>⌘ K</kbd></button><Link className="icon-button notification-button" to="/tasks?status=running" aria-label="Running tasks"><Icon name="tasks" /></Link><div className="account-menu"><button className="account-trigger" aria-label="Account menu" onClick={() => setAccountOpen((value) => !value)} aria-expanded={accountOpen}><span className="avatar">{displayName.slice(0, 2).toUpperCase()}</span><span><strong>{displayName}</strong><small>{session.data?.user?.email ?? "Authenticated"}</small></span><span>⌄</span></button>{accountOpen ? <div className="account-popover"><Link to="/settings">Account & workspace</Link><LogoutButton /></div> : null}</div></div>
-        </header>
-        <main id="main-content" tabIndex={-1} className="content"><Outlet /></main>
-      </div>
-      {searchOpen ? <div className="modal-backdrop command-backdrop" onClick={() => setSearchOpen(false)}><section ref={searchDialog} role="dialog" aria-modal="true" aria-label="Workspace navigation" tabIndex={-1} className="command-palette" onClick={(event) => event.stopPropagation()}><div><Icon name="search" /><input value={searchQuery} onChange={event => setSearchQuery(event.target.value)} aria-label="Find a workspace page" placeholder="Find a page…" /><button type="button" className="icon-button" aria-label="Close workspace navigation" onClick={() => setSearchOpen(false)}><Icon name="close" /></button></div><p>Workspace pages</p>{nav.filter(([, , label]) => label.toLowerCase().includes(searchQuery.trim().toLowerCase())).map(([to, icon, label]) => <button type="button" key={to} onClick={() => { navigate(to); setSearchOpen(false); }}><Icon name={icon} />{label}</button>)}{!nav.some(([, , label]) => label.toLowerCase().includes(searchQuery.trim().toLowerCase())) ? <p role="status">No matching pages.</p> : null}</section></div> : null}
+      <nav aria-label="Main" className="fr-sidebar">
+        <SuiteBrand linked />
+        <SystemSwitcher />
+        <div className="fr-nav">
+          <NavList items={PRIMARY_NAV} runningTasks={tasks.data?.total ?? 0} />
+        </div>
+        <div className={`fr-nav fr-nav--workspace${workspaceOpen ? " is-open" : ""}`}>
+          <button type="button" className="fr-nav__toggle" aria-expanded={workspaceOpen} aria-controls={workspaceListId} onClick={() => setWorkspaceOpen((value) => !value)}>
+            Workspace<Icon name="chevron" width={16} height={16} />
+          </button>
+          <div id={workspaceListId} className="fr-nav__collapsible" hidden={!workspaceOpen}><NavList items={workspaceNav} runningTasks={0} /></div>
+        </div>
+        <button type="button" className="fr-nav__find" onClick={() => setSearchOpen(true)}>
+          <Icon name="search" width={16} height={16} /><span>Find a page</span><kbd aria-hidden="true">Ctrl K</kbd>
+        </button>
+        <div className="fr-sidebar__account">
+          {userName ? <span className="fr-sidebar__user">{userName}</span> : null}
+          <span className="fr-sidebar__org">{organization.current_organization.name} · {roleLabel(organization.current_role)}</span>
+          {organization.memberships.length > 1 ? <OrganizationMenu /> : null}
+          <LogoutButton />
+        </div>
+      </nav>
+      <main id="main-content" tabIndex={-1} className="fr-main content"><Outlet /></main>
+      {searchOpen ? <div className="modal-backdrop command-backdrop" onClick={() => setSearchOpen(false)}><section ref={searchDialog} role="dialog" aria-modal="true" aria-label="Workspace navigation" tabIndex={-1} className="command-palette" onClick={(event) => event.stopPropagation()}><div><Icon name="search" /><input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} aria-label="Find a workspace page" placeholder="Find a page…" /><button type="button" className="icon-button" aria-label="Close workspace navigation" onClick={() => setSearchOpen(false)}><Icon name="close" /></button></div><p>Workspace pages</p>{matches.map((item) => <button type="button" key={item.to} onClick={() => { navigate(item.to); setSearchOpen(false); }}><Icon name={item.icon} />{item.label}</button>)}{matches.length === 0 ? <p role="status">No matching pages.</p> : null}</section></div> : null}
     </div>
   );
 }

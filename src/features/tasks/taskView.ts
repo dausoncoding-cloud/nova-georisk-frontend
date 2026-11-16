@@ -32,6 +32,14 @@ export function explainFailure(summary: string | null | undefined): FailureExpla
     detail: `Valid data covers ${pct(coverage[1]!)} of the area; at least ${pct(coverage[2]!)} is required for a reliable result.`,
     hints: ["Choose dates where the Sentinel-1 pass covers the whole area (the availability check shows the passes).", "Redraw the area so it lies inside the radar swath."],
   };
+  // r5.1: radar passes that cover only part of the area (a wide AOI across the edge of the orbit's swath).
+  const radar = /^The Sentinel-1 radar pass .+ covers only (\d+(?:\.\d+)?)% of the area\./.exec(message);
+  if (radar) return {
+    title: "The radar pass does not cover the whole area",
+    detail: `Sentinel-1 from one orbit covers ${radar[1]}% of the area; FRRIS needs one orbit over all of it.`,
+    hints: ["Split the area in the Area playground so that each part lies inside one radar swath, and run each part.",
+      "Or trim the area to the part the radar pass covers.", "The availability check in New analysis now shows this before you run."],
+  };
   // P6 wording ("between 21 and 22 May 2024", "on 21 May 2024") and the pre-P6 wording of stored failures.
   if (/^No Sentinel-1 scene over the area (between .+ and .+|on .+)\.$/.test(message)) return {
     title: "No Sentinel-1 pass in the chosen window",

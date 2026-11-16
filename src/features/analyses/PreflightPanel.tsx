@@ -28,6 +28,8 @@ export function sentinel2Text(period: AnalysisPreflightPeriod): string {
 }
 
 export const MIB = 1_048_576;
+/** Blocking reasons that only depend on the dates; others (size, radar coverage) concern the area too. */
+export const DATE_ISSUES = new Set(["no_sentinel1_pass", "multiple_orbits", "orbit_mismatch", "before_sentinel1_archive", "future_window"]);
 /** Backlog §4.7 item 3: sizes in MiB everywhere ("10.0 of 48 MiB"). */
 export function downloadSizeText(capacity: NonNullable<AnalysisPreflightResponse["capacity"]>): string {
   return `${(capacity.estimated_request_bytes / MIB).toFixed(1)} of ${(capacity.limit_bytes / MIB).toFixed(0)} MiB`;
@@ -68,7 +70,7 @@ export function PreflightPanel({ result, isFetching, error, onUseNearestPass }: 
     </dl>
     {blocking.length === 0 ? <p className="fr-box fr-box--success" role="status"><Icon name="check" width={18} height={18} strokeWidth={2.4} />
       Ready: {result.shared_relative_orbits?.length ? `Sentinel-1 orbit ${result.shared_relative_orbits.join(", ")} in both windows.` : "the dates and area pass the checks."}</p> : null}
-    {blocking.length ? <div className="fr-box fr-box--danger" role="alert" aria-label="Blocking reasons"><strong>Cannot run with these dates</strong><ul>{blocking.map((issue) => {
+    {blocking.length ? <div className="fr-box fr-box--danger" role="alert" aria-label="Blocking reasons"><strong>{blocking.every((issue) => DATE_ISSUES.has(issue.code)) ? "Cannot run with these dates" : "Cannot run with this area and these dates"}</strong><ul>{blocking.map((issue) => {
       const period = issue.period === "target" ? result.target : issue.period === "baseline" ? result.baseline : null;
       const nearest = issue.code === "no_sentinel1_pass" && period ? nearestPassWindow(period) : null;
       return <li key={`${issue.code}-${issue.period ?? "all"}`}><span>{issue.message}</span>{nearest ? <button type="button" className="fr-button fr-button--secondary fr-button--small" onClick={() => onUseNearestPass(issue.period as "target" | "baseline", nearest.start, nearest.end)}>Use nearest pass ({formatDay(nearest.pass)})</button> : null}</li>;

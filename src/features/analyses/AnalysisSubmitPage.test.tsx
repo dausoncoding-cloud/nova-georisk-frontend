@@ -333,6 +333,19 @@ describe("satellite availability (plan 4.1/4.4)", () => {
 });
 
 
+describe("radar coverage block (r5.1)", () => {
+  it("says the area is the problem and keeps Run disabled", async () => {
+    preflightAnalysisMock.mockResolvedValue({ ...okResult, ok: false, blocking: [{ code: "sentinel1_partial_coverage", period: "target",
+      message: "The Sentinel-1 radar pass on 15 Apr 2024 (orbit 174) covers only 40.1% of the area. FRRIS needs radar from one orbit over the whole area in both windows. Split the area into parts (Area playground) or trim it to the covered part." }] });
+    renderBuilder();
+    const alert = await screen.findByRole("alert", { name: "Blocking reasons" });
+    expect(alert).toHaveTextContent("Cannot run with this area and these dates");
+    expect(alert).toHaveTextContent("covers only 40.1% of the area");
+    expect(screen.getByRole("button", { name: "Run analysis" })).toBeDisabled();
+    expect(screen.getByText("Resolve the blocked items above to continue.")).toBeInTheDocument();
+  });
+});
+
 describe("products (r5.1)", () => {
   const extent = () => screen.getByRole("checkbox", { name: /Flood-candidate extent/i }) as HTMLInputElement;
 

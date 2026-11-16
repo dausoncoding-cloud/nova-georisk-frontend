@@ -16,7 +16,7 @@ import { fetchProject, fetchProjects } from "../projects/projectsApi";
 import { preflightAnalysis, submitAnalysis, type AnalysisSubmitRequest, type FirrisProduct } from "./analysisApi";
 import { buildGeeSatelliteWorkflowParameters, defaultSatelliteWorkflowForm, FIXED_RUN_SETTINGS, type SatelliteWorkflowForm } from "./parameters";
 import { periodProblem, SENTINEL1_START, todayIso, toApiEnd, toLastDay, formatPeriod, type InclusivePeriod } from "./periods";
-import { downloadSizeText, MIB, PreflightPanel } from "./PreflightPanel";
+import { DATE_ISSUES, downloadSizeText, MIB, PreflightPanel } from "./PreflightPanel";
 
 const PRODUCT_KEYS = new Set<string>(["flood_extent", "flood_depth", "flood_velocity", "flood_hazard", "flood_probability", "flood_duration", "flood_exposure", "flood_vulnerability", "flood_risk", "flood_susceptibility", "flood_hazard_zonation"]);
 const SATELLITE_PRODUCTS = new Set(["flood_extent", "flood_probability"]);
@@ -288,7 +288,7 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
           {problems.length ? <div className="fr-box fr-box--danger" role="alert"><ul>{problems.map((problem) => <li key={problem}>{problem}</li>)}</ul></div> : null}
           <button type="button" className="fr-button fr-button--primary fr-summary__run" disabled={blocked || noProduct || submit.isPending} onClick={run}>{submit.isPending ? "Submitting…" : "Run analysis"}</button>
           {noProduct ? <span className="fr-summary__hint" role="status" aria-label="Before you run">{NO_PRODUCT_MESSAGE}</span> : null}
-          {blocked ? <span className="fr-summary__hint" role="status">Resolve the blocked dates above to continue.</span> : null}
+          {blocked ? <span className="fr-summary__hint" role="status">{(preflight.data?.blocking ?? []).every((issue) => DATE_ISSUES.has(issue.code)) ? "Resolve the blocked dates above to continue." : "Resolve the blocked items above to continue."}</span> : null}
           {!blocked && opticalWarnings.length ? <span className="fr-summary__hint fr-summary__hint--warning" role="status" aria-label="Before you continue">Independent accuracy not assessable for {opticalWhere} (see the warning above).</span> : null}
           <Link className="fr-button fr-button--secondary" to={embedded ? `/projects/${projectId}` : FRRIS_ROUTES.analyses}>Cancel</Link>
         </section>

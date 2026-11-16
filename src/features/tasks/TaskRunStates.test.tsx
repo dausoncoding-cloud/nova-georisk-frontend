@@ -46,6 +46,9 @@ describe("view helpers", () => {
     expect(explainFailure("No Sentinel-1 scene over the area between 2024-05-21 and 2024-05-23 (end date exclusive).").title).toBe("No Sentinel-1 pass in the chosen window");
     expect(explainFailure("No Sentinel-1 scene over the area between 21 and 22 May 2024.").title).toBe("No Sentinel-1 pass in the chosen window"); // P6 wording
     expect(explainFailure("No Sentinel-1 scene over the area on 21 May 2024.").title).toBe("No Sentinel-1 pass in the chosen window");
+    // r5.1: radar coverage (production task efd93391, Ugalla).
+    expect(explainFailure("The Sentinel-1 radar pass on 15 Apr 2024 (orbit 174) covers only 40.1% of the area. FRRIS needs radar from one orbit over the whole area in both windows. Split the area into parts (Area playground) or trim it to the covered part."))
+      .toMatchObject({ title: "The radar pass does not cover the whole area", detail: "Sentinel-1 from one orbit covers 40.1% of the area; FRRIS needs one orbit over all of it." });
     expect(explainFailure("The target and baseline windows must each contain Sentinel-1 passes from exactly one relative orbit, the same in both (target: 57; baseline: 130).").title).toBe("The radar orbits do not match");
     expect(explainFailure("Analysis execution failed. Please retry or contact support with the request ID.")).toMatchObject({ title: "The analysis could not be completed", detail: null });
   });

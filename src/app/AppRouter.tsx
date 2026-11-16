@@ -15,6 +15,7 @@ const ProjectFormPage = lazy(() => import("../features/projects/ProjectFormPage"
 const AoiListPage = lazy(() => import("../features/aois/AoiListPage").then((module) => ({ default: module.AoiListPage })));
 const AnalysisSubmitPage = lazy(() => import("../features/analyses/AnalysisSubmitPage").then((module) => ({ default: module.AnalysisSubmitPage })));
 const TaskDetailPage = lazy(() => import("../features/tasks/TaskDetailPage").then((module) => ({ default: module.TaskDetailPage })));
+const AnalysesListPage = lazy(() => import("../features/analyses/AnalysesListPage").then((module) => ({ default: module.AnalysesListPage })));
 const TaskListPage = lazy(() => import("../features/tasks/TaskListPage").then((module) => ({ default: module.TaskListPage })));
 const ResultDetailPage = lazy(() => import("../features/results/ResultDetailPage").then((module) => ({ default: module.ResultDetailPage })));
 const ResultListPage = lazy(() => import("../features/results/ResultListPage").then((module) => ({ default: module.ResultListPage })));
@@ -38,7 +39,7 @@ export function AppRouter() {
             <Route index element={<SuiteHomePage />} />
             <Route element={<AuthenticatedLayout />}>
               <Route path="frris" element={<RedirectTo to={FRRIS_ROUTES.analyses} />} />
-              <Route path="frris/analyses" element={<TaskListPage />} />
+              <Route path="frris/analyses" element={<AnalysesListPage />} />
               <Route path="frris/overview" element={<DashboardPage />} />
               <Route path="projects" element={<ProjectListPage />} />
               <Route path="projects/new" element={<ProjectFormPage />} />

@@ -40,6 +40,7 @@ export function AppRouter() {
             <Route element={<AuthenticatedLayout />}>
               <Route path="frris" element={<RedirectTo to={FRRIS_ROUTES.analyses} />} />
               <Route path="frris/analyses" element={<AnalysesListPage />} />
+              <Route path="frris/analyses/new" element={<AnalysisSubmitPage />} />
               <Route path="frris/overview" element={<DashboardPage />} />
               <Route path="projects" element={<ProjectListPage />} />
               <Route path="projects/new" element={<ProjectFormPage />} />
@@ -48,7 +49,7 @@ export function AppRouter() {
                 <Route index element={<ProjectDetailPage />} />
                 <Route path="aois" element={<AoiListPage />} />
                 <Route path="data" element={<ExternalDataPage />} />
-                <Route path="analysis" element={<AnalysisSubmitPage />} />
+                <Route path="analysis" element={<AnalysisSubmitPage embedded />} />
                 <Route path="tasks" element={<TaskListPage />} />
                 <Route path="results" element={<ResultListPage />} />
                 <Route path="map" element={<ProjectUtilityPage mode="map" />} />
@@ -62,7 +63,8 @@ export function AppRouter() {
               <Route path="results" element={<ResultListPage />} />
               <Route path="results/:resultId" element={<ResultDetailPage />} />
               <Route path="aois" element={<PortfolioCapabilityPage mode="aois" />} />
-              <Route path="analyses" element={<PortfolioCapabilityPage mode="analysis" />} />
+              {/* Moved in the UI refresh: New analysis is a single FRRIS page with a project choice. */}
+              <Route path="analyses" element={<RedirectTo to={FRRIS_ROUTES.newAnalysis} />} />
               <Route path="maps" element={<PortfolioCapabilityPage mode="map" />} />
               <Route path="reports" element={<PortfolioCapabilityPage mode="reports" />} />
               <Route path="exports" element={<PortfolioCapabilityPage mode="exports" />} />

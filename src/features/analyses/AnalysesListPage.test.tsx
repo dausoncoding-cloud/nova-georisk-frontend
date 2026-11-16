@@ -114,6 +114,29 @@ describe("Analyses list", () => {
     expect(fetchResults).toHaveBeenCalledWith(expect.objectContaining({ engine_key: "firris" }));
   });
 
+  it("shows each row's own project and area, not the first project's", async () => {
+    vi.mocked(fetchTasks).mockResolvedValue({ items: [
+      task({ id: "a", task_id: "task-a", project_id: "p1", aoi_id: "aoi-1", status: "queued" }),
+      task({ id: "b", task_id: "task-b", project_id: "p2", aoi_id: "aoi-9", status: "queued" }),
+      task({ id: "c", task_id: "task-c", project_id: "p1", aoi_id: "aoi-2", status: "queued" }),
+    ], total: 3, limit: 50, offset: 0 });
+    vi.mocked(fetchProjects).mockResolvedValue([{ id: "p1", name: "Rufiji monitoring" }, { id: "p2", name: "Kilombero valley" }] as never);
+    vi.mocked(fetchProjectAois).mockImplementation(async (projectId: string) => ({ items: projectId === "p2"
+      ? [{ id: "aoi-9", name: "Kilombero floodplain", stats: { area_km2: 240.9 } }]
+      : [{ id: "aoi-1", name: "Rufiji floodplain 2024", stats: { area_km2: 98.84 } }, { id: "aoi-2", name: "Manyoni check", stats: { area_km2: 122.5 } }],
+    total: 1, limit: 200, offset: 0 }) as never);
+    renderPage();
+    const table = await screen.findByRole("table");
+    await waitFor(() => expect(within(table).getByRole("link", { name: "Kilombero floodplain" })).toBeInTheDocument());
+    const [, first, second, third] = within(table).getAllByRole("row");
+    expect(first).toHaveTextContent("Rufiji floodplain 2024"); expect(first).toHaveTextContent("Rufiji monitoring"); expect(first).not.toHaveTextContent("Kilombero valley");
+    expect(second).toHaveTextContent("Kilombero floodplain"); expect(second).toHaveTextContent("Kilombero valley"); expect(second).toHaveTextContent("240.9 km²");
+    expect(second).not.toHaveTextContent("Rufiji monitoring");
+    expect(third).toHaveTextContent("Manyoni check"); expect(third).toHaveTextContent("Rufiji monitoring");
+    expect(fetchProjectAois).toHaveBeenCalledWith("p1");
+    expect(fetchProjectAois).toHaveBeenCalledWith("p2");
+  });
+
   it("shows the latest completed result with its accuracy basis and metrics", async () => {
     renderPage();
     const card = await screen.findByRole("region", { name: "Latest completed" });
@@ -165,7 +188,8 @@ describe("Analyses list", () => {
     vi.mocked(fetchResults).mockResolvedValue({ items: [], total: 0, limit: 50, offset: 0 } as never);
     renderPage();
     const empty = await screen.findByRole("region", { name: "No analyses yet" });
-    expect(within(empty).getByRole("link", { name: "New analysis" })).toHaveAttribute("href", "/analyses");
+    expect(empty).toHaveTextContent("Start your first flood analysis by drawing or uploading an area and choosing a baseline and a target period.");
+    expect(within(empty).getByRole("link", { name: "New analysis" })).toHaveAttribute("href", "/frris/analyses/new");
     expect(screen.queryByRole("table")).toBeNull();
     expect(screen.queryByRole("group", { name: "Filter by status" })).toBeNull();
   });

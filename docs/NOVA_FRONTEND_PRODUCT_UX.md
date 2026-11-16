@@ -24,6 +24,8 @@ From 900 px the sidebar is sticky beside the content; its navigation scrolls whi
 
 FRRIS Analyses list (`/frris/analyses`): a "Latest completed" card (newest FRRIS result; AOI name, target period, the accuracy scope title from the API and its Overall accuracy, Kappa, F1 (flood candidate) and AUC; the independent Sentinel-2 scope is used when it was assessed, otherwise the internal scope is shown under its own title with the independent status) and a table of analyses (AOI name and project, target period, AOI area, status, created). Status filters keep the API values in `?status=` (All, Running, Queued, Completed, Needs attention = failed, Canceled) and wrap on narrow screens. Names and areas come from the project AOI lists, target periods from the FRRIS result list (latest 50); values not yet known (for example the target period of a running analysis) are shown as "—". Search filters the analyses on the current page. Organizations without analyses see the "No analyses yet" empty state.
 
+FRRIS New analysis (`/frris/analyses/new`, also embedded in the project workspace at `/projects/:id/analysis` and standalone at `/projects/:id/analyze`): one page with numbered steps (1 Area of interest: project, area, "Draw or upload an area" opens the AOI wizard; 2 Periods and satellite availability; 3 Data quality; 4 Products; 5 Processing and sampling) and a Run summary that is sticky beside the form from 1180 px and stacked under it below. Windows are entered as "First day" and "Last day (included)" (backlog §4.7 item 1): the UI adds one day to each last day before every API call (preflight and submission), so the request payload is unchanged. Date limits: 2014-10-03 to today (UTC), last day included. The preflight shows a green ready box, a red blocked box ("Cannot run with these dates", with "Use nearest pass", which extends the window) and blue warnings; the Sentinel-2 granules, tiles and area coverage are shown per window; sizes are in MiB (items 2–3). Run is disabled while blocked, with a hint; the note next to Run names the window(s) without a compliant Sentinel-2 reference (item 5). Defaults and fixed settings are unchanged: cloud ≤ 20%, coverage ≥ 70%, 30 m, 5,000 stratified samples (70% training, ≥ 30 per class, seed 12345), Random Forest with 200 trees, flood-candidate extent and model confidence score as the deliverable products. The server's own preflight messages still quote API (exclusive) end dates and say so ("end date exclusive"). Old `/analyses` links redirect to New analysis with their query.
+
 FRRIS addresses: `/frris` opens the Analyses list at `/frris/analyses`; the former dashboard is `/frris/overview`. Old `/tasks` links redirect to `/frris/analyses` with their query and hash; `/tasks/:taskId` is unchanged.
 
 Fonts are self-hosted (no external requests): Inter for the UI and IBM Plex Mono for numbers (`.fr-num`), both SIL OFL 1.1. The licence texts live next to the files in `src/assets/fonts/` and are emitted to `dist/licenses/fonts/` by the build.
@@ -110,3 +112,12 @@ npm audit --omit=dev
 ```
 
 For release review, also scan generated assets and source for `X-Internal-Secret`, OIDC client secrets, bearer tokens, and local artifact paths. Browser end-to-end verification still requires a live HTTPS staging topology with Auth0 and real FIRRIS artifacts.
+
+## Follow-ups (not in the frontend)
+
+Recorded during the 2026-11 UI refresh; to be added to the backend backlog (plan §4.7):
+
+1. **Expose the current stage name in the task API** (backend). The Analyses list shows "Running · 48%"; the design's "Running · Sentinel-1 download" needs a stage field on `TaskStatusResponse`.
+2. **Filter the Analyses list by the selected system** once a second engine exists (frontend, with `engine_key`). Today the list shows every task in the organization, which are all FRRIS.
+3. **Target period of running and queued analyses**: the task list response does not carry the submitted parameters (only `/tasks/{id}/archive` does), so these rows show "—" until the result exists.
+4. **Preflight messages in inclusive terms** (backend, optional): the messages quote API end dates "(end date exclusive)" while the UI asks for the last day included.

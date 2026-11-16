@@ -90,7 +90,7 @@ describe("FRRIS shell", () => {
   it("has a labelled main navigation with the FRRIS pages and the account", async () => {
     renderAt("/frris/analyses");
     const nav = screen.getByRole("navigation", { name: "Main" });
-    for (const [name, href] of [["Analyses", "/frris/analyses"], ["New analysis", "/analyses"], ["Data catalog", "/data"], ["Exports", "/exports"]]) {
+    for (const [name, href] of [["Analyses", "/frris/analyses"], ["New analysis", "/frris/analyses/new"], ["Data catalog", "/data"], ["Exports", "/exports"]]) {
       expect(within(nav).getByRole("link", { name: new RegExp(`^${name}`) })).toHaveAttribute("href", href);
     }
     expect(within(nav).getByRole("link", { name: /^Analyses/ })).toHaveAttribute("aria-current", "page");

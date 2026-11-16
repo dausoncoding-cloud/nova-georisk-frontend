@@ -17,8 +17,8 @@ type NavItem = { to: string; icon: Parameters<typeof Icon>[0]["name"]; label: st
 
 // Primary FRRIS navigation, as in the design.
 export const PRIMARY_NAV: readonly NavItem[] = [
-  { to: FRRIS_ROUTES.analyses, icon: "overview", label: "Analyses" },
-  { to: "/analyses", icon: "plus", label: "New analysis" },
+  { to: FRRIS_ROUTES.analyses, icon: "overview", label: "Analyses", end: true },
+  { to: FRRIS_ROUTES.newAnalysis, icon: "plus", label: "New analysis", end: true },
   { to: "/data", icon: "data", label: "Data catalog" },
   { to: "/exports", icon: "exports", label: "Exports" },
 ];

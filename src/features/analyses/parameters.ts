@@ -63,6 +63,19 @@ export const defaultSatelliteWorkflowForm: SatelliteWorkflowForm = {
   normalizeProjection: true,
 };
 
+// Fixed parts of the FRRIS run (not user-editable). Shown read-only in the builder; sent as-is in the payload.
+export const FIXED_RUN_SETTINGS = {
+  minimumValidCoveragePct: 70,
+  speckleRadiusM: 50,
+  minPerClass: 30,
+  randomSeed: 12345,
+  algorithm: "random_forest",
+  modelVersion: "1.0",
+  nEstimators: 200,
+  datasets: ["COPERNICUS/S1_GRD", "COPERNICUS/S2_SR_HARMONIZED", "UCSB-CHG/CHIRPS/DAILY", "USGS/SRTMGL1_003", "JRC/GSW1_4/GlobalSurfaceWater"],
+  features: ["sar_vv_target", "sar_change", "elevation", "slope", "rainfall"],
+} as const;
+
 export function buildGeeSatelliteWorkflowParameters(form: SatelliteWorkflowForm): AnalysisSubmitRequest["parameters"] {
   if (!form.targetStart || !form.targetEnd || !form.baselineStart || !form.baselineEnd) {
     throw new Error("Target and baseline date ranges are required.");
@@ -75,32 +88,32 @@ export function buildGeeSatelliteWorkflowParameters(form: SatelliteWorkflowForm)
       source: {
         provider: "gee",
         date_mode: "pre-post",
-        datasets: ["COPERNICUS/S1_GRD", "COPERNICUS/S2_SR_HARMONIZED", "UCSB-CHG/CHIRPS/DAILY", "USGS/SRTMGL1_003", "JRC/GSW1_4/GlobalSurfaceWater"],
+        datasets: [...FIXED_RUN_SETTINGS.datasets],
         target_period: { start: form.targetStart, end: form.targetEnd },
         baseline_period: { start: form.baselineStart, end: form.baselineEnd },
         max_cloud_pct: form.maxCloudPct,
-        minimum_valid_coverage_pct: 70,
+        minimum_valid_coverage_pct: FIXED_RUN_SETTINGS.minimumValidCoveragePct,
         scale: form.scale,
         target_crs: "EPSG:4326",
         dem_source: "SRTM",
-        features: ["sar_vv_target", "sar_change", "elevation", "slope", "rainfall"],
+        features: [...FIXED_RUN_SETTINGS.features],
       },
       preprocessing: {
         cloud_mask: form.cloudMask,
         preview_enhancement: false,
         sar_speckle_filter: form.sarSpeckleFilter,
-        sar_speckle_radius_m: 50,
+        sar_speckle_radius_m: FIXED_RUN_SETTINGS.speckleRadiusM,
         normalize_projection: form.normalizeProjection,
         clip_to_aoi: true,
       },
       sampling: {
         strategy: form.samplingStrategy,
         sample_size: form.sampleSize,
-        min_per_class: 30,
+        min_per_class: FIXED_RUN_SETTINGS.minPerClass,
         train_fraction: form.trainFraction,
-        random_seed: 12345,
+        random_seed: FIXED_RUN_SETTINGS.randomSeed,
       },
-      model: { algorithm: "random_forest", version: "1.0", n_estimators: 200 },
+      model: { algorithm: FIXED_RUN_SETTINGS.algorithm, version: FIXED_RUN_SETTINGS.modelVersion, n_estimators: FIXED_RUN_SETTINGS.nEstimators },
       quality: {},
     },
   };

@@ -91,13 +91,25 @@ describe("moved routes", () => {
     await waitFor(() => expect(fetchTasks).toHaveBeenCalledWith(expect.objectContaining({ status: "failed", offset: 50 })));
   });
 
+  it("old /analyses links open New analysis and keep their query", async () => {
+    renderApp("/analyses?project=p1");
+    await waitFor(() => expect(location()).toBe("/frris/analyses/new?project=p1"));
+  });
+
+  it("New analysis is the FRRIS builder", async () => {
+    renderApp("/frris/analyses/new");
+    expect(await screen.findByRole("navigation", { name: "Main" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "New analysis" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: /^Analyses/ })).not.toHaveAttribute("aria-current");
+  });
+
   it("the former dashboard is reachable as FRRIS Overview", async () => {
     renderApp("/frris/overview");
     expect(await screen.findByText("Operations overview")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute("href", "/frris/analyses");
   });
 
-  it.each(["/projects", "/results", "/data", "/settings", "/analyses"])("unchanged route %s still renders in the FRRIS shell", async (path) => {
+  it.each(["/projects", "/results", "/data", "/settings"])("unchanged route %s still renders in the FRRIS shell", async (path) => {
     renderApp(path);
     expect(await screen.findByRole("navigation", { name: "Main" })).toBeInTheDocument();
     expect(location()).toBe(path);

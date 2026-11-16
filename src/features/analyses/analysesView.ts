@@ -3,6 +3,7 @@
 // (target period, accuracy). Missing data is shown as missing, never invented.
 import type { components } from "../../shared/api/generated/nova-browser-api";
 import type { TaskStatus, TaskStatusResponse } from "../tasks/tasksApi";
+import { formatDay } from "./periods";
 
 type Result = components["schemas"]["ResultResponse"];
 type Scope = components["schemas"]["AccuracyScope"];
@@ -128,5 +129,9 @@ const INDEPENDENT_STATUS: Record<string, string> = {
 
 const AREA = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1, minimumFractionDigits: 1 });
 export const formatAreaValue = (km2: number) => AREA.format(km2);
-const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
-export const formatCreated = (iso: string) => DATE.format(new Date(iso));
+// The created date in the viewer's own calendar day, written like the design ("14 Nov 2026").
+export const formatCreated = (iso: string) => {
+  const date = new Date(iso);
+  const local = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return formatDay(local);
+};

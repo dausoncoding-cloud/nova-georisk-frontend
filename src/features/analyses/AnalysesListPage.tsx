@@ -1,6 +1,7 @@
-import { useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
+import { FRRIS_ROUTES } from "../../app/routes";
 import { queryKeys } from "../../shared/api/queryKeys";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { Icon } from "../../shared/ui/Icon";
@@ -14,7 +15,7 @@ import { fetchTasks, type TaskFilters, type TaskStatus } from "../tasks/tasksApi
 import { buildRows, formatAreaValue, formatCreated, latestResult, matchesSearch, STATUS_FILTERS, type AnalysisRow } from "./analysesView";
 
 const PAGE_SIZE = 50;
-const NEW_ANALYSIS = "/analyses";
+const NEW_ANALYSIS = FRRIS_ROUTES.newAnalysis;
 
 function StatusPill({ status }: { status: AnalysisRow["status"] }) {
   return <span className={`fr-pill fr-pill--${status.tone} fr-status`}><span className="fr-status__dot" aria-hidden="true" />{status.label}</span>;
@@ -25,7 +26,7 @@ function EmptyState() {
     <section className="fr-empty" aria-labelledby="analyses-empty-title">
       <span className="fr-empty__icon" aria-hidden="true"><Icon name="flood" width={28} height={28} strokeWidth={2} /></span>
       <h2 id="analyses-empty-title">No analyses yet</h2>
-      <p>Start your first flood analysis by drawing an area and choosing a baseline and a target period.</p>
+      <p>Start your first flood analysis by drawing or uploading an area and choosing a baseline and a target period.</p>
       <Link className="fr-button fr-button--primary" to={NEW_ANALYSIS}>New analysis</Link>
     </section>
   );
@@ -35,6 +36,20 @@ export function AnalysesListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const searchId = useId();
+  // Mobile: the status filters are one scrollable row; the edge fade shows on the side(s) with more filters.
+  const filterRow = useRef<HTMLDivElement>(null);
+  const [filterFade, setFilterFade] = useState<"none" | "start" | "end" | "both">("none");
+  const updateFilterFade = useCallback(() => {
+    const row = filterRow.current;
+    if (!row) return;
+    const more = { start: row.scrollLeft > 1, end: row.scrollLeft + row.clientWidth < row.scrollWidth - 1 };
+    setFilterFade(more.start && more.end ? "both" : more.start ? "start" : more.end ? "end" : "none");
+  }, []);
+  useEffect(() => {
+    updateFilterFade();
+    window.addEventListener("resize", updateFilterFade);
+    return () => window.removeEventListener("resize", updateFilterFade);
+  });
   const requestedStatus = searchParams.get("status");
   const status = STATUS_FILTERS.find((item) => item.value && item.value === requestedStatus)?.value;
   const requestedOffset = Number(searchParams.get("offset") ?? 0);
@@ -113,10 +128,12 @@ export function AnalysesListPage() {
               <Icon name="search" width={16} height={16} />
               <input id={searchId} type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name or project" />
             </label>
-            <div role="group" aria-label="Filter by status" className="fr-filters">
-              {STATUS_FILTERS.map((filter) => (
-                <button key={filter.label} type="button" className="fr-filter" aria-pressed={status === filter.value} onClick={() => setStatus(filter.value)}>{filter.label}</button>
-              ))}
+            <div className="fr-filters-scroll" data-fade={filterFade}>
+              <div role="group" aria-label="Filter by status" className="fr-filters" ref={filterRow} onScroll={updateFilterFade}>
+                {STATUS_FILTERS.map((filter) => (
+                  <button key={filter.label} type="button" className="fr-filter" aria-pressed={status === filter.value} onClick={() => setStatus(filter.value)}>{filter.label}</button>
+                ))}
+              </div>
             </div>
           </div>
           {lookupFailed ? <p className="fr-analyses__notice" role="status">Some names, areas or periods could not be loaded; they are shown as “—”.</p> : null}

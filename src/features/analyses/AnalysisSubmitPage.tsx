@@ -1,63 +1,99 @@
-import { Disclosure } from "../../shared/ui/Disclosure";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { FRRIS_ROUTES } from "../../app/routes";
 import { getErrorMessage } from "../../shared/api/errors";
 import { queryKeys } from "../../shared/api/queryKeys";
+import { FRRIS_ENGINE_KEY } from "../../shared/productName";
+import { Disclosure } from "../../shared/ui/Disclosure";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
 import { fetchProjectAois } from "../aois/aoisApi";
+import { AoiWizard } from "../aois/AoiWizard";
 import { getGeometryBoundingBox } from "../aois/geometry";
 import { useAvailableEngines, useEngineContract } from "../engines/engineQueries";
-import { fetchProject } from "../projects/projectsApi";
+import { fetchProject, fetchProjects } from "../projects/projectsApi";
 import { preflightAnalysis, submitAnalysis, type AnalysisSubmitRequest, type FirrisProduct } from "./analysisApi";
-import { PreflightPanel, SENTINEL1_START, todayIso } from "./PreflightPanel";
-import { buildGeeSatelliteWorkflowParameters, defaultSatelliteWorkflowForm, type SatelliteWorkflowForm } from "./parameters";
-import { FRRIS_ENGINE_KEY } from "../../shared/productName";
+import { buildGeeSatelliteWorkflowParameters, defaultSatelliteWorkflowForm, FIXED_RUN_SETTINGS, type SatelliteWorkflowForm } from "./parameters";
+import { periodProblem, SENTINEL1_START, todayIso, toApiEnd, toLastDay, formatPeriod, type InclusivePeriod } from "./periods";
+import { downloadSizeText, MIB, PreflightPanel } from "./PreflightPanel";
 
-const steps = ["Context", "AOI", "Period", "Data", "Preprocess", "Sampling", "Products", "Validation", "Review"];
-const productKeys = new Set<string>(["flood_extent", "flood_depth", "flood_velocity", "flood_hazard", "flood_probability", "flood_duration", "flood_exposure", "flood_vulnerability", "flood_risk", "flood_susceptibility", "flood_hazard_zonation"]);
+const PRODUCT_KEYS = new Set<string>(["flood_extent", "flood_depth", "flood_velocity", "flood_hazard", "flood_probability", "flood_duration", "flood_exposure", "flood_vulnerability", "flood_risk", "flood_susceptibility", "flood_hazard_zonation"]);
+const SATELLITE_PRODUCTS = new Set(["flood_extent", "flood_probability"]);
+const FEATURE_LABELS: Record<string, string> = { sar_vv_target: "SAR VV (target)", sar_change: "SAR change", elevation: "Elevation", slope: "Slope", rainfall: "Rainfall (CHIRPS)" };
 
-export function AnalysisSubmitPage() {
-  const { projectId = "" } = useParams();
+/** Form state in UI terms: windows end on an inclusive last day (backlog §4.7 item 1). */
+export type BuilderForm = Omit<SatelliteWorkflowForm, "targetEnd" | "baselineEnd"> & { targetLast: string; baselineLast: string };
+
+export const defaultBuilderForm: BuilderForm = (() => {
+  const { targetEnd, baselineEnd, ...rest } = defaultSatelliteWorkflowForm;
+  return { ...rest, targetLast: toLastDay(targetEnd), baselineLast: toLastDay(baselineEnd) };
+})();
+
+/** UI form → API form: the only change is the +1 day on each end date. */
+export function toApiForm(form: BuilderForm): SatelliteWorkflowForm {
+  const { targetLast, baselineLast, ...rest } = form;
+  return { ...rest, targetEnd: toApiEnd(targetLast), baselineEnd: toApiEnd(baselineLast) };
+}
+
+function Step({ number, title, children, id }: { number: number; title: string; children: ReactNode; id: string }) {
+  return (
+    <section className="fr-card fr-step" aria-labelledby={id}>
+      <div className="fr-step__head"><span className="fr-step__number" aria-hidden="true">{number}</span><h2 id={id}><span className="fr-visually-hidden">Step {number}: </span>{title}</h2></div>
+      {children}
+    </section>
+  );
+}
+
+export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean }) {
+  const { projectId: routeProjectId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const idBase = useId();
+  const [chosenProjectId, setChosenProjectId] = useState(searchParams.get("project") ?? "");
+  const projects = useQuery({ queryKey: queryKeys.projects.all, queryFn: fetchProjects, enabled: !routeProjectId });
+  const frrisProjects = useMemo(() => (projects.data ?? []).filter((item) => item.engine_key === FRRIS_ENGINE_KEY), [projects.data]);
+  const projectId = routeProjectId ?? (chosenProjectId || frrisProjects[0]?.id || "");
   const project = useQuery({ queryKey: queryKeys.projects.detail(projectId), queryFn: () => fetchProject(projectId), enabled: Boolean(projectId) });
   const aois = useQuery({ queryKey: queryKeys.aois.project(projectId), queryFn: () => fetchProjectAois(projectId), enabled: Boolean(projectId) });
   const engines = useAvailableEngines();
   const firris = useMemo(() => (engines.data ?? []).find((engine) => engine.key === FRRIS_ENGINE_KEY && engine.access !== false), [engines.data]);
   const contract = useEngineContract(firris?.key ?? null);
-  const [step, setStep] = useState(0);
   const [aoiId, setAoiId] = useState(searchParams.get("aoi_id") ?? "");
   const [products, setProducts] = useState<FirrisProduct[]>([]);
-  const [configuration, setConfiguration] = useState<SatelliteWorkflowForm>(() => ({ ...defaultSatelliteWorkflowForm }));
-  const [error, setError] = useState<string | null>(null);
-  const { targetStart, targetEnd, baselineStart, baselineEnd, maxCloudPct, scale, sampleSize, samplingStrategy, trainFraction, cloudMask, sarSpeckleFilter: sarFilter, normalizeProjection: normalize } = configuration;
-  const configure = <Key extends keyof SatelliteWorkflowForm>(key: Key, value: SatelliteWorkflowForm[Key]) => setConfiguration((current) => ({ ...current, [key]: value }));
-  const setTargetStart = (value: string) => configure("targetStart", value);
-  const setTargetEnd = (value: string) => configure("targetEnd", value);
-  const setBaselineStart = (value: string) => configure("baselineStart", value);
-  const setBaselineEnd = (value: string) => configure("baselineEnd", value);
-  const setMaxCloudPct = (value: number) => configure("maxCloudPct", value);
-  const setScale = (value: number) => configure("scale", value);
-  const setSampleSize = (value: number) => configure("sampleSize", value);
-  const setSamplingStrategy = (value: SatelliteWorkflowForm["samplingStrategy"]) => configure("samplingStrategy", value);
-  const setTrainFraction = (value: number) => configure("trainFraction", value);
-  const setCloudMask = (value: boolean) => configure("cloudMask", value);
-  const setSarFilter = (value: boolean) => configure("sarSpeckleFilter", value);
-  const setNormalize = (value: boolean) => configure("normalizeProjection", value);
+  const [form, setForm] = useState<BuilderForm>(() => ({ ...defaultBuilderForm }));
+  const [problems, setProblems] = useState<string[]>([]);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const knownAoiIds = useRef<Set<string> | null>(null);
+  const configure = <Key extends keyof BuilderForm>(key: Key, value: BuilderForm[Key]) => setForm((current) => ({ ...current, [key]: value }));
+  const today = todayIso();
 
-  useEffect(() => { if (!aoiId && aois.data?.items[0]) setAoiId(aois.data.items[0].id); }, [aoiId, aois.data]);
-  const availableProducts = useMemo(() => (contract.data?.products ?? []).filter((item) => productKeys.has(item.key)), [contract.data]);
+  // Keep a valid AOI selected; after "Draw or upload", select the area that was just created.
+  useEffect(() => {
+    const items = aois.data?.items ?? [];
+    if (knownAoiIds.current) {
+      const created = items.find((item) => !knownAoiIds.current!.has(item.id));
+      if (created) { setAoiId(created.id); knownAoiIds.current = null; return; }
+    }
+    if (items.length && !items.some((item) => item.id === aoiId)) setAoiId(items[0]!.id);
+  }, [aois.data, aoiId]);
+
+  const availableProducts = useMemo(() => (contract.data?.products ?? []).filter((item) => PRODUCT_KEYS.has(item.key)), [contract.data]);
   const selectedAoi = aois.data?.items.find((item) => item.id === aoiId);
-  const enabledSatelliteProducts = new Set(["flood_extent", "flood_probability"]);
+  const target: InclusivePeriod = { start: form.targetStart, lastDay: form.targetLast };
+  const baseline: InclusivePeriod = { start: form.baselineStart, lastDay: form.baselineLast };
+  const periodProblems = [periodProblem("Target", target, today), periodProblem("Baseline", baseline, today)].filter((item): item is string => Boolean(item));
+  const apiForm = periodProblems.length ? null : toApiForm(form);
 
   // One request shape for the availability check and the submission (the server re-runs the checks on submit).
-  const buildRequest = (requestProducts: FirrisProduct[]): AnalysisSubmitRequest | null => selectedAoi ? ({ project_id: projectId, aoi_id: selectedAoi.id, operation: "flood_mapping", products: requestProducts, parameters: buildGeeSatelliteWorkflowParameters(configuration), gis_metadata: { crs: selectedAoi.crs, bounding_box: getGeometryBoundingBox(selectedAoi.geometry), spatial_resolution: { x: scale, y: scale, unit: "m" }, acquisition_date: targetEnd, producer: "NOVA GeoRisk", engine_version: contract.data?.engine_version ?? null } }) : null;
-  const periodsValid = Boolean(targetStart && targetEnd && baselineStart && baselineEnd && targetStart < targetEnd && baselineStart < baselineEnd);
-  const preflightRequest = step >= 2 && periodsValid && firris && project.data?.engine_key === firris.key ? buildRequest(products.length ? products : ["flood_extent"]) : null;
+  const buildRequest = (requestProducts: FirrisProduct[]): AnalysisSubmitRequest | null => selectedAoi && apiForm ? ({
+    project_id: projectId, aoi_id: selectedAoi.id, operation: "flood_mapping", products: requestProducts,
+    parameters: buildGeeSatelliteWorkflowParameters(apiForm),
+    gis_metadata: { crs: selectedAoi.crs, bounding_box: getGeometryBoundingBox(selectedAoi.geometry), spatial_resolution: { x: form.scale, y: form.scale, unit: "m" }, acquisition_date: apiForm.targetEnd, producer: "NOVA GeoRisk", engine_version: contract.data?.engine_version ?? null },
+  }) : null;
+  const preflightRequest = firris && project.data?.engine_key === firris.key ? buildRequest(products.length ? products : ["flood_extent"]) : null;
   const preflight = useQuery({
-    queryKey: ["analysis-preflight", projectId, selectedAoi?.id, targetStart, targetEnd, baselineStart, baselineEnd, maxCloudPct, scale],
+    queryKey: ["analysis-preflight", projectId, selectedAoi?.id, apiForm?.targetStart, apiForm?.targetEnd, apiForm?.baselineStart, apiForm?.baselineEnd, form.maxCloudPct, form.scale],
     queryFn: () => preflightAnalysis(preflightRequest!),
     enabled: preflightRequest !== null,
     staleTime: 60_000,
@@ -65,70 +101,182 @@ export function AnalysisSubmitPage() {
   });
   const blocked = (preflight.data?.blocking?.length ?? 0) > 0;
   const opticalWarnings = (preflight.data?.warnings ?? []).filter((issue) => issue.code === "no_compliant_sentinel2" || issue.code === "sentinel2_partial_coverage");
-  const noOptical = opticalWarnings.length > 0;
   const opticalReason = opticalWarnings.some((issue) => issue.code === "no_compliant_sentinel2") ? "no compliant Sentinel-2 scene" : "Sentinel-2 does not cover the whole area";
   // Backlog §4.7 item 5: name the window(s) concerned.
   const opticalWindows = [...new Set(opticalWarnings.map((issue) => issue.period).filter((period): period is "target" | "baseline" => Boolean(period)))].sort().reverse();
   const opticalWhere = opticalWindows.length === 2 ? "both windows" : opticalWindows.length === 1 ? `the ${opticalWindows[0]} window` : "this analysis";
+  // "Use nearest pass" extends the window (API terms, end exclusive); the form keeps the inclusive last day.
   const useNearestPass = (period: "target" | "baseline", start: string, end: string) => {
-    if (period === "target") setConfiguration((current) => ({ ...current, targetStart: start, targetEnd: end }));
-    else setConfiguration((current) => ({ ...current, baselineStart: start, baselineEnd: end }));
+    if (period === "target") setForm((current) => ({ ...current, targetStart: start, targetLast: toLastDay(end) }));
+    else setForm((current) => ({ ...current, baselineStart: start, baselineLast: toLastDay(end) }));
   };
-  const today = todayIso();
 
   const submit = useMutation({
     mutationFn: async () => {
       if (!selectedAoi || !project.data || !firris) throw new Error("Project, engine and AOI are required.");
       if (project.data.engine_key !== firris.key) throw new Error("This project is not configured for the entitled FRRIS engine.");
-      if (!products.length) throw new Error("Select at least one production-ready product.");
       return submitAnalysis(buildRequest(products)!);
     },
     onSuccess: (response) => navigate(`/tasks/${response.task.task_id}`),
-    onError: (caught) => setError(getErrorMessage(caught)),
+    onError: (caught) => setProblems([getErrorMessage(caught)]),
   });
 
-  function next() {
-    setError(null);
-    if (step === 1 && !selectedAoi) return setError("Select an area of interest.");
-    if (step === 2 && (!targetStart || !targetEnd || !baselineStart || !baselineEnd || targetStart >= targetEnd || baselineStart >= baselineEnd)) return setError("Enter both date ranges. Each start date must be before its end date.");
-    if (step === 2 && blocked) return;
-    if (step === 3 && (!Number.isFinite(maxCloudPct) || maxCloudPct < 0 || maxCloudPct > 100)) return setError("Cloud cover must be between 0 and 100 percent.");
-    if (step === 5 && (!Number.isInteger(sampleSize) || sampleSize < 10 || sampleSize > 1000000 || !Number.isFinite(trainFraction) || trainFraction < .5 || trainFraction > .99)) return setError("Enter a whole sample size between 10 and 1,000,000 and a training fraction between 0.5 and 0.99.");
-    if (step === 7 && (!Number.isFinite(scale) || scale < 1 || scale > 1000)) return setError("Output scale must be between 1 and 1,000 metres.");
-    if (step === 6 && products.length === 0) return setError("Select at least one production-ready product.");
-    setStep((value) => Math.min(8, value + 1));
+  function run() {
+    const found: string[] = [];
+    if (!selectedAoi) found.push("Select an area of interest.");
+    found.push(...periodProblems);
+    if (!Number.isFinite(form.maxCloudPct) || form.maxCloudPct < 0 || form.maxCloudPct > 100) found.push("Cloud cover must be between 0 and 100 percent.");
+    if (!Number.isInteger(form.sampleSize) || form.sampleSize < 10 || form.sampleSize > 1000000 || !Number.isFinite(form.trainFraction) || form.trainFraction < .5 || form.trainFraction > .99) found.push("Enter a whole sample size between 10 and 1,000,000 and a training fraction between 0.5 and 0.99.");
+    if (!Number.isFinite(form.scale) || form.scale < 1 || form.scale > 1000) found.push("Output scale must be between 1 and 1,000 metres.");
+    if (products.length === 0) found.push("Select at least one production-ready product.");
+    setProblems(found);
+    if (found.length === 0 && !blocked) submit.mutate();
   }
 
-  if (project.isPending || aois.isPending || engines.isPending) return <LoadingState label="Preparing FRRIS analysis builder…" />;
+  if ((!routeProjectId && projects.isPending) || (projectId && (project.isPending || aois.isPending)) || engines.isPending) return <LoadingState label="Preparing the FRRIS analysis builder…" />;
+  if (projects.isError) return <ErrorState title="Projects could not be loaded" error={projects.error} />;
   if (project.isError) return <ErrorState title="Project could not be loaded" error={project.error} />;
   if (aois.isError) return <ErrorState title="Areas of interest could not be loaded" error={aois.error} />;
   if (engines.isError) return <ErrorState title="Engine access could not be loaded" error={engines.error} />;
   if (!firris) return <ErrorState title="FRRIS is unavailable" error={new Error("This organization does not have an active FRRIS entitlement.")} />;
 
-  return <div className="analysis-builder">
-    <header className="section-heading"><div><span className="eyebrow">Guided workflow</span><h2>New FRRIS analysis</h2><p>Select a boundary, period and products, then review your analysis.</p><Link to={`/projects/${projectId}/data`}>Manage vetted external inputs for advanced analyses</Link></div><span className="engine-pill">FRRIS · {firris.version}</span></header>
-    <ol className="analysis-stepper">{steps.map((label, index) => <li key={label} className={index === step ? "is-active" : index < step ? "is-done" : ""}><button type="button" aria-current={index === step ? "step" : undefined} disabled={index > step} onClick={() => { setStep(index); setError(null); }}><span>{index < step ? "✓" : index + 1}</span><small>{label}</small></button></li>)}</ol>
-    <div className="analysis-builder__layout"><section className="panel builder-panel">
-      {step === 0 ? <div className="builder-step"><span className="eyebrow">Step 1 of 9</span><h3>Confirm project context</h3><p>Confirm the project and coordinate reference system before continuing.</p><dl className="review-facts"><div><dt>Project</dt><dd>{project.data.name}</dd></div><div><dt>Organization</dt><dd>{project.data.organization_id}</dd></div><div><dt>Engine</dt><dd>{project.data.engine_key.toUpperCase()}</dd></div><div><dt>Project CRS</dt><dd>{project.data.crs}</dd></div></dl></div> : null}
-      {step === 1 ? <div className="builder-step"><span className="eyebrow">Step 2 of 9</span><h3>Select area of interest</h3><p>Only AOIs from this project are available.</p><div className="selection-list">{aois.data.items.map((aoi) => <label className={aoiId === aoi.id ? "is-selected" : ""} key={aoi.id}><input type="radio" name="aoi" checked={aoiId === aoi.id} onChange={() => setAoiId(aoi.id)} /><span><strong>{aoi.name}</strong><small>{aoi.geometry.type} · {aoi.stats.area_km2.toFixed(2)} km² · {aoi.crs}</small></span></label>)}</div>{aois.data.items.length === 0 ? <div className="empty-state"><p>No AOIs available.</p><Link className="button button--primary" to={`/projects/${projectId}/aois`}>Create AOI</Link></div> : null}</div> : null}
-      {step === 2 ? <div className="builder-step"><span className="eyebrow">Step 3 of 9</span><h3>Analysis period</h3><p>Choose the target event window and a comparable baseline period.</p><div className="date-period"><fieldset><legend>Target period</legend><label className="field"><span>Start</span><input type="date" min={SENTINEL1_START} max={today} value={targetStart} onChange={(event) => setTargetStart(event.target.value)} /></label><label className="field"><span>End</span><input type="date" min={SENTINEL1_START} max={today} value={targetEnd} onChange={(event) => setTargetEnd(event.target.value)} /></label></fieldset><fieldset><legend>Baseline period</legend><label className="field"><span>Start</span><input type="date" min={SENTINEL1_START} max={today} value={baselineStart} onChange={(event) => setBaselineStart(event.target.value)} /></label><label className="field"><span>End</span><input type="date" min={SENTINEL1_START} max={today} value={baselineEnd} onChange={(event) => setBaselineEnd(event.target.value)} /></label></fieldset></div><p className="field-help">Sentinel-1 data starts on 3 October 2014; end dates are exclusive.</p><PreflightPanel result={preflight.data} isFetching={preflight.isFetching} error={preflight.error ? getErrorMessage(preflight.error) : null} onUseNearestPass={useNearestPass} /></div> : null}
-      {step === 3 ? <div className="builder-step"><span className="eyebrow">Step 4 of 9</span><h3>Satellite data</h3><p>The FRRIS production pipeline requires this reviewed dataset combination.</p><div className="dataset-selection">{[["Sentinel-1 GRD", "SAR flood signal"], ["Sentinel-2 SR", "Optical quality features"], ["CHIRPS Daily", "Rainfall context"], ["SRTM / ALOS", "Terrain features"], ["JRC Surface Water", "Permanent-water context"]].map(([name, use]) => <div key={name}><span>✓</span><strong>{name}</strong><small>{use}</small></div>)}</div><label className="field field--compact"><span>Maximum optical cloud cover</span><input type="number" min="0" max="100" value={maxCloudPct} onChange={(event) => setMaxCloudPct(Number(event.target.value))} /><small>percent</small></label></div> : null}
-      {step === 4 ? <div className="builder-step"><span className="eyebrow">Step 5 of 9</span><h3>Preprocessing</h3><p>Configure supported quality and normalization operations.</p><Disclosure title="Advanced preprocessing settings"><div className="toggle-list">{[["Cloud and quality mask", cloudMask, setCloudMask], ["SAR speckle filtering", sarFilter, setSarFilter], ["Projection normalization", normalize, setNormalize]].map(([label, checked, setter]) => <label key={String(label)}><span><strong>{String(label)}</strong><small>Applied server-side and recorded in provenance.</small></span><input type="checkbox" role="switch" checked={Boolean(checked)} onChange={(event) => (setter as (value: boolean) => void)(event.target.checked)} /></label>)}</div><div className="notice">AOI clipping is always enforced by the engine and cannot be disabled.</div></Disclosure></div> : null}
-      {step === 5 ? <div className="builder-step">
-        <span className="eyebrow">Step 6 of 9</span><h3>Sampling framework</h3>
-        <p>Choose a sampling method and the training/testing split.</p>
-        <div className="form-row">
-          <label className="field"><span>Method</span><select value={samplingStrategy} onChange={(event) => setSamplingStrategy(event.target.value as SatelliteWorkflowForm["samplingStrategy"])}><option value="stratified_random">Stratified random (recommended)</option><option value="simple_random">Simple random</option></select></label>
-          <label className="field"><span>Sample size</span><input type="number" min="10" max="1000000" value={sampleSize} onChange={(event) => setSampleSize(Number(event.target.value))} /></label>
-          <label className="field"><span>Training fraction</span><input type="number" min=".5" max=".99" step=".05" value={trainFraction} onChange={(event) => setTrainFraction(Number(event.target.value))} /></label>
-        </div>
-        <div className="notice">The remaining {(100 - trainFraction * 100).toFixed(0)}% is reserved for validation. The worker rejects simple-random samples that fail the minimum per-class count.</div>
-      </div> : null}
-      {step === 6 ? <div className="builder-step"><span className="eyebrow">Step 7 of 9</span><h3>Select products</h3><p>Only products with an available satellite delivery type can be submitted.</p><div className="product-grid">{availableProducts.map((product) => { const ready = product.available_delivery_types.length > 0 && enabledSatelliteProducts.has(product.key); const checked = products.includes(product.key as FirrisProduct); return <label className={`product-option${checked ? " product-option--selected" : ""}${!ready ? " product-option--disabled" : ""}`} key={product.key}><input type="checkbox" disabled={!ready} checked={checked} onChange={() => setProducts((current) => checked ? current.filter((key) => key !== product.key) : [...current, product.key as FirrisProduct])} /><span><strong>{product.label}</strong><small>{ready ? product.available_delivery_types.join(" · ") : `Planned · ${product.planned_delivery_types.join(" · ") || "delivery unavailable"}`}</small></span></label>; })}</div></div> : null}
-      {step === 7 ? <div className="builder-step"><span className="eyebrow">Step 8 of 9</span><h3>Validation and output</h3><p>Confirm the model baseline and requested spatial resolution.</p><div className="model-card"><div><span className="engine-pill">Baseline</span><h4>Random Forest</h4><p>Versioned model metadata, confusion matrix and accuracy metrics are persisted with the result.</p></div><label className="field"><span>Output scale</span><input type="number" min="1" max="1000" value={scale} onChange={(event) => setScale(Number(event.target.value))} /><small>metres</small></label></div><div className="notice">The SAR screening mask is used as a pseudo-label in the current baseline. Independent field labels remain necessary for authoritative validation.</div></div> : null}
-      {step === 8 ? <div className="builder-step"><span className="eyebrow">Step 9 of 9</span><h3>Review and submit</h3><p>Check the settings below. You can track progress after submitting.</p><dl className="review-facts"><div><dt>Project</dt><dd>{project.data.name}</dd></div><div><dt>AOI</dt><dd>{selectedAoi?.name}</dd></div><div><dt>Target</dt><dd>{targetStart} → {targetEnd}</dd></div><div><dt>Baseline</dt><dd>{baselineStart} → {baselineEnd}</dd></div><div><dt>Products</dt><dd>{products.map((item) => availableProducts.find((product) => product.key === item)?.label ?? item).join(", ")}</dd></div><div><dt>Sampling</dt><dd>{samplingStrategy.replaceAll("_", " ")} · {sampleSize.toLocaleString()} · {(trainFraction * 100).toFixed(0)}% training</dd></div><div><dt>Resolution</dt><dd>{scale} m</dd></div><div><dt>Outputs</dt><dd>Protected GIS products, validation and report package</dd></div></dl><PreflightPanel result={preflight.data} isFetching={preflight.isFetching} error={preflight.error ? getErrorMessage(preflight.error) : null} onUseNearestPass={useNearestPass} /></div> : null}
-      {error ? <div className="inline-alert" role="alert">{error}</div> : null}
-      <footer className="builder-actions"><button className="button button--quiet" type="button" onClick={() => step === 0 ? navigate(`/projects/${projectId}`) : setStep((value) => value - 1)}>{step === 0 ? "Cancel" : "Back"}</button>{step === 2 && blocked ? <span className="builder-actions__hint" role="status">Resolve the blocked items above to continue</span> : null}{step === 2 && !blocked && noOptical ? <span className="builder-actions__hint builder-actions__hint--warning" role="status" aria-label="Before you continue">Independent accuracy will not be assessable for {opticalWhere} ({opticalReason}). Widen the window to include clear dates over the whole area, or continue.</span> : null}{step < 8 ? <button className="button button--primary" type="button" disabled={step === 2 && blocked} onClick={next}>Continue</button> : <button className="button button--primary" type="button" disabled={submit.isPending || blocked} title={blocked ? "Resolve the blocking reasons in the analysis period first." : undefined} onClick={() => submit.mutate()}>{submit.isPending ? "Submitting…" : "Submit FRRIS analysis"}</button>}</footer>
-    </section><aside className="analysis-summary"><span className="eyebrow">Run summary</span><dl><div><dt>Engine</dt><dd>FRRIS {firris.version}</dd></div><div><dt>AOI</dt><dd>{selectedAoi?.name ?? "Not selected"}</dd></div><div><dt>Products</dt><dd>{products.length}</dd></div><div><dt>Output scale</dt><dd>{scale} m</dd></div></dl><div className="secure-note"><strong>Project</strong><p>{project.data.name}</p><strong>Target period</strong><p>{targetStart} → {targetEnd}</p></div></aside></div>
+  const Heading = embedded ? "h2" : "h1";
+  const capacity = preflight.data?.capacity;
+  const orbits = preflight.data?.shared_relative_orbits ?? [];
+  const productLabels = products.map((key) => availableProducts.find((product) => product.key === key)?.label ?? key);
+  const id = (name: string) => `${idBase}-${name}`;
+  const dateInput = (label: string, value: string, onChange: (value: string) => void) => (
+    <label className="fr-field"><span>{label}</span><input type="date" min={SENTINEL1_START} max={today} value={value} onChange={(event) => onChange(event.target.value)} /></label>
+  );
+
+  return <div className="fr-builder">
+    <header className="fr-page-header fr-builder__header">
+      <div className="fr-page-header__text">
+        {embedded ? null : <Link className="fr-back" to={FRRIS_ROUTES.analyses}>← Analyses</Link>}
+        <Heading>New flood analysis</Heading>
+        <p>Define the area and the two periods. FRRIS compares a dry-season baseline with the target period using Sentinel-1 radar.</p>
+      </div>
+    </header>
+
+    <div className="fr-builder__layout">
+      <div className="fr-builder__steps">
+        <Step number={1} title="Area of interest" id={id("area")}>
+          {routeProjectId ? null : (
+            <label className="fr-field"><span>Project</span>
+              <select value={projectId} onChange={(event) => { setChosenProjectId(event.target.value); setAoiId(""); }}>
+                {frrisProjects.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+            </label>
+          )}
+          {!projectId ? <div className="fr-box fr-box--info" role="status">No FRRIS project yet. <Link to="/projects/new">Create the first FRRIS project</Link></div> : <>
+            <fieldset className="fr-choice-list">
+              <legend>Area</legend>
+              {aois.data?.items.map((aoi) => (
+                <label key={aoi.id} className={`fr-choice${aoiId === aoi.id ? " is-selected" : ""}`}>
+                  <input type="radio" name={id("aoi")} checked={aoiId === aoi.id} onChange={() => setAoiId(aoi.id)} />
+                  <span><strong>{aoi.name}</strong><small><span className="fr-num">{aoi.stats.area_km2.toFixed(1)}</span> km² · {aoi.geometry.type} · {aoi.crs}</small></span>
+                </label>
+              ))}
+              {aois.data?.items.length === 0 ? <p className="fr-help">This project has no areas yet.</p> : null}
+            </fieldset>
+            <div className="fr-step__actions">
+              <button type="button" className="fr-button fr-button--secondary" onClick={() => { knownAoiIds.current = new Set(aois.data?.items.map((item) => item.id)); setWizardOpen(true); }}>Draw or upload an area</button>
+              <span className="fr-help">Polygon, rectangle, GeoJSON, KML, Shapefile (.zip) or GeoPackage.</span>
+            </div>
+          </>}
+        </Step>
+
+        <Step number={2} title="Periods and satellite availability" id={id("periods")}>
+          <div className="fr-periods">
+            <fieldset><legend>Target (flood event)</legend>{dateInput("First day", form.targetStart, (value) => configure("targetStart", value))}{dateInput("Last day (included)", form.targetLast, (value) => configure("targetLast", value))}</fieldset>
+            <fieldset><legend>Baseline (dry season)</legend>{dateInput("First day", form.baselineStart, (value) => configure("baselineStart", value))}{dateInput("Last day (included)", form.baselineLast, (value) => configure("baselineLast", value))}</fieldset>
+          </div>
+          <p className="fr-help">Sentinel-1 data starts on 3 Oct 2014 and passes over the same area about every 12 days. Choose a target period that includes a pass during the flood. End dates are inclusive; the last day can be today ({today}, UTC) at the latest.</p>
+          {periodProblems.length && selectedAoi ? <p className="fr-box fr-box--info" role="status">{periodProblems.join(" ")}</p> : null}
+          <div aria-live="polite">
+            <PreflightPanel result={preflight.data} isFetching={preflight.isFetching} error={preflight.error ? getErrorMessage(preflight.error) : null} onUseNearestPass={useNearestPass} />
+          </div>
+        </Step>
+
+        <Step number={3} title="Data quality" id={id("quality")}>
+          <div className="fr-grid-3">
+            <label className="fr-field"><span>Max. cloud cover (Sentinel-2)</span><span className="fr-input-unit"><input type="number" min="0" max="100" value={form.maxCloudPct} onChange={(event) => configure("maxCloudPct", Number(event.target.value))} /><span aria-hidden="true">%</span></span></label>
+            <div className="fr-field fr-field--fixed"><span>Min. area coverage</span><strong className="fr-num">{FIXED_RUN_SETTINGS.minimumValidCoveragePct}%</strong><small>fixed</small></div>
+            <div className="fr-field fr-field--fixed"><span>Degraded MSI pixels</span><strong className="fr-num">≤ 0.1%</strong><small>fixed</small></div>
+          </div>
+          <div className="fr-features">
+            <span className="fr-features__label">Model features</span>
+            <ul>{FIXED_RUN_SETTINGS.features.map((feature) => <li key={feature}>{FEATURE_LABELS[feature] ?? feature}</li>)}</ul>
+            <p className="fr-help">Sentinel-2 is used only as the independent accuracy reference, not as a model input.</p>
+          </div>
+        </Step>
+
+        <Step number={4} title="Products" id={id("products")}>
+          <fieldset className="fr-choice-list fr-choice-list--grid">
+            <legend>Products to deliver</legend>
+            {availableProducts.map((product) => {
+              const ready = product.available_delivery_types.length > 0 && SATELLITE_PRODUCTS.has(product.key);
+              const checked = products.includes(product.key as FirrisProduct);
+              return <label key={product.key} className={`fr-choice${checked ? " is-selected" : ""}${ready ? "" : " is-disabled"}`}>
+                <input type="checkbox" disabled={!ready} checked={checked} onChange={() => setProducts((current) => checked ? current.filter((key) => key !== product.key) : [...current, product.key as FirrisProduct])} />
+                <span><strong>{product.label}</strong><small>{ready ? product.available_delivery_types.join(" · ") : `Planned · ${product.planned_delivery_types.join(" · ") || "delivery unavailable"}`}</small></span>
+              </label>;
+            })}
+          </fieldset>
+        </Step>
+
+        <Step number={5} title="Processing and sampling" id={id("processing")}>
+          <div className="fr-grid-3 fr-grid-3--wide">
+            <label className="fr-field"><span>Sampling method</span><select value={form.samplingStrategy} onChange={(event) => configure("samplingStrategy", event.target.value as BuilderForm["samplingStrategy"])}><option value="stratified_random">Stratified random (recommended)</option><option value="simple_random">Simple random</option></select></label>
+            <label className="fr-field"><span>Sample size</span><input type="number" min="10" max="1000000" value={form.sampleSize} onChange={(event) => configure("sampleSize", Number(event.target.value))} /></label>
+            <label className="fr-field"><span>Training fraction</span><input type="number" min=".5" max=".99" step=".05" value={form.trainFraction} onChange={(event) => configure("trainFraction", Number(event.target.value))} /></label>
+            <label className="fr-field"><span>Output scale</span><span className="fr-input-unit"><input type="number" min="1" max="1000" value={form.scale} onChange={(event) => configure("scale", Number(event.target.value))} /><span aria-hidden="true">m</span></span></label>
+          </div>
+          <p className="fr-help">The remaining {(100 - form.trainFraction * 100).toFixed(0)}% is reserved for validation. The worker rejects simple-random samples that fail the minimum of {FIXED_RUN_SETTINGS.minPerClass} per class. Random Forest, {FIXED_RUN_SETTINGS.nEstimators} trees, random seed {FIXED_RUN_SETTINGS.randomSeed}.</p>
+          <Disclosure title="Preprocessing">
+            <div className="fr-toggles">
+              {([["Cloud and quality mask", "cloudMask"], ["SAR speckle filtering", "sarSpeckleFilter"], ["Projection normalization", "normalizeProjection"]] as const).map(([label, key]) => (
+                <label key={key}><span><strong>{label}</strong><small>Applied server-side and recorded in provenance.</small></span><input type="checkbox" role="switch" checked={form[key]} onChange={(event) => configure(key, event.target.checked)} /></label>
+              ))}
+            </div>
+            <p className="fr-help">AOI clipping is always enforced by the engine and cannot be disabled.</p>
+          </Disclosure>
+        </Step>
+      </div>
+
+      <aside className="fr-summary" aria-labelledby={id("summary")}>
+        <section className="fr-card fr-summary__card">
+          <h2 id={id("summary")}>Run summary</h2>
+          <dl>
+            <div><dt>Project</dt><dd>{project.data?.name ?? "Not selected"}</dd></div>
+            <div><dt>Area</dt><dd>{selectedAoi ? <>{selectedAoi.name} · <span className="fr-num">{selectedAoi.stats.area_km2.toFixed(1)}</span> km²</> : "Not selected"}</dd></div>
+            <div><dt>Baseline</dt><dd>{formatPeriod(baseline)}</dd></div>
+            <div><dt>Target</dt><dd>{formatPeriod(target)}</dd></div>
+            <div><dt>Radar</dt><dd>Sentinel-1 VV{orbits.length ? ` · orbit ${orbits.join(", ")}` : ""}</dd></div>
+            <div><dt>Reference</dt><dd>Sentinel-2 (independent accuracy)</dd></div>
+            <div><dt>Quality</dt><dd>Cloud ≤ {form.maxCloudPct}% · cover ≥ {FIXED_RUN_SETTINGS.minimumValidCoveragePct}% · MSI ≤ 0.1%</dd></div>
+            <div><dt>Products</dt><dd>{productLabels.length ? productLabels.join(", ") : "None selected"}</dd></div>
+            <div><dt>Sampling</dt><dd>{form.samplingStrategy.replaceAll("_", " ")} · {form.sampleSize.toLocaleString("en-GB")} · {(form.trainFraction * 100).toFixed(0)}% training</dd></div>
+            <div><dt>Resolution</dt><dd>{form.scale} m</dd></div>
+          </dl>
+          {capacity ? (
+            <div className="fr-meter">
+              <div className="fr-meter__label"><span>Download size estimate</span><span className="fr-num">{downloadSizeText(capacity)}</span></div>
+              <div className="fr-meter__track" role="img" aria-label={`Download size estimate: ${downloadSizeText(capacity)} limit`}>
+                <div className={`fr-meter__bar${capacity.estimated_request_bytes > capacity.limit_bytes ? " is-over" : ""}`} style={{ width: `${Math.min(100, (capacity.estimated_request_bytes / capacity.limit_bytes) * 100)}%` }} />
+              </div>
+              <span className="fr-help">{(capacity.limit_bytes / MIB).toFixed(0)} MiB is the provider's limit per request at {capacity.scale_m} m.</span>
+            </div>
+          ) : null}
+          {problems.length ? <div className="fr-box fr-box--danger" role="alert"><ul>{problems.map((problem) => <li key={problem}>{problem}</li>)}</ul></div> : null}
+          <button type="button" className="fr-button fr-button--primary fr-summary__run" disabled={blocked || submit.isPending} onClick={run}>{submit.isPending ? "Submitting…" : "Run analysis"}</button>
+          {blocked ? <span className="fr-summary__hint" role="status">Resolve the blocked dates above to continue.</span> : null}
+          {!blocked && opticalWarnings.length ? <span className="fr-summary__hint fr-summary__hint--warning" role="status" aria-label="Before you continue">Independent accuracy will not be assessable for {opticalWhere} ({opticalReason}). Widen the window to include clear dates over the whole area, or run the analysis anyway.</span> : null}
+          <Link className="fr-button fr-button--secondary" to={embedded ? `/projects/${projectId}` : FRRIS_ROUTES.analyses}>Cancel</Link>
+        </section>
+        <p className="fr-summary__tip"><strong>Tip</strong> Choose a baseline from the dry season close to the event. Large areas may need to be split to stay under the download limit.</p>
+      </aside>
+    </div>
+    {wizardOpen && projectId ? <AoiWizard projectId={projectId} projectName={project.data?.name} onClose={() => setWizardOpen(false)} /> : null}
   </div>;
 }

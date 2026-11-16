@@ -65,3 +65,23 @@ export function getErrorMessage(error: unknown): string {
   }
   return "An unexpected error occurred.";
 }
+
+type ValidationDetail = { loc?: unknown[]; msg?: string };
+
+/**
+ * Plain message for an API error. A 422 validation error names its fields in `details`; this turns them into a
+ * specific sentence instead of the envelope's generic "One or more request fields are invalid." (r5.1).
+ */
+export function describeApiError(error: unknown): string {
+  if (error instanceof ApiError && error.code === "validation_error" && Array.isArray(error.details) && error.details.length) {
+    const messages = (error.details as ValidationDetail[]).map((detail) => {
+      const path = (detail.loc ?? []).filter((part) => part !== "body").map(String);
+      const message = (detail.msg ?? "").replace(/^Value error, /, "");
+      if (path.includes("products")) return "Select at least one product (step 4).";
+      if (/Baseline must precede target/i.test(message)) return "The baseline must end before the target starts; the two windows may not overlap.";
+      return path.length ? `${path.join(" › ")}: ${message}` : message;
+    });
+    return [...new Set(messages.filter(Boolean))].join(" ");
+  }
+  return getErrorMessage(error);
+}

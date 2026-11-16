@@ -33,6 +33,8 @@ FRRIS result (`/results/:id`): header with the area name, Report (Word) and Repo
 - Provenance: Run (science version as "Science version 2 (id: firris-science-2)", model as "Random Forest baseline, version 1.0 (id: firris-random-forest-baseline)"), Sentinel-1 radar, Sentinel-2 reference, Labels and model, Quality gates and Ancillary data, then every provenance field as delivered, the spatial reference of each layer, the model configuration, product metadata and the raw summary.
 - The API summary sentence still quotes the exclusive dates; it changes with the P6 backend branch (follow-up 4).
 
+r5.1: the flood-candidate extent is selected by default and stays selected through project, AOI and date changes. With no product selected, no availability check is sent; "Select at least one product (step 4)." appears next to the check and next to Run, and Run is disabled. The builder refuses a baseline that overlaps or follows the target before asking the API, and API validation errors (422) are shown with their field-specific reason, never the generic "One or more request fields are invalid.". The nearest-pass button shows the date as "25 May 2024". In the area playground, the coarser option states how much detail is lost; at 120 m and coarser it says detail is strongly reduced and recommends Split.
+
 New analysis products whose module is not approved (for example Flood depth) are listed as "Coming soon" without a checkbox. The minimum area coverage (70%) was never user-editable; it is shown read-only.
 
 Analysis page (`/tasks/:id`, P5): header with the area name, the status pill and the submitted windows (inclusive, from the task archive when the role can read it).

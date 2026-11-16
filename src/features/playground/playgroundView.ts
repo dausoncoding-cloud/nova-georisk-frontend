@@ -33,6 +33,18 @@ export function leafletRings(geometry: GeoJsonGeometry | null | undefined): [num
 export type Tone = "ok" | "near" | "over";
 export const toneOf = (status: AreaCapacityResponse["status"]): Tone => status === "fits" ? "ok" : status;
 
+/** From this resolution on, map detail is strongly reduced and Split is the better choice (r5.1). */
+export const STRONG_REDUCTION_M = 120;
+
+/** Wording of the coarser option: how much detail is lost, and the recommendation when it is a lot. */
+export function coarserAdvice(scaleM: number, hasSplit: boolean): { detail: string; recommendSplit: boolean } {
+  const factor = Math.round((scaleM / 30) ** 2);
+  if (scaleM >= STRONG_REDUCTION_M) {
+    return { detail: `Map detail is strongly reduced: each ${scaleM} m pixel replaces ${factor} pixels of the 30 m map.`, recommendSplit: hasSplit };
+  }
+  return { detail: `Map detail is reduced: each ${scaleM} m pixel replaces ${factor} pixels of the 30 m map.`, recommendSplit: false };
+}
+
 /** What the panel shows for the current choice: the original check, or the applied fix. */
 export function currentFigures(check: AreaCapacityResponse, applied: Fix | null) {
   const limit = check.capacity.limit_bytes;
@@ -48,8 +60,9 @@ export function currentFigures(check: AreaCapacityResponse, applied: Fix | null)
   }
   if (applied === "coarser" && check.coarser) {
     const bytes = check.coarser.capacity.estimated_request_bytes;
+    const advice = coarserAdvice(check.coarser.scale_m, Boolean(check.split));
     return { bytes, limit, tone: (bytes / limit >= check.near_ratio ? "near" : "ok") as Tone, areaKm2: check.area_km2, scale: check.coarser.scale_m,
-      message: `Whole area fits at ${check.coarser.scale_m} m resolution.` };
+      message: `Whole area fits at ${check.coarser.scale_m} m resolution. ${advice.detail}${advice.recommendSplit ? " Split keeps the 30 m detail and is the better choice." : ""}` };
   }
   return { bytes: check.capacity.estimated_request_bytes, limit, tone: toneOf(check.status), areaKm2: check.area_km2, scale: check.capacity.scale_m, message: check.message };
 }

@@ -571,3 +571,4 @@ a.fr-switcher__option .fr-switcher__state { color: var(--fr-primary-text); font-
 .fr-meter__bar--near { background: var(--fr-warning-dot); }
 .fr-meter__bar--over { background: var(--fr-danger-text); }
 @media (max-width: 699px) { .fr-pg-map { height: 340px; } }
+.fr-pg-advice { color: var(--fr-warning-text) !important; }

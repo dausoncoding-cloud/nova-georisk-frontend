@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { checkAreaCapacity, createAoi, type AreaCapacityResponse } from "../aois/aoisApi";
 import { fetchProjects } from "../projects/projectsApi";
 import { AreaPlaygroundPage } from "./AreaPlaygroundPage";
-import { areasToSave, currentFigures, featureCollection, polygonFromPoints, previewPaths, rectangleFromCorners } from "./playgroundView";
+import { areasToSave, coarserAdvice, currentFigures, featureCollection, polygonFromPoints, previewPaths, rectangleFromCorners } from "./playgroundView";
 
 vi.mock("../aois/aoisApi", async (load) => ({ ...await load<typeof import("../aois/aoisApi")>(), checkAreaCapacity: vi.fn(), createAoi: vi.fn() }));
 vi.mock("../projects/projectsApi", async (load) => ({ ...await load<typeof import("../projects/projectsApi")>(), fetchProjects: vi.fn() }));
@@ -63,6 +63,26 @@ describe("playground helpers", () => {
     expect(areasToSave(OVER, "coarser", geometry, "Kilombero")).toEqual([{ name: "Kilombero", geometry }]);
     expect(featureCollection([{ name: "A", geometry }], 60).features[0]).toMatchObject({ type: "Feature", properties: { name: "A", scale_m: 60, crs: "EPSG:4326" } });
     expect(previewPaths([geometry], [[36.05, -8.5, 36.25, -8.3]]).boxes).toHaveLength(1);
+  });
+});
+
+describe("coarser resolution wording (r5.1)", () => {
+  it("says detail is reduced at 60 m and strongly reduced at 120 m, recommending Split there", () => {
+    expect(coarserAdvice(60, true)).toEqual({ detail: "Map detail is reduced: each 60 m pixel replaces 4 pixels of the 30 m map.", recommendSplit: false });
+    expect(coarserAdvice(120, true)).toEqual({ detail: "Map detail is strongly reduced: each 120 m pixel replaces 16 pixels of the 30 m map.", recommendSplit: true });
+    expect(coarserAdvice(120, false).recommendSplit).toBe(false); // no split offered: nothing to recommend
+  });
+
+  it("shows the strong reduction and the Split recommendation on the 120 m option and after applying it", async () => {
+    vi.mocked(checkAreaCapacity).mockResolvedValue({ ...OVER, coarser: { scale_m: 120, capacity: cap(44.3, 120) } } as AreaCapacityResponse);
+    setup();
+    await drawArea();
+    const option = (await screen.findByRole("radio", { name: /Use 120 m resolution/ })).closest("label")!;
+    expect(option).toHaveTextContent("Map detail is strongly reduced: each 120 m pixel replaces 16 pixels of the 30 m map.");
+    expect(option).toHaveTextContent("Recommended: Split keeps the 30 m detail");
+    fireEvent.click(within(option).getByRole("radio"));
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    expect(screen.getByText(/Whole area fits at 120 m resolution\. Map detail is strongly reduced.*Split keeps the 30 m detail and is the better choice\./)).toBeInTheDocument();
   });
 });
 

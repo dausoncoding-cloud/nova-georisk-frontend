@@ -1,6 +1,6 @@
 import type { AnalysisPreflightPeriod, AnalysisPreflightResponse } from "./analysisApi";
 import { Icon } from "../../shared/ui/Icon";
-import { addDays } from "./periods";
+import { addDays, formatDay } from "./periods";
 
 export { SENTINEL1_START, todayIso } from "./periods";
 
@@ -71,7 +71,7 @@ export function PreflightPanel({ result, isFetching, error, onUseNearestPass }: 
     {blocking.length ? <div className="fr-box fr-box--danger" role="alert" aria-label="Blocking reasons"><strong>Cannot run with these dates</strong><ul>{blocking.map((issue) => {
       const period = issue.period === "target" ? result.target : issue.period === "baseline" ? result.baseline : null;
       const nearest = issue.code === "no_sentinel1_pass" && period ? nearestPassWindow(period) : null;
-      return <li key={`${issue.code}-${issue.period ?? "all"}`}><span>{issue.message}</span>{nearest ? <button type="button" className="fr-button fr-button--secondary fr-button--small" onClick={() => onUseNearestPass(issue.period as "target" | "baseline", nearest.start, nearest.end)}>Use nearest pass ({nearest.pass})</button> : null}</li>;
+      return <li key={`${issue.code}-${issue.period ?? "all"}`}><span>{issue.message}</span>{nearest ? <button type="button" className="fr-button fr-button--secondary fr-button--small" onClick={() => onUseNearestPass(issue.period as "target" | "baseline", nearest.start, nearest.end)}>Use nearest pass ({formatDay(nearest.pass)})</button> : null}</li>;
     })}</ul></div> : null}
     {warnings.length ? <div className="fr-box fr-box--info" role="note" aria-label="Warnings"><Icon name="warning" width={18} height={18} strokeWidth={2} /><ul>{warnings.map((issue) => <li key={`${issue.code}-${issue.period ?? "all"}`}>{issue.message}</li>)}</ul></div> : null}
   </section>;

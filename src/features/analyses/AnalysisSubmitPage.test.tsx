@@ -5,6 +5,7 @@ import { ToastProvider } from "../../shared/ui/Toast";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AnalysisSubmitPage, defaultBuilderForm, toApiForm } from "./AnalysisSubmitPage";
 import { addDays, formatPeriod, periodProblem, todayIso } from "./periods";
+import { ApiError, describeApiError } from "../../shared/api/errors";
 
 const { submitAnalysisMock, preflightAnalysisMock, fetchProjectAoisMock } = vi.hoisted(() => ({ submitAnalysisMock: vi.fn(), preflightAnalysisMock: vi.fn(), fetchProjectAoisMock: vi.fn() }));
 
@@ -40,7 +41,8 @@ const dates = () => ({
 const setDate = (input: HTMLElement, value: string) => fireEvent.change(input, { target: { value } });
 const lastPreflight = () => preflightAnalysisMock.mock.calls.at(-1)?.[0];
 const run = () => fireEvent.click(screen.getByRole("button", { name: "Run analysis" }));
-const selectExtent = () => fireEvent.click(screen.getByRole("checkbox", { name: /Flood-candidate extent/i }));
+// The flood-candidate extent is selected by default (r5.1); this only makes sure it is still selected.
+const selectExtent = () => { const box = screen.getByRole("checkbox", { name: /Flood-candidate extent/i }); if (!(box as HTMLInputElement).checked) fireEvent.click(box); };
 
 beforeEach(() => {
   submitAnalysisMock.mockReset().mockResolvedValue({ task: { task_id: "task-1" } });
@@ -177,8 +179,8 @@ describe("FRRIS analysis builder", () => {
   it("keeps the existing validations", async () => {
     renderBuilder();
     await screen.findByText("Floodplain");
-    run();
-    expect(screen.getByRole("alert")).toHaveTextContent("Select at least one production-ready product.");
+    fireEvent.click(screen.getByRole("checkbox", { name: /Flood-candidate extent/i })); // deselect the default
+    expect(screen.getByRole("button", { name: "Run analysis" })).toBeDisabled();
     selectExtent();
     fireEvent.change(screen.getByLabelText(/Max\. cloud cover \(Sentinel-2\)/), { target: { value: "150" } });
     fireEvent.change(screen.getByLabelText("Sample size"), { target: { value: "5" } });
@@ -293,7 +295,7 @@ describe("satellite availability (plan 4.1/4.4)", () => {
     expect(screen.getByRole("button", { name: "Run analysis" })).toBeDisabled();
     expect(screen.getByText("Resolve the blocked dates above to continue.")).toBeInTheDocument();
     // 2024-05-25 is closer to the end than 2024-05-13 is to the start: the window grows to include it.
-    fireEvent.click(within(alert).getByRole("button", { name: "Use nearest pass (2024-05-25)" }));
+    fireEvent.click(within(alert).getByRole("button", { name: "Use nearest pass (25 May 2024)" }));
     expect(dates().targetStart).toHaveValue("2024-05-21");
     expect(dates().targetLast).toHaveValue("2024-05-25");
     await waitFor(() => expect(screen.getByRole("button", { name: "Run analysis" })).toBeEnabled());
@@ -313,7 +315,7 @@ describe("satellite availability (plan 4.1/4.4)", () => {
     renderBuilder();
     await screen.findByText("Floodplain");
     setDate(dates().targetStart, "2024-05-26"); setDate(dates().targetLast, "2024-05-26");
-    fireEvent.click(await screen.findByRole("button", { name: "Use nearest pass (2024-05-25)" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Use nearest pass (25 May 2024)" }));
     await waitFor(() => expect(lastPreflight().parameters.workflow.source.target_period).toEqual({ start: "2024-05-25", end: "2024-05-27" }));
     expect(dates().targetLast).toHaveValue("2024-05-26");
     expect(await screen.findByRole("note", { name: "Warnings" })).toHaveTextContent("independent accuracy will not be assessable");
@@ -327,5 +329,70 @@ describe("satellite availability (plan 4.1/4.4)", () => {
     await screen.findByText("Floodplain");
     selectExtent(); run();
     expect(await screen.findByRole("alert")).toHaveTextContent("The AOI is outside the organization's scope.");
+  });
+});
+
+
+describe("products (r5.1)", () => {
+  const extent = () => screen.getByRole("checkbox", { name: /Flood-candidate extent/i }) as HTMLInputElement;
+
+  it("selects the flood-candidate extent on load and keeps it through AOI, project and date changes", async () => {
+    fetchProjectAoisMock.mockImplementation(async (projectId: string) => ({ total: 2, limit: 200, offset: 0, items: projectId === "project-2"
+      ? [aoi("aoi-2", "Upper reach", "project-2")] : [aoi("aoi-1", "Floodplain"), aoi("aoi-3", "Delta")] }));
+    renderBuilder("/frris/analyses/new");
+    await screen.findByRole("radio", { name: /Floodplain/ });
+    expect(extent()).toBeChecked();
+    const summary = () => within(screen.getByRole("complementary", { name: "Run summary" })).getByText("Products").nextElementSibling;
+    expect(summary()).toHaveTextContent("Flood-candidate extent (model-classified)");
+    fireEvent.click(screen.getByRole("radio", { name: /Delta/ }));
+    setDate(dates().targetStart, "2024-05-24"); setDate(dates().targetLast, "2024-05-25");
+    fireEvent.change(screen.getByRole("combobox", { name: "Project" }), { target: { value: "project-2" } });
+    await screen.findByRole("radio", { name: /Upper reach/ });
+    expect(extent()).toBeChecked();
+    expect(summary()).toHaveTextContent("Flood-candidate extent (model-classified)");
+    await waitFor(() => expect(lastPreflight()?.products).toEqual(["flood_extent"]));
+  });
+
+  it("without a product: no preflight call, a specific message next to the check and Run, and Run disabled", async () => {
+    renderBuilder();
+    await waitFor(() => expect(preflightAnalysisMock).toHaveBeenCalled());
+    const calls = preflightAnalysisMock.mock.calls.length;
+    fireEvent.click(extent());
+    expect(extent()).not.toBeChecked();
+    const near = screen.getByRole("status", { name: "Satellite availability" });
+    expect(near).toHaveTextContent("Select at least one product (step 4).");
+    expect(screen.getByRole("status", { name: "Before you run" })).toHaveTextContent("Select at least one product (step 4).");
+    const runButton = screen.getByRole("button", { name: "Run analysis" });
+    expect(runButton).toBeDisabled();
+    expect(within(screen.getByRole("complementary", { name: "Run summary" })).getByText("Products").nextElementSibling).toHaveTextContent("None selected");
+    setDate(dates().targetStart, "2024-05-20"); // a date change must not call the preflight without a product
+    expect(preflightAnalysisMock.mock.calls.length).toBe(calls);
+    expect(document.body).not.toHaveTextContent("One or more request fields are invalid");
+    fireEvent.click(extent());
+    expect(runButton).toBeEnabled();
+    await waitFor(() => expect(preflightAnalysisMock.mock.calls.length).toBeGreaterThan(calls));
+    expect(submitAnalysisMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses a baseline that overlaps or follows the target before asking the API", async () => {
+    renderBuilder();
+    await waitFor(() => expect(preflightAnalysisMock).toHaveBeenCalled());
+    const calls = preflightAnalysisMock.mock.calls.length;
+    setDate(dates().baselineStart, "2025-03-15"); setDate(dates().baselineLast, "2025-04-10"); // target is 1–31 Mar 2025
+    expect(await screen.findByText(/The baseline must end before the target starts; the two windows may not overlap\./)).toBeInTheDocument();
+    expect(preflightAnalysisMock.mock.calls.length).toBe(calls);
+  });
+
+  it("turns API validation errors into specific messages, never the generic one", async () => {
+    const error = (details: unknown[]) => new ApiError({ message: "One or more request fields are invalid.", status: 422, code: "validation_error", details });
+    expect(describeApiError(error([{ loc: ["body", "products"], msg: "List should have at least 1 item after validation, not 0" }]))).toBe("Select at least one product (step 4).");
+    expect(describeApiError(error([{ loc: ["body", "parameters", "workflow", "source"], msg: "Value error, Baseline must precede target without overlap" }])))
+      .toBe("The baseline must end before the target starts; the two windows may not overlap.");
+    expect(describeApiError(error([{ loc: ["body", "gis_metadata", "acquisition_date"], msg: "Input should be a valid date" }]))).toBe("gis_metadata › acquisition_date: Input should be a valid date");
+    preflightAnalysisMock.mockRejectedValue(error([{ loc: ["body", "products"], msg: "List should have at least 1 item after validation, not 0" }]));
+    renderBuilder();
+    const panel = await screen.findByRole("status", { name: "Satellite availability" });
+    await waitFor(() => expect(panel).toHaveTextContent("Select at least one product (step 4)."));
+    expect(panel).not.toHaveTextContent("One or more request fields are invalid");
   });
 });

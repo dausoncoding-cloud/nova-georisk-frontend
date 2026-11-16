@@ -11,7 +11,7 @@ import { checkAreaCapacity, createAoi, type AoiCreateRequest } from "../aois/aoi
 import type { GeoJsonGeometry } from "../aois/geometry";
 import { fetchProjects } from "../projects/projectsApi";
 import { PlaygroundMap, type DrawMode } from "./PlaygroundMap";
-import { areasToSave, currentFigures, featureCollection, mibText, polygonFromPoints, previewPaths, rectangleFromCorners, slug, type Fix, type LonLat } from "./playgroundView";
+import { areasToSave, coarserAdvice, currentFigures, featureCollection, mibText, polygonFromPoints, previewPaths, rectangleFromCorners, slug, type Fix, type LonLat } from "./playgroundView";
 
 type Source = AoiCreateRequest["source_type"];
 
@@ -173,7 +173,8 @@ export function AreaPlaygroundPage() {
             </label> : null}
             {data.coarser ? <label className={`fr-choice${fix === "coarser" ? " is-selected" : ""}`}>
               <input type="radio" name="pg-fix" checked={fix === "coarser"} onChange={() => { setFix("coarser"); setApplied(null); }} />
-              <span><strong>Use {data.coarser.scale_m} m resolution</strong><small>Keeps the whole area (<span className="fr-num">{mibText(data.coarser.capacity.estimated_request_bytes)}</span> MiB), with less map detail.</small></span>
+              <span><strong>Use {data.coarser.scale_m} m resolution</strong><small>Keeps the whole area (<span className="fr-num">{mibText(data.coarser.capacity.estimated_request_bytes)}</span> MiB). {coarserAdvice(data.coarser.scale_m, Boolean(data.split)).detail}</small>
+                {coarserAdvice(data.coarser.scale_m, Boolean(data.split)).recommendSplit ? <small className="fr-pg-advice"><strong>Recommended: Split</strong> keeps the 30 m detail; choose it unless you only need an overview.</small> : null}</span>
               <Preview geometries={[geometry]} label="Preview: the whole area" />
             </label> : null}
           </fieldset>

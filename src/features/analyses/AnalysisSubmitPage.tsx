@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "rea
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FRRIS_ROUTES } from "../../app/routes";
-import { getErrorMessage } from "../../shared/api/errors";
+import { describeApiError } from "../../shared/api/errors";
 import { queryKeys } from "../../shared/api/queryKeys";
 import { FRRIS_ENGINE_KEY } from "../../shared/productName";
 import { Disclosure } from "../../shared/ui/Disclosure";
@@ -20,6 +20,8 @@ import { downloadSizeText, MIB, PreflightPanel } from "./PreflightPanel";
 
 const PRODUCT_KEYS = new Set<string>(["flood_extent", "flood_depth", "flood_velocity", "flood_hazard", "flood_probability", "flood_duration", "flood_exposure", "flood_vulnerability", "flood_risk", "flood_susceptibility", "flood_hazard_zonation"]);
 const SATELLITE_PRODUCTS = new Set(["flood_extent", "flood_probability"]);
+const DEFAULT_PRODUCT: FirrisProduct = "flood_extent";
+export const NO_PRODUCT_MESSAGE = "Select at least one product (step 4).";
 const FEATURE_LABELS: Record<string, string> = { sar_vv_target: "SAR VV (target)", sar_change: "SAR change", elevation: "Elevation", slope: "Slope", rainfall: "Rainfall (CHIRPS)" };
 
 /** Form state in UI terms: windows end on an inclusive last day (backlog §4.7 item 1). */
@@ -60,7 +62,9 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
   const firris = useMemo(() => (engines.data ?? []).find((engine) => engine.key === FRRIS_ENGINE_KEY && engine.access !== false), [engines.data]);
   const contract = useEngineContract(firris?.key ?? null);
   const [aoiId, setAoiId] = useState(searchParams.get("aoi_id") ?? "");
-  const [products, setProducts] = useState<FirrisProduct[]>([]);
+  // r5.1: the flood-candidate extent is selected by default. `null` means "the default"; the user's own choice
+  // (including none) is kept as an explicit list and survives project, AOI and date changes.
+  const [chosenProducts, setProducts] = useState<FirrisProduct[] | null>(null);
   // ?scale= from the area playground ("Use 60 m resolution"); any other value keeps the 30 m default.
   const [form, setForm] = useState<BuilderForm>(() => {
     const scale = Number(searchParams.get("scale"));
@@ -83,10 +87,15 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
   }, [aois.data, aoiId]);
 
   const availableProducts = useMemo(() => (contract.data?.products ?? []).filter((item) => PRODUCT_KEYS.has(item.key)), [contract.data]);
+  const defaultProducts = useMemo<FirrisProduct[]>(() => availableProducts.some((item) => item.key === DEFAULT_PRODUCT && item.available_delivery_types.length > 0) ? [DEFAULT_PRODUCT] : [], [availableProducts]);
+  const products = chosenProducts ?? defaultProducts;
+  const noProduct = products.length === 0;
   const selectedAoi = aois.data?.items.find((item) => item.id === aoiId);
   const target: InclusivePeriod = { start: form.targetStart, lastDay: form.targetLast };
   const baseline: InclusivePeriod = { start: form.baselineStart, lastDay: form.baselineLast };
   const periodProblems = [periodProblem("Target", target, today), periodProblem("Baseline", baseline, today)].filter((item): item is string => Boolean(item));
+  // The API requires the baseline to end before the target starts (no overlap); say so before asking it.
+  if (!periodProblems.length && baseline.lastDay >= target.start) periodProblems.push("The baseline must end before the target starts; the two windows may not overlap.");
   const apiForm = periodProblems.length ? null : toApiForm(form);
 
   // One request shape for the availability check and the submission (the server re-runs the checks on submit).
@@ -95,7 +104,8 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
     parameters: buildGeeSatelliteWorkflowParameters(apiForm),
     gis_metadata: { crs: selectedAoi.crs, bounding_box: getGeometryBoundingBox(selectedAoi.geometry), spatial_resolution: { x: form.scale, y: form.scale, unit: "m" }, acquisition_date: apiForm.targetEnd, producer: "NOVA GeoRisk", engine_version: contract.data?.engine_version ?? null },
   }) : null;
-  const preflightRequest = firris && project.data?.engine_key === firris.key ? buildRequest(products.length ? products : ["flood_extent"]) : null;
+  // No preflight without a product: the API would refuse the request, and the reason is shown here instead.
+  const preflightRequest = firris && project.data?.engine_key === firris.key && !noProduct ? buildRequest(products) : null;
   const preflight = useQuery({
     queryKey: ["analysis-preflight", projectId, selectedAoi?.id, apiForm?.targetStart, apiForm?.targetEnd, apiForm?.baselineStart, apiForm?.baselineEnd, form.maxCloudPct, form.scale],
     queryFn: () => preflightAnalysis(preflightRequest!),
@@ -122,7 +132,7 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
       return submitAnalysis(buildRequest(products)!);
     },
     onSuccess: (response) => navigate(`/tasks/${response.task.task_id}`),
-    onError: (caught) => setProblems([getErrorMessage(caught)]),
+    onError: (caught) => setProblems([describeApiError(caught)]),
   });
 
   function run() {
@@ -132,9 +142,9 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
     if (!Number.isFinite(form.maxCloudPct) || form.maxCloudPct < 0 || form.maxCloudPct > 100) found.push("Cloud cover must be between 0 and 100 percent.");
     if (!Number.isInteger(form.sampleSize) || form.sampleSize < 10 || form.sampleSize > 1000000 || !Number.isFinite(form.trainFraction) || form.trainFraction < .5 || form.trainFraction > .99) found.push("Enter a whole sample size between 10 and 1,000,000 and a training fraction between 0.5 and 0.99.");
     if (!Number.isFinite(form.scale) || form.scale < 1 || form.scale > 1000) found.push("Output scale must be between 1 and 1,000 metres.");
-    if (products.length === 0) found.push("Select at least one production-ready product.");
+    if (noProduct) found.push(NO_PRODUCT_MESSAGE);
     setProblems(found);
-    if (found.length === 0 && !blocked) submit.mutate();
+    if (found.length === 0 && !blocked && !noProduct) submit.mutate();
   }
 
   if ((!routeProjectId && projects.isPending) || (projectId && (project.isPending || aois.isPending)) || engines.isPending) return <LoadingState label="Preparing the FRRIS analysis builder…" />;
@@ -198,7 +208,8 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
           <p className="fr-help">Sentinel-1 data starts on 3 Oct 2014 and passes over the same area about every 12 days. Choose a target period that includes a pass during the flood. End dates are inclusive; the last day can be today ({today}, UTC) at the latest.</p>
           {periodProblems.length && selectedAoi ? <p className="fr-box fr-box--info" role="status">{periodProblems.join(" ")}</p> : null}
           <div aria-live="polite">
-            <PreflightPanel result={preflight.data} isFetching={preflight.isFetching} error={preflight.error ? getErrorMessage(preflight.error) : null} onUseNearestPass={useNearestPass} />
+            {noProduct && selectedAoi && !periodProblems.length ? <p className="fr-box fr-box--warning" role="status" aria-label="Satellite availability">{NO_PRODUCT_MESSAGE} The availability check runs once a product is selected.</p> : null}
+            <PreflightPanel result={noProduct ? undefined : preflight.data} isFetching={!noProduct && preflight.isFetching} error={!noProduct && preflight.error ? describeApiError(preflight.error) : null} onUseNearestPass={useNearestPass} />
           </div>
         </Step>
 
@@ -224,7 +235,7 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
               // Products whose module is not approved are listed without a control until they can be delivered.
               if (!ready) return <div key={product.key} className="fr-choice is-disabled"><span><strong>{product.label}</strong><small>Coming soon</small></span></div>;
               return <label key={product.key} className={`fr-choice${checked ? " is-selected" : ""}`}>
-                <input type="checkbox" checked={checked} onChange={() => setProducts((current) => checked ? current.filter((key) => key !== product.key) : [...current, product.key as FirrisProduct])} />
+                <input type="checkbox" checked={checked} onChange={() => setProducts(checked ? products.filter((key) => key !== product.key) : [...products, product.key as FirrisProduct])} />
                 <span><strong>{product.label}</strong><small>{product.available_delivery_types.join(" · ")}</small></span>
               </label>;
             })}
@@ -275,7 +286,8 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
             </div>
           ) : null}
           {problems.length ? <div className="fr-box fr-box--danger" role="alert"><ul>{problems.map((problem) => <li key={problem}>{problem}</li>)}</ul></div> : null}
-          <button type="button" className="fr-button fr-button--primary fr-summary__run" disabled={blocked || submit.isPending} onClick={run}>{submit.isPending ? "Submitting…" : "Run analysis"}</button>
+          <button type="button" className="fr-button fr-button--primary fr-summary__run" disabled={blocked || noProduct || submit.isPending} onClick={run}>{submit.isPending ? "Submitting…" : "Run analysis"}</button>
+          {noProduct ? <span className="fr-summary__hint" role="status" aria-label="Before you run">{NO_PRODUCT_MESSAGE}</span> : null}
           {blocked ? <span className="fr-summary__hint" role="status">Resolve the blocked dates above to continue.</span> : null}
           {!blocked && opticalWarnings.length ? <span className="fr-summary__hint fr-summary__hint--warning" role="status" aria-label="Before you continue">Independent accuracy not assessable for {opticalWhere} (see the warning above).</span> : null}
           <Link className="fr-button fr-button--secondary" to={embedded ? `/projects/${projectId}` : FRRIS_ROUTES.analyses}>Cancel</Link>

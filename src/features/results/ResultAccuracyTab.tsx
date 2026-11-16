@@ -93,6 +93,10 @@ export function ResultAccuracyTab({ data, artifacts }: { data: Result; artifacts
         <PackageFigure resultId={data.id} artifact={figure(artifacts, "independent_optical", "roc")} caption={independentAuc?.assessable ? `ROC curve — ${independentAuc.label}: ${aucValueText(independentAuc)}` : `ROC — ${independentAuc?.label}: ${independentAuc ? aucValueText(independentAuc) : ""}`} />
         <PackageFigure resultId={data.id} artifact={figure(artifacts, "independent_optical", "pr")} caption={`Precision–recall curve (AP ${dec(independent.average_precision)})`} />
       </section>
+      {asRecord(independentRecord?.variable_roc)?.status === "assessed" ? (
+        // r5.3: the per-variable curves live in the report and workbook; this page keeps the single model curve.
+        <p className="fr-help">Per-variable ROC curves (the model score and each model variable against the same Sentinel-2 reference, each with its AUC) are in the scientific report (section 9 and Appendix C) and in the workbook sheet “ROC thresholds by variable”.</p>
+      ) : null}
       <Disclosure title="Per-class summary and curve data (independent reference)">
         <AccuracyAssessment assessment={{ ...assessment!, scopes: [independent] }} showStatus={false} />
       </Disclosure>

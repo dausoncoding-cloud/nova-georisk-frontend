@@ -138,6 +138,24 @@ describe("Accuracy assessment", () => {
     expect(internal).toHaveTextContent("use the Sentinel-2 figures above for accuracy");
   });
 
+  it("r5.3: points to the per-variable ROC curves only when the result has them", async () => {
+    const POINTER = /Per-variable ROC curves .* are in the scientific report \(section 9 and Appendix C\)/;
+    const older = setup(rufiji(), "accuracy");
+    await screen.findByRole("region", { name: "Accuracy figures" });
+    expect(screen.queryByText(POINTER)).toBeNull(); // results from before r5.3 have no per-variable curves
+    older.unmount();
+    const notAssessable = rufiji();
+    (notAssessable.summary.independent_accuracy as Record<string, unknown>).variable_roc = { status: "not_assessable", reason: "x", curves: [] };
+    const second = setup(notAssessable, "accuracy");
+    await screen.findByRole("region", { name: "Accuracy figures" });
+    expect(screen.queryByText(POINTER)).toBeNull();
+    second.unmount();
+    const data = rufiji();
+    (data.summary.independent_accuracy as Record<string, unknown>).variable_roc = { status: "assessed", curves: [] };
+    setup(data, "accuracy");
+    expect(await screen.findByText(POINTER)).toHaveTextContent("ROC thresholds by variable");
+  });
+
   it("not assessable (Kilombero): the API reason is prominent and no number is shown as map accuracy", async () => {
     setup(kilombero(), "accuracy");
     const box = await screen.findByRole("region", { name: "Independent accuracy not assessable" });

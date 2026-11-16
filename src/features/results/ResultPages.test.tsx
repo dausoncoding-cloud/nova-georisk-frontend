@@ -185,6 +185,68 @@ describe("Accuracy assessment", () => {
   });
 });
 
+// Depth & Exposure module, Phase 1: a trimmed copy of the Rufiji hazard record (values from the read-only QA run).
+function hazardRecord(status = "assessed") {
+  const row = (t: number, wet: number, p50: number, max: number, inside: number) => ({
+    return_period_years: t, aep: 1 / t, wet_area_km2: wet * 0.9877, wet_pct_of_aoi: wet,
+    depth_m: { p50, mean: p50 - 0.05, p90: max - 0.6, max }, classes: [], observed_extent: { inside_pct: inside, pixels: 5000 },
+    including_permanent_water: { wet_pct_of_aoi: wet + 8.9 },
+  });
+  return status !== "assessed" ? { status, reason: "The area lies outside the GloFAS flood hazard maps (no tile covers it).", citation: "Baugh, C. et al. (2024): Global river flood hazard maps", attribution: "Contains modified GloFAS data", licence: "Licence under confirmation." } : {
+    status, method: { note: "Flood defences are not modelled (undefended)." }, aoi: { area_km2: 98.77, covered_pct: 100 },
+    permanent_water_km2: 8.76, permanent_water_pct_of_aoi: 8.9,
+    return_periods: [row(10, 26.7, 1.18, 2.61, 38.4), row(100, 31.5, 1.79, 3.41, 42.1), row(500, 32.8, 2.09, 3.75, 42.9)],
+    occurrence: { years: [10, 30], rows: [10, 100, 500].map((t) => ({ return_period_years: t, aep: 1 / t, probability_at_least_once: { "10": 1 - (1 - 1 / t) ** 10, "30": 1 - (1 - 1 / t) ** 30 } })) },
+    citation: "Baugh, C. et al. (2024): Global river flood hazard maps. PID http://data.europa.eu/89h/jrc-floods-floodmapgl_rp50y-tif",
+    attribution: "Contains modified GloFAS flood hazard map data v2.1", licence: "Licence under confirmation.",
+  };
+}
+function withHazard(status = "assessed") {
+  const data = rufiji() as Fixture & Record<string, unknown>;
+  (data.summary as Record<string, unknown>).modelled_flood_hazard = hazardRecord(status);
+  const template = data.exports[0]!;
+  for (const key of ["figure_modelled_hazard_depth_by_return_period_png", "figure_modelled_hazard_aep_png", "modelled_flood_depth_rp10_map_png", "modelled_flood_depth_rp100_map_png", "modelled_flood_depth_rp500_map_png"]) {
+    data.exports.push({ ...template, key, label: key.replaceAll("_", " ") });
+  }
+  return data;
+}
+
+describe("Modelled hazard (Depth & Exposure module)", () => {
+  it("has no tab on results without the modelled hazard", async () => {
+    setup(rufiji());
+    await screen.findByRole("tab", { name: "Overview" });
+    expect(screen.queryByRole("tab", { name: "Modelled hazard" })).toBeNull();
+  });
+
+  it("shows the per-return-period table, both graphs, the occurrence table, the maps, and the source with the open licence", async () => {
+    setup(withHazard(), "hazard");
+    const card = await screen.findByRole("region", { name: "Modelled flood hazard" });
+    expect(screen.getByRole("tab", { name: "Modelled hazard" })).toHaveAttribute("aria-selected", "true");
+    expect(card).toHaveTextContent("Context — not an observation");
+    expect(card).toHaveTextContent("Flood defences are not modelled");
+    expect(card).toHaveTextContent("Permanent water (8.76 km², 8.9% of the area) is not flooding");
+    const rows = within(card).getAllByRole("row").map((row) => row.textContent);
+    expect(rows[1]).toBe("1-in-10 years10.0%26.37 km² (26.7%)1.18 / 1.13 / 2.01 / 2.61 m38.4%");
+    expect(rows[2]).toContain("1-in-100 years1.0%");
+    expect(card).toHaveTextContent("context, not accuracy");
+    const figures = screen.getByRole("region", { name: "Hazard figures" });
+    expect(within(figures).getAllByRole("img").map((img) => img.getAttribute("src"))).toEqual([url("figure_modelled_hazard_depth_by_return_period_png"), url("figure_modelled_hazard_aep_png")]);
+    const occurrence = screen.getByRole("region", { name: "Probability of at least one occurrence" });
+    expect(within(occurrence).getAllByRole("row")[2]!.textContent).toBe("100 years1.0%9.6%26.0%");
+    expect(within(screen.getByRole("region", { name: "Modelled depth maps" })).getAllByRole("img")).toHaveLength(3);
+    const source = screen.getByRole("region", { name: "Source and licence" });
+    expect(source).toHaveTextContent("jrc-floods-floodmapgl_rp50y-tif");
+    expect(source).toHaveTextContent("Licence: Licence under confirmation.");
+  });
+
+  it("not available: the reason, no figures", async () => {
+    setup(withHazard("not_available"), "hazard");
+    expect(await screen.findByRole("status", { name: "Modelled flood hazard" })).toHaveTextContent("Modelled flood hazard: not available. The area lies outside the GloFAS flood hazard maps");
+    expect(screen.queryByRole("region", { name: "Hazard figures" })).toBeNull();
+    expect(screen.getByRole("region", { name: "Source and licence" })).toBeInTheDocument();
+  });
+});
+
 describe("Downloads", () => {
   it("groups downloads with format and size from the API and keeps protected download URLs", async () => {
     setup(rufiji(), "downloads");

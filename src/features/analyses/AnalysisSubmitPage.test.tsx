@@ -106,6 +106,23 @@ describe("inclusive end dates (backlog §4.7 item 1)", () => {
     expect(screen.getByText("task page")).toBeInTheDocument();
   });
 
+  it("Depth & Exposure: the modelled hazard is opt-in, shown in the run summary and sent as workflow.context", async () => {
+    renderBuilder();
+    await screen.findByText("Floodplain");
+    const toggle = screen.getByRole("switch", { name: /Modelled flood hazard \(GloFAS v2\.1\)/ });
+    expect(toggle).not.toBeChecked();
+    const d = dates();
+    setDate(d.targetStart, "2024-05-24"); setDate(d.targetLast, "2024-05-25");
+    setDate(d.baselineStart, "2022-08-28"); setDate(d.baselineLast, "2022-09-02");
+    await waitFor(() => expect(lastPreflight()?.parameters.workflow.source.target_period).toEqual({ start: "2024-05-24", end: "2024-05-26" }));
+    expect(lastPreflight().parameters.workflow).not.toHaveProperty("context");
+    fireEvent.click(toggle);
+    expect(screen.getByText("Modelled flood hazard (GloFAS)")).toBeInTheDocument(); // run summary
+    selectExtent(); run();
+    await waitFor(() => expect(submitAnalysisMock).toHaveBeenCalledOnce());
+    expect(submitAnalysisMock.mock.calls[0]![0].parameters.workflow.context).toEqual({ modelled_flood_hazard: true });
+  });
+
   it("accepts today as the last day (API end = tomorrow) and refuses tomorrow without calling the API", async () => {
     const today = todayIso();
     renderBuilder();

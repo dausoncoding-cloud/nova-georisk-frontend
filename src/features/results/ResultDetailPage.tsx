@@ -13,17 +13,20 @@ import { FIRRISGisViewer } from "./FIRRISGisViewer";
 import { QuantitativeDelivery } from "./QuantitativeDelivery";
 import { ResultAccuracyTab } from "./ResultAccuracyTab";
 import { ResultDownloadsTab } from "./ResultDownloadsTab";
+import { hazardRecord, ResultHazardTab } from "./ResultHazardTab";
 import { ResultOverviewTab } from "./ResultOverviewTab";
 import { ResultProvenanceTab } from "./ResultProvenanceTab";
 import { fetchResult, protectedProductUrl } from "./resultsApi";
 import { asRecord, INDEPENDENT_STATUS_TEXT, radarSummary, resolutionMetres, resultPeriods } from "./resultView";
 
 // The design's four sections first; the existing map viewer, metrics and execution archive stay available.
-const tabs = [
+const baseTabs = [
   { key: "overview", label: "Overview" }, { key: "accuracy", label: "Accuracy assessment" },
   { key: "downloads", label: "Downloads & GIS layers" }, { key: "provenance", label: "Provenance" },
   { key: "maps", label: "Map viewer" }, { key: "metrics", label: "Metrics" }, { key: "execution", label: "Execution" },
 ] as const;
+// Depth & Exposure module: the modelled hazard tab appears only on results that carry it.
+const HAZARD_TAB = { key: "hazard", label: "Modelled hazard" } as const;
 // Links from before the refresh (?tab=validation|files|metadata) open the matching section.
 const TAB_ALIASES: Record<string, string> = { validation: "accuracy", files: "downloads", metadata: "provenance" };
 
@@ -31,8 +34,10 @@ export function ResultDetailPage() {
   const { resultId = "" } = useParams();
   const [params, setParams] = useSearchParams();
   const requested = params.get("tab") ?? "";
-  const tab = tabs.find((item) => item.key === (TAB_ALIASES[requested] ?? requested))?.key ?? "overview";
   const result = useQuery({ queryKey: queryKeys.results.detail(resultId), queryFn: () => fetchResult(resultId), enabled: Boolean(resultId) });
+  const tabs: readonly { key: string; label: string }[] = result.data && hazardRecord(result.data)
+    ? [baseTabs[0], baseTabs[1], HAZARD_TAB, ...baseTabs.slice(2)] : baseTabs;
+  const tab = tabs.find((item) => item.key === (TAB_ALIASES[requested] ?? requested))?.key ?? "overview";
   const aoiId = result.data?.aoi_id ?? "";
   const aoi = useQuery({ queryKey: queryKeys.aois.detail(aoiId), queryFn: () => fetchAoi(aoiId), enabled: Boolean(aoiId) });
   if (result.isPending) return <LoadingState label="Loading result…" />;
@@ -86,6 +91,7 @@ export function ResultDetailPage() {
     <WorkspaceTabs tabs={tabs} value={tab} onChange={navigateTab} label="Result sections">
       {tab === "overview" ? <ResultOverviewTab data={data} artifacts={artifacts} aoiName={aoi.data?.name ?? null} viewer={viewer(true)} onOpenTab={navigateTab} /> : null}
       {tab === "accuracy" ? <ResultAccuracyTab data={data} artifacts={artifacts} /> : null}
+      {tab === "hazard" ? <ResultHazardTab data={data} artifacts={artifacts} /> : null}
       {tab === "downloads" ? <ResultDownloadsTab resultId={data.id} artifacts={artifacts} createdAt={data.created_at} /> : null}
       {tab === "provenance" ? <ResultProvenanceTab data={data} /> : null}
       {tab === "maps" ? viewer(false) : null}

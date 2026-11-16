@@ -2705,6 +2705,18 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /**
+         * FIRRISContextConfig
+         * @description Opt-in context layers next to the flood map (Depth & Exposure module). They never change the flood map.
+         */
+        FIRRISContextConfig: {
+            /**
+             * Modelled Flood Hazard
+             * @description Add the GloFAS v2.1 modelled river-flood hazard (depth for return periods 10-500 years) as context. Earth Engine source only.
+             * @default false
+             */
+            modelled_flood_hazard: boolean;
+        };
         /** FIRRISModelConfig */
         FIRRISModelConfig: {
             /**
@@ -2811,6 +2823,7 @@ export interface components {
         };
         /** FIRRISSatelliteWorkflowConfig */
         FIRRISSatelliteWorkflowConfig: {
+            context?: components["schemas"]["FIRRISContextConfig"];
             /** Feature Layers */
             feature_layers?: {
                 [key: string]: number[][];

@@ -240,6 +240,12 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
               </label>;
             })}
           </fieldset>
+          <div className="fr-toggles">
+            <label>
+              <span><strong>Modelled flood hazard (GloFAS v2.1)</strong><small>Context next to the flood map: modelled river-flood depth for 10- to 500-year return periods, with the annual exceedance probability. A model, not an observation; it does not change the flood map.</small></span>
+              <input type="checkbox" role="switch" checked={form.modelledFloodHazard} onChange={(event) => configure("modelledFloodHazard", event.target.checked)} />
+            </label>
+          </div>
         </Step>
 
         <Step number={5} title="Processing and sampling" id={id("processing")}>
@@ -273,6 +279,7 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
             <div><dt>Reference</dt><dd>Sentinel-2 (independent accuracy)</dd></div>
             <div><dt>Quality</dt><dd>Cloud ≤ {form.maxCloudPct}% · cover ≥ {FIXED_RUN_SETTINGS.minimumValidCoveragePct}% · MSI ≤ 0.1%</dd></div>
             <div><dt>Products</dt><dd>{productLabels.length ? productLabels.join(", ") : "None selected"}</dd></div>
+            {form.modelledFloodHazard ? <div><dt>Context</dt><dd>Modelled flood hazard (GloFAS)</dd></div> : null}
             <div><dt>Sampling</dt><dd>{form.samplingStrategy.replaceAll("_", " ")} · {form.sampleSize.toLocaleString("en-GB")} · {(form.trainFraction * 100).toFixed(0)}% training</dd></div>
             <div><dt>Resolution</dt><dd>{form.scale} m</dd></div>
           </dl>

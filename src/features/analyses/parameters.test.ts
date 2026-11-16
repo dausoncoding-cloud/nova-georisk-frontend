@@ -33,6 +33,13 @@ describe("FIRRIS parameter payload", () => {
     for (const optical of ["ndvi", "mndwi", "ndbi", "ndwi", "ndmi"]) expect(source?.features).not.toContain(optical);
   });
 
+  it("adds the modelled flood hazard context only when chosen (Depth & Exposure module)", () => {
+    const off = buildGeeSatelliteWorkflowParameters(defaultSatelliteWorkflowForm);
+    expect(off?.workflow).not.toHaveProperty("context");
+    const on = buildGeeSatelliteWorkflowParameters({ ...defaultSatelliteWorkflowForm, modelledFloodHazard: true });
+    expect(on?.workflow?.context).toEqual({ modelled_flood_hazard: true });
+  });
+
   it("rejects reversed satellite date ranges", () => {
     expect(() => buildGeeSatelliteWorkflowParameters({
       ...defaultSatelliteWorkflowForm,

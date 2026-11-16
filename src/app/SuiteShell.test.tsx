@@ -88,20 +88,20 @@ describe("Suite home", () => {
 
 describe("FRRIS shell", () => {
   it("has a labelled main navigation with the FRRIS pages and the account", async () => {
-    renderAt("/tasks");
+    renderAt("/frris/analyses");
     const nav = screen.getByRole("navigation", { name: "Main" });
-    for (const [name, href] of [["Analyses", "/tasks"], ["New analysis", "/analyses"], ["Data catalog", "/data"], ["Exports", "/exports"]]) {
+    for (const [name, href] of [["Analyses", "/frris/analyses"], ["New analysis", "/analyses"], ["Data catalog", "/data"], ["Exports", "/exports"]]) {
       expect(within(nav).getByRole("link", { name: new RegExp(`^${name}`) })).toHaveAttribute("href", href);
     }
     expect(within(nav).getByRole("link", { name: /^Analyses/ })).toHaveAttribute("aria-current", "page");
     expect(await within(nav).findByLabelText("2 running")).toBeInTheDocument();
-    expect(within(nav).getByText("Session User")).toBeInTheDocument();
-    expect(within(nav).getByText("Org One · Analyst")).toBeInTheDocument();
+    expect(screen.getByText("Session User")).toBeInTheDocument();
+    expect(screen.getByText("Org One · Analyst")).toBeInTheDocument();
     expect(screen.getByRole("main")).toHaveTextContent("page content");
   });
 
   it("switcher lists FRRIS as current and WRRIS/MEGIS as in development, not clickable", () => {
-    renderAt("/tasks");
+    renderAt("/frris/analyses");
     const trigger = screen.getByRole("button", { name: /Switch system\. Current system: FRRIS/ });
     expect(trigger).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(trigger);
@@ -122,7 +122,7 @@ describe("FRRIS shell", () => {
   });
 
   it("keeps every existing workspace page reachable and shows Administration only to admins and owners", () => {
-    renderAt("/tasks");
+    renderAt("/frris/analyses");
     const toggle = screen.getByRole("button", { name: "Workspace" });
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByRole("link", { name: "Projects" })).toBeNull();
@@ -138,7 +138,8 @@ describe("FRRIS shell", () => {
     state.role = "admin";
     state.memberships = 2;
     renderAt("/settings");
-    fireEvent.click(screen.getByRole("button", { name: "Workspace" }));
+    // On desktop the Workspace group is open when one of its pages is current.
+    expect(screen.getByRole("button", { name: "Workspace" })).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByRole("link", { name: "Administration" })).toHaveAttribute("href", "/administration");
     expect(screen.getByRole("combobox", { name: "Organization" })).toBeInTheDocument();
   });

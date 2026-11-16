@@ -6,9 +6,9 @@ The NOVA browser application is the organization-scoped WebGIS workspace for FIR
 
 ## Information architecture
 
-After sign-in, `/` is the NOVA-GeoRisk suite home ("Your systems"). FRRIS opens when the organization has access to the `firris` engine (`GET /api/v1/engines`); WRRIS and MEGIS are shown as "In development" and are not links.
+After sign-in without a deep link, the BFF callback returns to `/`, the NOVA-GeoRisk suite home ("Your systems"). A deep link (for example `/login?return_to=/frris/overview`) is kept. FRRIS opens when the organization has access to the `firris` engine (`GET /api/v1/engines`); WRRIS and MEGIS are shown as "In development" and are not links.
 
-The FRRIS shell has a white sidebar: the NOVA-GeoRisk brand (link to the suite home), a system switcher (FRRIS current; WRRIS and MEGIS listed as "In development", not clickable), the primary FRRIS pages (Analyses, New analysis, Data catalog, Exports), a "Workspace" disclosure with every other page (Overview at `/frris`, Projects, AOIs, Results, Maps, Reports, External data, Administration for admins and owners, Settings), page search (Ctrl/⌘ K), and the account (user, organization · role, organization picker when there are several memberships, Sign out). A selected project opens a persistent workspace with these tabs:
+The FRRIS shell has a white sidebar: the NOVA-GeoRisk brand (link to the suite home), a system switcher (FRRIS current; WRRIS and MEGIS listed as "In development", not clickable), the primary FRRIS pages (Analyses, New analysis, Data catalog, Exports), a "Workspace" disclosure with every other page (Overview at `/frris/overview`, Projects, AOIs, Results, Maps, Reports, External data, Administration for admins and owners, Settings), page search (Ctrl/⌘ K), and the account (user, organization · role, organization picker when there are several memberships, Sign out). A selected project opens a persistent workspace with these tabs:
 
 1. Overview
 2. AOI
@@ -20,7 +20,11 @@ The FRRIS shell has a white sidebar: the NOVA-GeoRisk brand (link to the suite h
 8. Reports
 9. Exports
 
-From 900 px the sidebar is sticky beside the content. Below 900 px it is stacked above the content, with the Workspace group closed.
+From 900 px the sidebar is sticky beside the content; its navigation scrolls while the account block stays pinned at the bottom. Below 900 px a top bar shows the brand, the current system and a menu button ("Open menu"); the sidebar opens as a modal drawer (focus trapped, Escape/backdrop/Close menu close it and return focus to the button, and it closes on navigation).
+
+FRRIS addresses: `/frris` opens the Analyses list at `/frris/analyses`; the former dashboard is `/frris/overview`. Old `/tasks` links redirect to `/frris/analyses` with their query and hash; `/tasks/:taskId` is unchanged.
+
+Fonts are self-hosted (no external requests): Inter for the UI and IBM Plex Mono for numbers (`.fr-num`), both SIL OFL 1.1. The licence texts live next to the files in `src/assets/fonts/` and are emitted to `dist/licenses/fonts/` by the build.
 
 ## Supported product journeys
 

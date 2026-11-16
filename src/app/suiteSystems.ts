@@ -1,4 +1,5 @@
 import { FRRIS_ENGINE_KEY } from "../shared/productName";
+import { FRRIS_ROUTES } from "./routes";
 
 // The NOVA-GeoRisk suite. FRRIS is the only system with a working frontend; WRRIS and MEGIS are shown as
 // "In development" and are never links. FRRIS availability for the organization comes from GET /api/v1/engines.
@@ -22,7 +23,7 @@ export const SUITE_SYSTEMS: readonly SuiteSystem[] = [
     description: "Sentinel-1 flood-candidate mapping with an independent Sentinel-2 accuracy assessment.",
     icon: "flood",
     engineKey: FRRIS_ENGINE_KEY,
-    route: "/frris",
+    route: FRRIS_ROUTES.home,
   },
   { key: "wrris", name: "WRRIS", domain: "Wildfire risk", icon: "wildfire" },
   { key: "megis", name: "MEGIS", domain: "Mineral exploration", icon: "mineral" },

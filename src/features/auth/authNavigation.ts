@@ -1,4 +1,5 @@
-const defaultReturnTo = "/projects";
+// After sign-in without a deep link, users land on the suite home (UI refresh 2026-11).
+const defaultReturnTo = "/";
 
 export function sanitizeReturnTo(value: unknown): string {
   if (typeof value !== "string") return defaultReturnTo;

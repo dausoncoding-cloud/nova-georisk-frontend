@@ -6,6 +6,7 @@ import { fetchResults } from "../results/resultsApi";
 import { queryKeys } from "../../shared/api/queryKeys";
 import { useOrganizationContext } from "../organization/OrganizationContext";
 import { TaskStatusBadge } from "../tasks/TaskStatusBadge";
+import { FRRIS_ROUTES } from "../../app/routes";
 
 export function DashboardPage() {
   const organization = useOrganizationContext();
@@ -23,7 +24,7 @@ export function DashboardPage() {
       <article className="metric-card metric-card--accent"><span>Engine</span><strong>FRRIS</strong><small>Flood intelligence reference engine</small></article>
     </section>
     <div className="dashboard-grid">
-      <section className="panel"><header className="panel-heading"><div><span className="eyebrow">Recent activity</span><h2>Analysis tasks</h2></div><Link to="/tasks">View all</Link></header><div className="activity-list">{tasks.isPending ? <p className="notice" role="status">Loading recent tasks…</p> : null}{tasks.isError ? <div className="inline-alert" role="alert">Recent tasks could not be loaded. <button className="button button--quiet button--small" onClick={() => void tasks.refetch()}>Try again</button></div> : null}{tasks.data?.items.slice(0, 6).map((task) => <Link className="activity-row" to={`/tasks/${task.task_id}`} key={task.task_id}><span className="activity-icon">↻</span><span><strong>{task.task_type.replaceAll("_", " ")}</strong><small>{new Date(task.created_at).toLocaleString()}</small></span><TaskStatusBadge status={task.status} /></Link>)}{tasks.data?.items.length === 0 ? <div className="empty-state compact"><p>No analysis activity yet.</p></div> : null}</div></section>
+      <section className="panel"><header className="panel-heading"><div><span className="eyebrow">Recent activity</span><h2>Analysis tasks</h2></div><Link to={FRRIS_ROUTES.analyses}>View all</Link></header><div className="activity-list">{tasks.isPending ? <p className="notice" role="status">Loading recent tasks…</p> : null}{tasks.isError ? <div className="inline-alert" role="alert">Recent tasks could not be loaded. <button className="button button--quiet button--small" onClick={() => void tasks.refetch()}>Try again</button></div> : null}{tasks.data?.items.slice(0, 6).map((task) => <Link className="activity-row" to={`/tasks/${task.task_id}`} key={task.task_id}><span className="activity-icon">↻</span><span><strong>{task.task_type.replaceAll("_", " ")}</strong><small>{new Date(task.created_at).toLocaleString()}</small></span><TaskStatusBadge status={task.status} /></Link>)}{tasks.data?.items.length === 0 ? <div className="empty-state compact"><p>No analysis activity yet.</p></div> : null}</div></section>
       <aside className="panel quick-start"><span className="eyebrow">Quick start</span><h2>Launch the FRRIS workflow</h2><ol><li><span>1</span>Create your FRRIS project</li><li><span>2</span>Add a validated AOI</li><li><span>3</span>Configure satellite analysis</li><li><span>4</span>Explore and export results</li></ol><Link className="button button--secondary" to="/projects">Open projects</Link></aside>
     </div>
   </div>;

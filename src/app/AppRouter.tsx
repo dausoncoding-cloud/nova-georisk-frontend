@@ -5,7 +5,9 @@ import { LoginPage } from "../features/auth/LoginPage";
 import { OrganizationContextProvider } from "../features/organization/OrganizationContext";
 import { AuthenticatedLayout } from "./AuthenticatedLayout";
 import { NotFoundPage } from "./NotFoundPage";
+import { RedirectTo } from "./RedirectTo";
 import { SuiteHomePage } from "./SuiteHomePage";
+import { FRRIS_ROUTES } from "./routes";
 
 const ProjectListPage = lazy(() => import("../features/projects/ProjectListPage").then((module) => ({ default: module.ProjectListPage })));
 const ProjectDetailPage = lazy(() => import("../features/projects/ProjectDetailPage").then((module) => ({ default: module.ProjectDetailPage })));
@@ -35,7 +37,9 @@ export function AppRouter() {
           <Route element={<OrganizationContextProvider><Outlet /></OrganizationContextProvider>}>
             <Route index element={<SuiteHomePage />} />
             <Route element={<AuthenticatedLayout />}>
-              <Route path="frris" element={<DashboardPage />} />
+              <Route path="frris" element={<RedirectTo to={FRRIS_ROUTES.analyses} />} />
+              <Route path="frris/analyses" element={<TaskListPage />} />
+              <Route path="frris/overview" element={<DashboardPage />} />
               <Route path="projects" element={<ProjectListPage />} />
               <Route path="projects/new" element={<ProjectFormPage />} />
               <Route path="projects/:projectId/edit" element={<ProjectFormPage />} />
@@ -51,7 +55,8 @@ export function AppRouter() {
                 <Route path="exports" element={<ProjectUtilityPage mode="exports" />} />
               </Route>
               <Route path="projects/:projectId/analyze" element={<AnalysisSubmitPage />} />
-              <Route path="tasks" element={<TaskListPage />} />
+              {/* Moved in the UI refresh: the task center is now the FRRIS Analyses list. */}
+              <Route path="tasks" element={<RedirectTo to={FRRIS_ROUTES.analyses} />} />
               <Route path="tasks/:taskId" element={<TaskDetailPage />} />
               <Route path="results" element={<ResultListPage />} />
               <Route path="results/:resultId" element={<ResultDetailPage />} />

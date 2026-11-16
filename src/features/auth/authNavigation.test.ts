@@ -13,7 +13,7 @@ describe("sanitizeReturnTo", () => {
     "/auth/callback",
     "projects",
   ])("rejects unsafe return target %s", (target) => {
-    expect(sanitizeReturnTo(target)).toBe("/projects");
+    expect(sanitizeReturnTo(target)).toBe("/");
   });
 });
 

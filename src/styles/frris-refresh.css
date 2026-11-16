@@ -63,17 +63,41 @@ body { color: var(--fr-ink); font-family: var(--fr-sans); }
 .fr-brand__copy strong { font-size: 15px; font-weight: 700; }
 .fr-brand__copy span { color: var(--fr-muted); font-size: 12px; }
 
-/* FRRIS application shell: sticky sidebar on desktop, stacked above the content on mobile. */
+/* FRRIS application shell.
+   Desktop (>= 900 px): sticky sidebar; the nav area scrolls and the account block stays pinned at the bottom.
+   Compact (< 900 px): a top bar (brand, current system, menu button); the sidebar opens as a modal drawer. */
 .fr-shell { background: var(--fr-bg); display: flex; flex-direction: column; min-height: 100vh; }
-.fr-sidebar { background: var(--fr-surface); border-bottom: 1px solid var(--fr-line); box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+.fr-sidebar { background: var(--fr-surface); box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; overflow: hidden; padding: 24px 16px 16px; }
+.fr-sidebar:focus { outline: none; }
+.fr-sidebar__head { align-items: center; display: flex; flex: none; gap: 8px; justify-content: space-between; }
+.fr-sidebar__scroll { display: flex; flex: 1 1 auto; flex-direction: column; gap: 24px; margin: 0 -8px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 8px; }
+.fr-sidebar__close { align-items: center; background: transparent; border: 1px solid var(--fr-line); border-radius: 8px; color: var(--fr-ink-2); cursor: pointer; display: none; flex: none; height: var(--fr-target); justify-content: center; width: var(--fr-target); }
 .fr-main.content { box-sizing: border-box; flex: 1; max-width: none; min-width: 0; padding: 24px 16px 40px; }
 .fr-main.content > * { max-width: 1280px; }
 .fr-main:focus { outline: none; }
 
+.fr-topbar { align-items: center; background: var(--fr-surface); border-bottom: 1px solid var(--fr-line); box-sizing: border-box; display: flex; gap: 8px; min-height: 60px; padding: 8px 8px 8px 12px; position: sticky; top: 0; z-index: 20; }
+.fr-topbar .fr-brand { min-width: 0; padding: 0 4px; }
+.fr-topbar .fr-brand__copy strong { white-space: nowrap; }
+.fr-topbar__system { align-items: center; background: var(--fr-primary-soft); border-radius: 999px; color: var(--fr-primary-text); display: inline-flex; flex: none; font-size: 13px; font-weight: 700; gap: 6px; margin-left: auto; padding: 4px 10px; }
+.fr-topbar__menu { align-items: center; background: transparent; border: 1px solid var(--fr-line); border-radius: 8px; color: var(--fr-ink); cursor: pointer; display: flex; flex: none; height: var(--fr-target); justify-content: center; width: var(--fr-target); }
+.fr-topbar__menu:hover { background: var(--fr-bg); }
+.fr-drawer-backdrop { background: rgba(15, 27, 42, .5); inset: 0; position: fixed; z-index: 40; }
+
 @media (min-width: 900px) {
   .fr-shell { flex-direction: row; }
-  .fr-sidebar { align-self: flex-start; border-bottom: 0; border-right: 1px solid var(--fr-line); flex: 0 0 260px; gap: 24px; height: 100vh; overflow-y: auto; padding: 24px 16px; position: sticky; top: 0; width: 260px; }
+  .fr-topbar { display: none; }
+  .fr-sidebar { align-self: flex-start; border-right: 1px solid var(--fr-line); flex: 0 0 260px; gap: 24px; height: 100vh; position: sticky; top: 0; width: 260px; }
   .fr-main.content { padding: 40px 48px; }
+}
+@media (max-width: 899px) {
+  .fr-sidebar { display: none; }
+  .fr-shell.is-drawer-open .fr-sidebar { bottom: 0; box-shadow: 0 0 40px rgba(15, 27, 42, .25); display: flex; height: 100dvh; left: 0; max-width: 88vw; padding: 12px 16px 16px; position: fixed; top: 0; width: 320px; z-index: 50; }
+  .fr-sidebar__close { display: inline-flex; }
+}
+@media (prefers-reduced-motion: no-preference) and (max-width: 899px) {
+  .fr-shell.is-drawer-open .fr-sidebar { animation: fr-drawer-in .18s ease-out; }
+  @keyframes fr-drawer-in { from { transform: translateX(-100%); } to { transform: none; } }
 }
 
 /* System switcher */
@@ -129,18 +153,7 @@ a.fr-switcher__option .fr-switcher__state { color: var(--fr-primary-text); font-
 .fr-sidebar__account .logout-control .button, .fr-suite__account .logout-control .button { background: transparent; border: 0; color: var(--fr-primary); font-size: 14px; font-weight: 500; justify-content: flex-start; min-height: var(--fr-target); padding: 0; text-decoration: underline; text-underline-offset: 3px; }
 .fr-sidebar__account .logout-control .button:hover, .fr-suite__account .logout-control .button:hover { color: var(--fr-primary-hover); }
 
-@media (min-width: 900px) {
-  .fr-sidebar__account { margin-top: auto; }
-}
-@media (max-width: 899px) {
-  .fr-sidebar > .fr-brand { align-self: flex-start; }
-  .fr-nav:not(.fr-nav--workspace) .fr-nav__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .fr-nav--workspace .fr-nav__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .fr-nav__find kbd { display: none; }
-  .fr-sidebar__account { flex-flow: row wrap; align-items: center; column-gap: 12px; padding: 12px 4px 0; }
-  .fr-sidebar__account .organization-picker { flex: 1 1 100%; margin-top: 0; }
-  .fr-sidebar__account .logout-control { margin-left: auto; }
-}
+.fr-sidebar__account { flex: none; }
 
 /* Suite home */
 .fr-suite { background: var(--fr-bg); display: flex; flex-direction: column; min-height: 100vh; }
@@ -174,3 +187,6 @@ a.fr-switcher__option .fr-switcher__state { color: var(--fr-primary-text); font-
   .fr-suite__main { padding: 48px; }
   .fr-system-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Numbers (metrics, areas, sizes, identifiers) use IBM Plex Mono, as in the design. */
+.fr-num { font-family: var(--fr-mono); font-variant-numeric: tabular-nums; }

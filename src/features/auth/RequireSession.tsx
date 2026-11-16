@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { LoadingState } from "../../shared/ui/LoadingState";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { useSession } from "./authQueries";
+import { isSessionExpired } from "./sessionExpiry";
 
 export function RequireSession() {
   const location = useLocation();
@@ -19,7 +20,7 @@ export function RequireSession() {
   }
   if (!session.data.authenticated) {
     const returnTo = `${location.pathname}${location.search}${location.hash}`;
-    return <Navigate to="/login" replace state={{ returnTo }} />;
+    return <Navigate to="/login" replace state={{ returnTo, expired: isSessionExpired() }} />;
   }
 
   return <Outlet />;

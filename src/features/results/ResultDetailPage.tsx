@@ -36,7 +36,7 @@ export function ResultDetailPage() {
   const aoiId = result.data?.aoi_id ?? "";
   const aoi = useQuery({ queryKey: queryKeys.aois.detail(aoiId), queryFn: () => fetchAoi(aoiId), enabled: Boolean(aoiId) });
   if (result.isPending) return <LoadingState label="Loading result…" />;
-  if (result.isError) return <ErrorState title="Result could not be loaded" error={result.error} onRetry={() => void result.refetch()} />;
+  if (result.isError) return <ErrorState title="Result could not be loaded" error={result.error} onRetry={() => void result.refetch()} subject="analysis" />;
 
   const data = result.data;
   const summary = asRecord(data.summary);

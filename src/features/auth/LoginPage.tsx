@@ -1,10 +1,14 @@
+import { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { clearSessionExpired } from "./sessionExpiry";
 import { buildLoginUrl, sanitizeReturnTo } from "./authNavigation";
 import { useAuthConfig, useSession } from "./authQueries";
 import { getErrorMessage } from "../../shared/api/errors";
 import { LoadingState } from "../../shared/ui/LoadingState";
+import { SessionEndedState } from "../../shared/ui/StatusStates";
+import { SuiteBrand } from "../../app/SuiteBrand";
 
-type LoginLocationState = { returnTo?: string } | null;
+type LoginLocationState = { returnTo?: string; expired?: boolean } | null;
 
 export function LoginPage() {
   const location = useLocation();
@@ -13,6 +17,7 @@ export function LoginPage() {
   const state = location.state as LoginLocationState;
   const queryReturnTo = new URLSearchParams(location.search).get("return_to");
   const returnTo = sanitizeReturnTo(state?.returnTo ?? queryReturnTo);
+  useEffect(() => clearSessionExpired(), []);
 
   if (session.isPending) return <LoadingState label="Checking your NOVA session…" />;
   if (session.data?.authenticated) return <Navigate to={returnTo} replace />;
@@ -20,6 +25,21 @@ export function LoginPage() {
   const isConfigured = authConfig.data?.configured ?? false;
   const canSignIn = authConfig.isSuccess && isConfigured;
   const authError = authConfig.isError ? getErrorMessage(authConfig.error) : session.isError ? getErrorMessage(session.error) : null;
+
+  if (state?.expired) {
+    // P5: the session ended while the user was working; signing in again returns to the same page.
+    return (
+      <div className="fr-suite">
+        <header className="fr-suite__header"><SuiteBrand /></header>
+        <main id="main-content" className="fr-suite__main fr-state-page">
+          <SessionEndedState disabled={!canSignIn} onSignIn={() => window.location.assign(buildLoginUrl(returnTo))}>
+            {authError ? <p className="fr-box fr-box--danger" role="alert">{authError}</p> : null}
+            {authConfig.isSuccess && !isConfigured ? <p className="fr-box fr-box--danger" role="alert">{authConfig.data.message}</p> : null}
+          </SessionEndedState>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <main className="login-page">

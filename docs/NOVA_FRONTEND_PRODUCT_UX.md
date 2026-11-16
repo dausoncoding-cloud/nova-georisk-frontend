@@ -35,6 +35,13 @@ FRRIS result (`/results/:id`): header with the area name, Report (Word) and Repo
 
 New analysis products whose module is not approved (for example Flood depth) are listed as "Coming soon" without a checkbox. The minimum area coverage (70%) was never user-editable; it is shown read-only.
 
+Analysis page (`/tasks/:id`, P5): header with the area name, the status pill and the submitted windows (inclusive, from the task archive when the role can read it).
+- Running or queued: progress from `progress_pct` (progress bar), start time, the six steps of the run as a description (the API reports a percentage, not a named stage; follow-up 1), "You can leave this page…", Cancel analysis, and the run history from the execution events. The page polls every 2 seconds.
+- Failed: a plain-language title for the allow-listed failures (low valid-pixel coverage with the parsed figures, no Sentinel-1 pass, orbit mismatch; otherwise "The analysis could not be completed"), the API message as delivered, "What you can do", Edit and retry (New analysis with the same project and area), Retry with the same settings, Back to analyses, the reference, and "Where it stopped" from the events.
+- Canceled and completed: run it again / open the result. The execution archive stays at the bottom.
+
+Error states (P5): an API 403 shows "You don't have access to this" (with the request reference and Back to analyses), an API 404 or an unknown address shows "Page not found" (Go to your systems). When an API call returns 401 during a session, the user lands on "Your session has ended" with Sign in again, which returns to the same page; a first visit or a deliberate sign-out shows the normal sign-in.
+
 FRRIS addresses: `/frris` opens the Analyses list at `/frris/analyses`; the former dashboard is `/frris/overview`. Old `/tasks` links redirect to `/frris/analyses` with their query and hash; `/tasks/:taskId` is unchanged.
 
 Fonts are self-hosted (no external requests): Inter for the UI and IBM Plex Mono for numbers (`.fr-num`), both SIL OFL 1.1. The licence texts live next to the files in `src/assets/fonts/` and are emitted to `dist/licenses/fonts/` by the build.

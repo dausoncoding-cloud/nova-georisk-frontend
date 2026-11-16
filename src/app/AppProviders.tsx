@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ApiError } from "../shared/api/errors";
 import { subscribeToUnauthorized } from "../shared/api/client";
 import { clearCsrfToken } from "../shared/api/csrf";
+import { markSessionExpired } from "../features/auth/sessionExpiry";
 import { queryKeys } from "../shared/api/queryKeys";
 import { ToastProvider } from "../shared/ui/Toast";
 
@@ -24,6 +25,7 @@ function SessionInvalidationBridge({ children }: PropsWithChildren) {
   useEffect(
     () =>
       subscribeToUnauthorized(() => {
+        markSessionExpired();
         clearCsrfToken();
         queryClient.removeQueries({ queryKey: queryKeys.organization });
         queryClient.removeQueries({ queryKey: queryKeys.projects.all });

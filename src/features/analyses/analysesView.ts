@@ -4,6 +4,7 @@
 import type { components } from "../../shared/api/generated/nova-browser-api";
 import type { TaskStatus, TaskStatusResponse } from "../tasks/tasksApi";
 import { formatDay } from "./periods";
+import { aucView } from "../results/aucView";
 
 type Result = components["schemas"]["ResultResponse"];
 type Scope = components["schemas"]["AccuracyScope"];
@@ -105,7 +106,8 @@ export function latestResult(results: readonly Result[]): LatestResult | null {
     { label: "Overall accuracy", value: fixed(scope.overall_accuracy_pct, 1), suffix: "%" },
     { label: "Kappa", value: fixed(scope.cohens_kappa, 3), suffix: "" },
     { label: "F1 (flood candidate)", value: fixed(scope.f1_flooded, 3), suffix: "" },
-    { label: "AUC", value: fixed(scope.roc_auc, 3), suffix: "" },
+    // r5.2: the AUC is named by its reference; a holdout AUC is never shown as independent.
+    { label: aucView(scope).label, value: aucView(scope).assessable ? fixed(scope.roc_auc, 3) : "not assessable", suffix: "" },
   ].flatMap((metric) => metric.value === null ? [] : [{ label: metric.label, value: `${metric.value}${metric.suffix}` }]) : [];
   return {
     resultId: result.id,

@@ -95,7 +95,8 @@ describe("Accuracy assessment tables (2.2)", () => {
     const rocFigure = screen.getByRole("img", { name: /ROC curve/ });
     expect(rocFigure.querySelector("[data-testid=diagonal]")).not.toBeNull();
     expect(rocFigure.querySelector("polyline")?.getAttribute("points")?.split(" ").length).toBe(3);
-    expect(screen.getByText(/AUC 0\.931 · positives 413 · negatives 514/)).toBeInTheDocument();
+    // r5.2: the AUC names its reference.
+    expect(screen.getByText("AUC vs Sentinel-2 reference (independent): 0.931 (census of all eligible pixels: no sampling interval) · positives 413 · negatives 514")).toBeInTheDocument();
     const prFigure = screen.getByRole("img", { name: /Precision-recall curve/ });
     expect(prFigure.querySelector("[data-testid=prevalence]")).not.toBeNull();
     expect(prFigure.querySelector("polyline")?.getAttribute("points")?.split(" ").length).toBe(2);
@@ -105,7 +106,7 @@ describe("Accuracy assessment tables (2.2)", () => {
 
   it("shows bootstrap intervals only for the held-out sample and the census note otherwise", () => {
     render(<AccuracyAssessment assessment={assessed} />);
-    expect(screen.getByText(/95% interval: OA 95\.1–97\.4% · Kappa 0\.900–0\.950 · AUC 0\.910–0\.950/)).toBeInTheDocument();
+    expect(screen.getByText(/95% interval: OA 95\.1–97\.4% · Kappa 0\.900–0\.950 \(percentile bootstrap, 1000 resamples, seed 2025\)\. AUC vs SAR-derived labels \(holdout, not independent\): 0\.931 \(95% CI 0\.910–0\.950\)\./)).toBeInTheDocument();
     expect(screen.getByText(/no sampling error, so no sampling interval/)).toBeInTheDocument();
   });
 
@@ -119,6 +120,18 @@ describe("Accuracy assessment tables (2.2)", () => {
     const empty = scope({ roc_auc: null, average_precision: null, cohens_kappa: null, per_class: [{ ...assessed.scopes[0]!.per_class[0]!, users_accuracy_pct: null }] });
     render(<AccuracyAssessment assessment={{ ...assessed, scopes: [empty] }} />);
     expect(document.body.textContent).not.toMatch(/NaN|undefined/);
-    expect(screen.getByText(/AUC — ·/)).toBeInTheDocument();
+    expect(screen.getByText("AUC vs Sentinel-2 reference (independent): not assessable: the AUC could not be computed. No ROC curve is drawn.")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /ROC curve/ })).toBeNull();
+  });
+
+  // r5.2: never a misleading curve; the reason instead.
+  it.each([
+    [{ n_per_reference_class: { "0": 514, "1": 0 } }, "one reference class is empty (0 positive, 514 negative)"],
+    [{ n_per_reference_class: { "0": 514, "1": 49 } }, "fewer than 50 samples in a reference class (49 positive, 514 negative)"],
+    [{ roc: [{ fpr: 0, tpr: 0, threshold: null }, { fpr: 1, tpr: 1, threshold: null }] }, "the model scores take too few distinct values to draw an ROC curve"],
+  ])("shows AUC not assessable with the reason and no ROC curve (%#)", (overrides, reason) => {
+    render(<AccuracyAssessment assessment={{ ...assessed, scopes: [scope(overrides)] }} />);
+    expect(screen.getByText(`AUC vs Sentinel-2 reference (independent): not assessable: ${reason}. No ROC curve is drawn.`)).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /ROC curve/ })).toBeNull();
   });
 });

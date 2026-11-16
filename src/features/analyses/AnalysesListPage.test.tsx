@@ -20,7 +20,9 @@ const task = (overrides: Partial<TaskStatusResponse>): TaskStatusResponse => ({
   error_summary: null, error_message: null, result_reference: null, result_payload: null, execution: null, ...overrides,
 } as TaskStatusResponse);
 
-const scope = (name: string, title: string, oa: number | null) => ({ scope: name, title, overall_accuracy_pct: oa, cohens_kappa: 0.4461, f1_flooded: 0.4771, roc_auc: 0.8049 });
+const scope = (name: string, title: string, oa: number | null) => ({ scope: name, title, overall_accuracy_pct: oa, cohens_kappa: 0.4461, f1_flooded: 0.4771, roc_auc: 0.8049,
+  method: name === "independent_optical" ? "census" : "held_out_sample", n_per_reference_class: { "0": 900, "1": 600 },
+  roc: [{ fpr: 0, tpr: 0 }, { fpr: 0.2, tpr: 0.7 }, { fpr: 1, tpr: 1 }] });
 const result = (overrides: Record<string, unknown> = {}) => ({
   id: "res-1", aoi_id: "aoi-1", project_id: "p1", task_id: "task-completed",
   overview: { headline: { target_period: "24–25 May 2024" } },
@@ -77,7 +79,7 @@ describe("analyses view model", () => {
     expect(latest.independent).toBe(true);
     expect(latest.metrics).toEqual([
       { label: "Overall accuracy", value: "94.2%" }, { label: "Kappa", value: "0.446" },
-      { label: "F1 (flood candidate)", value: "0.477" }, { label: "AUC", value: "0.805" },
+      { label: "F1 (flood candidate)", value: "0.477" }, { label: "AUC vs Sentinel-2 reference (independent)", value: "0.805" },
     ]);
   });
 
@@ -86,7 +88,7 @@ describe("analyses view model", () => {
     const latest = latestResult([internalOnly as never])!;
     expect(latest.basis).toBe("Internal agreement (SAR screening labels)");
     expect(latest.independentNote).toBe("Independent accuracy: not assessable.");
-    expect(latest.metrics.map((metric) => metric.label)).toEqual(["Kappa", "F1 (flood candidate)", "AUC"]);
+    expect(latest.metrics.map((metric) => metric.label)).toEqual(["Kappa", "F1 (flood candidate)", "AUC vs SAR-derived labels (holdout, not independent)"]);
     expect(latestResult([])).toBeNull();
     expect(latestResult([result({ validation_dashboard: null }) as never])!.metrics).toEqual([]);
   });
@@ -144,7 +146,7 @@ describe("Analyses list", () => {
     expect(card).toHaveTextContent("Independent accuracy (Sentinel-2 reference)");
     expect(card).toHaveTextContent("Target period 24–25 May 2024");
     const terms = within(card).getAllByRole("term").map((term) => term.textContent);
-    expect(terms).toEqual(["Overall accuracy", "Kappa", "F1 (flood candidate)", "AUC"]);
+    expect(terms).toEqual(["Overall accuracy", "Kappa", "F1 (flood candidate)", "AUC vs Sentinel-2 reference (independent)"]);
     expect(within(card).getAllByRole("definition").map((value) => value.textContent)).toEqual(["94.2%", "0.446", "0.477", "0.805"]);
   });
 

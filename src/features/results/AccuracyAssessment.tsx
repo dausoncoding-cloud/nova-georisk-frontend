@@ -1,4 +1,5 @@
 import type { components } from "../../shared/api/generated/nova-browser-api";
+import { aucValueText, aucView } from "./aucView";
 
 type Assessment = components["schemas"]["AccuracyAssessment"];
 type Scope = components["schemas"]["AccuracyScope"];
@@ -76,6 +77,7 @@ function Curve({ label, points, reference, referenceId, xLabel, yLabel, note }: 
 }
 
 function Curves({ scope }: { scope: Scope }) {
+  const auc = aucView(scope);
   const roc = scope.roc.filter(item => item.fpr !== null && item.tpr !== null).map(item => [item.fpr!, item.tpr!] as [number, number]);
   const pr = scope.pr.filter(item => item.recall !== null && item.precision !== null).map(item => [item.recall!, item.precision!] as [number, number]);
   const prevalence = scope.prevalence ?? 0;
@@ -83,9 +85,10 @@ function Curves({ scope }: { scope: Scope }) {
   const negatives = scope.n_per_reference_class["0"] ?? 0;
   return (
     <div className="accuracy-curves">
-      <Curve label={`ROC curve, ${scope.title}`} points={roc} reference={`M ${point(0, 0)} L ${point(1, 1)}`} referenceId="diagonal"
+      {auc.assessable ? <Curve label={`ROC curve, ${scope.title}`} points={roc} reference={`M ${point(0, 0)} L ${point(1, 1)}`} referenceId="diagonal"
         xLabel="False positive rate" yLabel="True positive rate"
-        note={`AUC ${fixed(scope.roc_auc, 3)} · positives ${count.format(positives)} · negatives ${count.format(negatives)}`} />
+        note={`${auc.label}: ${aucValueText(auc)} · positives ${count.format(positives)} · negatives ${count.format(negatives)}`} />
+        : <p className="notice" role="note">{auc.label}: {aucValueText(auc)}. No ROC curve is drawn.</p>}
       <Curve label={`Precision-recall curve, ${scope.title}`} points={pr} reference={`M ${point(0, prevalence)} L ${point(1, prevalence)}`} referenceId="prevalence"
         xLabel="Recall" yLabel="Precision" note={`AP ${fixed(scope.average_precision, 3)} · prevalence ${fixed(scope.prevalence, 3)}`} />
       <p className="notice">{scope.roc_auc_note}</p>
@@ -97,7 +100,7 @@ function Intervals({ scope }: { scope: Scope }) {
   const intervals = scope.confidence_intervals_95;
   if (!intervals) return <p>{scope.interval_note}</p>;
   const range = (value: number[] | null | undefined, digits: number, unit = "") => (value ? `${value[0]!.toFixed(digits)}–${value[1]!.toFixed(digits)}${unit}` : DASH);
-  return <p>95% interval: OA {range(intervals.overall_accuracy_pct, 1, "%")} · Kappa {range(intervals.cohens_kappa, 3)} · AUC {range(intervals.roc_auc, 3)} ({intervals.method})</p>;
+  return <p>95% interval: OA {range(intervals.overall_accuracy_pct, 1, "%")} · Kappa {range(intervals.cohens_kappa, 3)} ({intervals.method}). {aucView(scope).label}: {aucValueText(aucView(scope))}.</p>;
 }
 
 export function AccuracyAssessment({ assessment, showStatus = true }: { assessment: Assessment; showStatus?: boolean }) {

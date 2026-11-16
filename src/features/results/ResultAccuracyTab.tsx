@@ -4,6 +4,7 @@ import { AccuracyAssessment } from "./AccuracyAssessment";
 import type { ResultArtifact } from "./gisViewer";
 import { DeliveredMetadata } from "./QuantitativeDelivery";
 import { protectedProductUrl } from "./resultsApi";
+import { aucValueText, aucView } from "./aucView";
 import { asRecord, confusionCells, COUNT, figure, fixed, independentScope, INDEPENDENT_STATUS_TEXT, internalScopes } from "./resultView";
 
 type Result = components["schemas"]["ResultResponse"];
@@ -57,6 +58,7 @@ export function ResultAccuracyTab({ data, artifacts }: { data: Result; artifacts
   const referenceBasis = dashboard?.reference_basis ?? null;
   const limitations = Array.from(new Set([...(data.analytics?.limitations ?? []), ...(dashboard?.limitations ?? [])]));
   const cells = independent ? confusionCells(independent) : null;
+  const independentAuc = independent ? aucView(independent) : null;
 
   return <div className="fr-tab-stack">
     <h2 className="fr-visually-hidden">Accuracy assessment</h2>
@@ -74,8 +76,13 @@ export function ResultAccuracyTab({ data, artifacts }: { data: Result; artifacts
       </section>
       <section className="fr-metrics" aria-label="Accuracy metrics">
         {[["Overall accuracy", pct(independent.overall_accuracy_pct)], ["Cohen's Kappa", dec(independent.cohens_kappa)], ["F1 (flood class)", dec(independent.f1_flooded)],
-          ["User's accuracy (flood)", pct(cells.usersFlood.pct)], ["Producer's accuracy (flood)", pct(cells.producersFlood.pct)], ["ROC AUC", dec(independent.roc_auc)]]
+          ["User's accuracy (flood)", pct(cells.usersFlood.pct)], ["Producer's accuracy (flood)", pct(cells.producersFlood.pct)]]
           .map(([label, value]) => <div className="fr-metric" key={label}><span>{label}</span><strong className="fr-num">{value}</strong></div>)}
+        {independentAuc ? <div className="fr-metric" aria-label="ROC AUC">
+          <span>{independentAuc.label}</span>
+          <strong className="fr-num">{independentAuc.assessable ? dec(independentAuc.value) : "Not assessable"}</strong>
+          <small className="fr-help">{independentAuc.assessable ? (independentAuc.interval ? `95% CI ${independentAuc.interval[0].toFixed(3)}–${independentAuc.interval[1].toFixed(3)}` : independentAuc.intervalNote) : independentAuc.reason}</small>
+        </div> : null}
       </section>
       <section className="fr-card fr-section" aria-labelledby="accuracy-matrix">
         <h3 id="accuracy-matrix">Confusion matrix</h3>
@@ -83,7 +90,7 @@ export function ResultAccuracyTab({ data, artifacts }: { data: Result; artifacts
         <p className="fr-help">{independent.interval_note}.</p>
       </section>
       <section className="fr-figures" aria-label="Accuracy figures">
-        <PackageFigure resultId={data.id} artifact={figure(artifacts, "independent_optical", "roc")} caption={`ROC curve (AUC ${dec(independent.roc_auc)})`} />
+        <PackageFigure resultId={data.id} artifact={figure(artifacts, "independent_optical", "roc")} caption={independentAuc?.assessable ? `ROC curve — ${independentAuc.label}: ${aucValueText(independentAuc)}` : `ROC — ${independentAuc?.label}: ${independentAuc ? aucValueText(independentAuc) : ""}`} />
         <PackageFigure resultId={data.id} artifact={figure(artifacts, "independent_optical", "pr")} caption={`Precision–recall curve (AP ${dec(independent.average_precision)})`} />
       </section>
       <Disclosure title="Per-class summary and curve data (independent reference)">
@@ -114,6 +121,8 @@ export function ResultAccuracyTab({ data, artifacts }: { data: Result; artifacts
       {internal.length ? <>
         <ul className="fr-agreement">{internal.map((scope) => <li key={scope.scope}>
           {scope.method === "census" ? "Census" : "Held-out sample"}, <span className="fr-num">n = {COUNT.format(scope.n)}</span>: overall agreement <span className="fr-num">{pct(scope.overall_accuracy_pct)}</span> · Kappa <span className="fr-num">{dec(scope.cohens_kappa)}</span> · F1 <span className="fr-num">{dec(scope.f1_flooded)}</span>
+          <br />{aucView(scope).label}: <span className="fr-num">{aucValueText(aucView(scope))}</span>
+          {aucView(scope).caveat ? <span className="fr-help"> {aucView(scope).caveat}</span> : null}
         </li>)}</ul>
         <Disclosure title="All internal agreement values (as delivered)"><DeliveredMetadata value={asRecord(summary?.validation)} /></Disclosure>
       </> : <DeliveredMetadata value={asRecord(summary?.validation)} />}

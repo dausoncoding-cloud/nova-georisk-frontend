@@ -110,9 +110,16 @@ describe("Accuracy assessment", () => {
   it("assessed: census metrics, TP/TN/FP/FN with totals and UA/PA, package figures, audit sample, internal agreement apart", async () => {
     setup(rufiji(), "accuracy");
     const metrics = await screen.findByRole("region", { name: "Accuracy metrics" });
-    for (const [label, value] of [["Overall accuracy", "94.2%"], ["Cohen's Kappa", "0.446"], ["F1 (flood class)", "0.477"], ["User's accuracy (flood)", "48.9%"], ["Producer's accuracy (flood)", "46.5%"], ["ROC AUC", "0.805"]] as const) {
+    for (const [label, value] of [["Overall accuracy", "94.2%"], ["Cohen's Kappa", "0.446"], ["F1 (flood class)", "0.477"], ["User's accuracy (flood)", "48.9%"], ["Producer's accuracy (flood)", "46.5%"], ["AUC vs Sentinel-2 reference (independent)", "0.805"]] as const) {
       expect(within(metrics).getByText(label).nextElementSibling).toHaveTextContent(value);
     }
+    // r5.2: the independent AUC tile names its reference and states the census note; the holdout AUC appears only
+    // under internal agreement, labelled "not independent".
+    expect(within(metrics).getByLabelText("ROC AUC")).toHaveTextContent("census of all eligible pixels: no sampling interval");
+    expect(metrics).not.toHaveTextContent(/holdout/);
+    const internalSection = screen.getByRole("region", { name: /Internal agreement/ });
+    expect(internalSection).toHaveTextContent("AUC vs SAR-derived labels (holdout, not independent)");
+    expect(internalSection).not.toHaveTextContent("AUC vs Sentinel-2 reference (independent)");
     const matrix = screen.getByRole("table", { name: /Confusion matrix — rows: model classification/ });
     const rows = within(matrix).getAllByRole("row").map((row) => row.textContent);
     expect(rows[1]).toBe("Model floodedTP 2,807FP 2,9295,73648.9%");

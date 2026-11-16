@@ -89,3 +89,11 @@ export async function deleteAoi(aoiId: string): Promise<void> {
   });
   assertSuccessfulResponse(result);
 }
+
+export type AreaCapacityRequest = components["schemas"]["AOICapacityRequest"];
+export type AreaCapacityResponse = components["schemas"]["AOICapacityResponse"];
+
+/** P6 area playground: does the area fit one FRRIS analysis (the preflight's capacity rule), and how to make it fit. */
+export async function checkAreaCapacity(body: AreaCapacityRequest) {
+  return unwrapResponse(await apiClient.POST("/api/v1/aois/capacity", { body }));
+}

@@ -42,6 +42,8 @@ Analysis page (`/tasks/:id`, P5): header with the area name, the status pill and
 
 Error states (P5): an API 403 shows "You don't have access to this" (with the request reference and Back to analyses), an API 404 or an unknown address shows "Page not found" (Go to your systems). When an API call returns 401 during a session, the user lands on "Your session has ended" with Sign in again, which returns to the same page; a first visit or a deliberate sign-out shows the normal sign-in.
 
+Area playground (`/frris/playground`, P6): draw a polygon or rectangle, or upload GeoJSON / Shapefile (.zip) / KML. Every change is checked with `POST /api/v1/aois/capacity`, which uses the preflight's own capacity rule (no Earth Engine call). The live meter shows the download estimate against the 48 MiB limit (fits / close to the limit / too large). Over the limit, three options with small previews: trim to the largest box that fits (move it by dragging on the map or with the West/North/South/East buttons; each move is checked again), split into N parts (each saved as its own area), or a coarser resolution (60 m, or the next scale that fits). Save to my areas (a split saves N areas, named "… (part i of N)") into a chosen FRRIS project, then "Start a new analysis" opens New analysis with that area (and `?scale=60` for the coarser option). Download GeoJSON saves the current area(s) as a FeatureCollection. Saving is disabled while the area is too large and no option is applied.
+
 FRRIS addresses: `/frris` opens the Analyses list at `/frris/analyses`; the former dashboard is `/frris/overview`. Old `/tasks` links redirect to `/frris/analyses` with their query and hash; `/tasks/:taskId` is unchanged.
 
 Fonts are self-hosted (no external requests): Inter for the UI and IBM Plex Mono for numbers (`.fr-num`), both SIL OFL 1.1. The licence texts live next to the files in `src/assets/fonts/` and are emitted to `dist/licenses/fonts/` by the build.
@@ -131,9 +133,9 @@ For release review, also scan generated assets and source for `X-Internal-Secret
 
 ## Follow-ups (not in the frontend)
 
-Recorded during the 2026-11 UI refresh; to be added to the backend backlog (plan §4.7):
+Recorded during the 2026-11 UI refresh; items 1–3 are now backend plan §4.7 items 10–12:
 
 1. **Expose the current stage name in the task API** (backend). The Analyses list shows "Running · 48%"; the design's "Running · Sentinel-1 download" needs a stage field on `TaskStatusResponse`.
 2. **Filter the Analyses list by the selected system** once a second engine exists (frontend, with `engine_key`). Today the list shows every task in the organization, which are all FRRIS.
 3. **Target period of running and queued analyses**: the task list response does not carry the submitted parameters (only `/tasks/{id}/archive` does), so these rows show "—" until the result exists.
-4. **Inclusive dates in every user-facing server text** (backend, P6 branch; ships together with the UI refresh): preflight messages ("between 21 and 22 May 2024"), the result summary sentence, report PDF/Word text, map captions and README. API fields, provenance.json and the science stay exclusive; tests check last day = exclusive end − 1.
+4. *(Done in P6, backend `fix/frris-inclusive-dates`.)* **Inclusive dates in every user-facing server text**: preflight messages ("between 21 and 22 May 2024"), the result summary sentence, report PDF/Word text, map captions and README. API fields, provenance.json and the science stay exclusive; tests check last day = exclusive end − 1.

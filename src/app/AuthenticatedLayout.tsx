@@ -19,6 +19,7 @@ type NavItem = { to: string; icon: Parameters<typeof Icon>[0]["name"]; label: st
 export const PRIMARY_NAV: readonly NavItem[] = [
   { to: FRRIS_ROUTES.analyses, icon: "overview", label: "Analyses", end: true },
   { to: FRRIS_ROUTES.newAnalysis, icon: "plus", label: "New analysis", end: true },
+  { to: FRRIS_ROUTES.playground, icon: "aoi", label: "Area playground" },
   { to: "/data", icon: "data", label: "Data catalog" },
   { to: "/exports", icon: "exports", label: "Exports" },
 ];

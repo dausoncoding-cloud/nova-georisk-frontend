@@ -227,6 +227,12 @@ describe("FRRIS analysis builder", () => {
     expect(screen.getByRole("link", { name: "← Analyses" })).toHaveAttribute("href", "/frris/analyses");
   });
 
+  it("takes the resolution chosen in the area playground (?scale=60) and keeps 30 m otherwise", async () => {
+    renderBuilder("/frris/analyses/new?project=project-1&aoi_id=aoi-1&scale=60");
+    expect(await screen.findByLabelText(/Output scale/)).toHaveValue(60);
+    await waitFor(() => expect(lastPreflight()?.parameters.workflow.source.scale).toBe(60));
+  });
+
   it("uses a level-2 heading inside the project workspace and opens the area wizard", async () => {
     renderBuilder("/projects/project-1/analysis");
     expect(await screen.findByRole("heading", { level: 2, name: "New flood analysis" })).toBeInTheDocument();

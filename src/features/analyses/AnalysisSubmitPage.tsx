@@ -61,7 +61,11 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
   const contract = useEngineContract(firris?.key ?? null);
   const [aoiId, setAoiId] = useState(searchParams.get("aoi_id") ?? "");
   const [products, setProducts] = useState<FirrisProduct[]>([]);
-  const [form, setForm] = useState<BuilderForm>(() => ({ ...defaultBuilderForm }));
+  // ?scale= from the area playground ("Use 60 m resolution"); any other value keeps the 30 m default.
+  const [form, setForm] = useState<BuilderForm>(() => {
+    const scale = Number(searchParams.get("scale"));
+    return { ...defaultBuilderForm, ...(Number.isFinite(scale) && scale >= 1 && scale <= 1000 && searchParams.has("scale") ? { scale } : {}) };
+  });
   const [problems, setProblems] = useState<string[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
   const knownAoiIds = useRef<Set<string> | null>(null);

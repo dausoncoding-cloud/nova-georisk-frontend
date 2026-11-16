@@ -44,6 +44,8 @@ describe("view helpers", () => {
   it("explains the allow-listed failures in plain language, with figures parsed from the message", () => {
     expect(explainFailure(COVERAGE)).toMatchObject({ title: "Not enough valid radar data over the area", detail: "Valid data covers 63.21% of the area; at least 70% is required for a reliable result." });
     expect(explainFailure("No Sentinel-1 scene over the area between 2024-05-21 and 2024-05-23 (end date exclusive).").title).toBe("No Sentinel-1 pass in the chosen window");
+    expect(explainFailure("No Sentinel-1 scene over the area between 21 and 22 May 2024.").title).toBe("No Sentinel-1 pass in the chosen window"); // P6 wording
+    expect(explainFailure("No Sentinel-1 scene over the area on 21 May 2024.").title).toBe("No Sentinel-1 pass in the chosen window");
     expect(explainFailure("The target and baseline windows must each contain Sentinel-1 passes from exactly one relative orbit, the same in both (target: 57; baseline: 130).").title).toBe("The radar orbits do not match");
     expect(explainFailure("Analysis execution failed. Please retry or contact support with the request ID.")).toMatchObject({ title: "The analysis could not be completed", detail: null });
   });

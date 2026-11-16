@@ -32,7 +32,8 @@ export function explainFailure(summary: string | null | undefined): FailureExpla
     detail: `Valid data covers ${pct(coverage[1]!)} of the area; at least ${pct(coverage[2]!)} is required for a reliable result.`,
     hints: ["Choose dates where the Sentinel-1 pass covers the whole area (the availability check shows the passes).", "Redraw the area so it lies inside the radar swath."],
   };
-  if (/^No Sentinel-1 scene over the area between \d{4}-\d{2}-\d{2} and \d{4}-\d{2}-\d{2} \(end date exclusive\)\.$/.test(message)) return {
+  // P6 wording ("between 21 and 22 May 2024", "on 21 May 2024") and the pre-P6 wording of stored failures.
+  if (/^No Sentinel-1 scene over the area (between .+ and .+|on .+)\.$/.test(message)) return {
     title: "No Sentinel-1 pass in the chosen window",
     detail: null,
     hints: ["Widen the window or use the nearest pass offered by the availability check.", "Sentinel-1 passes over the same area about every 12 days."],

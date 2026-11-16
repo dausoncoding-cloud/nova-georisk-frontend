@@ -4,4 +4,5 @@ export const FRRIS_ROUTES = {
   analyses: "/frris/analyses",
   overview: "/frris/overview",
   newAnalysis: "/frris/analyses/new",
+  playground: "/frris/playground",
 } as const;

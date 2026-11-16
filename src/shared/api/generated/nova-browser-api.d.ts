@@ -242,6 +242,26 @@ export interface paths {
         patch: operations["update_aoi_api_v1_aoi__aoi_id__patch"];
         trace?: never;
     };
+    "/api/v1/aois/capacity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Area Capacity
+         * @description Whether an area fits one FRRIS analysis (the preflight's capacity rule), with trim / split / coarser options.
+         */
+        post: operations["check_area_capacity_api_v1_aois_capacity_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/engines": {
         parameters: {
             query?: never;
@@ -1440,6 +1460,90 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AOICapacityCoarser */
+        AOICapacityCoarser: {
+            capacity: components["schemas"]["AnalysisPreflightCapacity"];
+            /** Scale M */
+            scale_m: number;
+        };
+        /** AOICapacityPart */
+        AOICapacityPart: {
+            /** Area Km2 */
+            area_km2: number;
+            /**
+             * Bbox
+             * @description [west, south, east, north] in EPSG:4326
+             */
+            bbox: number[];
+            capacity: components["schemas"]["AnalysisPreflightCapacity"];
+            geometry: components["schemas"]["GeoJSONGeometry"];
+        };
+        /** AOICapacityRequest */
+        AOICapacityRequest: {
+            geometry: components["schemas"]["GeoJSONGeometry"];
+            /**
+             * Scale M
+             * @description Output resolution in metres (the analysis default is 30 m).
+             * @default 30
+             */
+            scale_m: number;
+            /**
+             * Trim Center
+             * @description Centre [longitude, latitude] for the trimmed box; default: the centre of the area's bounding box.
+             */
+            trim_center?: number[] | null;
+        };
+        /** AOICapacityResponse */
+        AOICapacityResponse: {
+            /** Area Km2 */
+            area_km2: number;
+            /** Bbox */
+            bbox: number[];
+            /** Bbox Km2 */
+            bbox_km2: number;
+            capacity: components["schemas"]["AnalysisPreflightCapacity"];
+            coarser?: components["schemas"]["AOICapacityCoarser"] | null;
+            /** Message */
+            message: string;
+            /**
+             * Near Ratio
+             * @description Share of the limit from which an area is reported as close to the limit.
+             */
+            near_ratio: number;
+            split?: components["schemas"]["AOICapacitySplit"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "fits" | "near" | "over";
+            trim?: components["schemas"]["AOICapacityTrim"] | null;
+        };
+        /** AOICapacitySplit */
+        AOICapacitySplit: {
+            /** Cols */
+            cols: number;
+            /** Parts */
+            parts: components["schemas"]["AOICapacityPart"][];
+            /** Rows */
+            rows: number;
+        };
+        /** AOICapacityTrim */
+        AOICapacityTrim: {
+            /** Area Km2 */
+            area_km2: number;
+            /**
+             * Bbox
+             * @description [west, south, east, north] in EPSG:4326
+             */
+            bbox: number[];
+            /**
+             * Box
+             * @description The largest box that fits, [west, south, east, north]; geometry is the area inside it.
+             */
+            box: number[];
+            capacity: components["schemas"]["AnalysisPreflightCapacity"];
+            geometry: components["schemas"]["GeoJSONGeometry"];
+        };
         /** AOICreateRequest */
         AOICreateRequest: {
             /**
@@ -5325,6 +5429,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AOIResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    check_area_capacity_api_v1_aois_capacity_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AOICapacityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AOICapacityResponse"];
                 };
             };
             /** @description Bad request */

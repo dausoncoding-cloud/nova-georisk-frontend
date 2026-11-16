@@ -129,6 +129,9 @@ describe("Area playground", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Apply" }));
     expect(screen.getByText("stub: trim box shown")).toBeInTheDocument();
     expect(screen.getByText("Trimmed area fits. Move the box to cover the part you need most.")).toBeInTheDocument();
+    // r5.1: the Box figure shows the trimmed box (0.2° x 0.2° at 8.4° S ≈ 487 km²), not the original 1,010 km².
+    expect(screen.getByLabelText("Area figures")).toHaveTextContent(/Box 4[89]\d km² \(trimmed\)/);
+    expect(screen.getByLabelText("Area figures")).not.toHaveTextContent("1,010");
     expect(screen.getByRole("img", { name: "47.7 of 48.0 MiB" })).toBeInTheDocument();
     fireEvent.click(within(screen.getByRole("group", { name: "Move the trimmed box" })).getByRole("button", { name: "East" }));
     await waitFor(() => expect(checkAreaCapacity).toHaveBeenLastCalledWith(expect.objectContaining({ trim_center: [36.2, -8.4] })));

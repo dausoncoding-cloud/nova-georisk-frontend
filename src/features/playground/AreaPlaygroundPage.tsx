@@ -6,7 +6,7 @@ import { getErrorMessage } from "../../shared/api/errors";
 import { queryKeys } from "../../shared/api/queryKeys";
 import { FRRIS_ENGINE_KEY } from "../../shared/productName";
 import { Icon } from "../../shared/ui/Icon";
-import { parseGeoJsonFile, parseKml, parseShapefilePreview } from "../aois/aoiFiles";
+import { estimateGeometryStats, parseGeoJsonFile, parseKml, parseShapefilePreview } from "../aois/aoiFiles";
 import { checkAreaCapacity, createAoi, type AoiCreateRequest } from "../aois/aoisApi";
 import type { GeoJsonGeometry } from "../aois/geometry";
 import { fetchProjects } from "../projects/projectsApi";
@@ -14,6 +14,12 @@ import { PlaygroundMap, type DrawMode } from "./PlaygroundMap";
 import { areasToSave, coarserAdvice, currentFigures, featureCollection, mibText, polygonFromPoints, previewPaths, rectangleFromCorners, slug, type Fix, type LonLat } from "./playgroundView";
 
 type Source = AoiCreateRequest["source_type"];
+
+/** r5.1: after Trim, the "Box" figure is the trimmed box, not the original bounding box. */
+function trimmedBoxKm2(box: number[]): number {
+  const [west, south, east, north] = box as [number, number, number, number];
+  return estimateGeometryStats({ type: "Polygon", coordinates: [[[west, south], [east, south], [east, north], [west, north], [west, south]]] }).areaKm2;
+}
 
 function Preview({ geometries, boxes, label }: { geometries: (GeoJsonGeometry | null | undefined)[]; boxes?: (number[] | null | undefined)[]; label: string }) {
   const paths = previewPaths(geometries, boxes ?? []);
@@ -133,7 +139,9 @@ export function AreaPlaygroundPage() {
           trimBox={applied === "trim" ? data?.trim?.box ?? null : null} onMoveTrim={(center) => setTrimCenter(center)} parts={partLabels} />
         {data ? <p className="fr-pg-stats" aria-label="Area figures">
           <span>Area <span className="fr-num">{(figures?.areaKm2 ?? data.area_km2).toLocaleString("en-GB", { maximumFractionDigits: 1 })}</span> km²</span>
-          <span>Box <span className="fr-num">{applied === "split" && data.split ? `${data.split.parts.length} parts` : `${data.bbox_km2.toLocaleString("en-GB", { maximumFractionDigits: 0 })} km²`}</span></span>
+          <span>Box <span className="fr-num">{applied === "split" && data.split ? `${data.split.parts.length} parts`
+            : applied === "trim" && data.trim ? `${trimmedBoxKm2(data.trim.box).toLocaleString("en-GB", { maximumFractionDigits: 0 })} km² (trimmed)`
+            : `${data.bbox_km2.toLocaleString("en-GB", { maximumFractionDigits: 0 })} km²`}</span></span>
           <span>Resolution <span className="fr-num">{figures?.scale ?? 30}</span> m</span>
         </p> : null}
         {applied === "trim" && data?.trim ? <div className="fr-pg-move" role="group" aria-label="Move the trimmed box">

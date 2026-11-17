@@ -34,6 +34,9 @@ export function ResultExposureTab({ data, artifacts }: { data: Result; artifacts
   const rows = (Array.isArray(record.rows) ? record.rows : []).map((row) => asRecord(row) ?? {});
   const observed = rows.find((row) => row.extent === "observed_extent");
   const masked = asRecord(observed?.sensitivity_glofas_permanent_water_masked);
+  // The observed extent inherits the flood map's commission error (owner, 2026-11-17).
+  const caveat = asRecord(record.observed_extent_caveat);
+  const cluster = asRecord(record.observed_cluster);
   const byKey = new Map(artifacts.map((item) => [item.key, item]));
   const maps = [["exposed_population_observed_extent_map_png", "the observed flood candidates of this run"], ["exposed_population_rp100_map_png", "the modelled 1-in-100-year zone"]] as const;
   return <div className="fr-stack">
@@ -53,12 +56,14 @@ export function ResultExposureTab({ data, artifacts }: { data: Result; artifacts
           </tr>)}</tbody>
         </table>
       </div>
+      {observed && caveat ? <p className="fr-notice" aria-label="Observed extent caveat"><strong>Observed flood candidates:</strong> {String(caveat.text ?? "")} {String(caveat.built_up_note ?? "")}{cluster?.text ? ` ${String(cluster.text)}` : ""}</p> : null}
       {observed ? <p className="fr-help">{masked ? `Sensitivity only: masking the observed flood candidates with the coarser GloFAS permanent water would give ${km2(masked.area_km2)} km² and ${int(masked.people)} people. ` : ""}Counting every 100 m cell that touches the observed extent would give {int(observed.people_cells_touching)} people; that overstates exposure and is not used.</p> : null}
     </section>
     <section className="fr-figures" aria-label="Exposure maps">
       {maps.map(([key, what]) => {
         const artifact = byKey.get(key);
-        return artifact ? <figure key={key} className="fr-figure"><img src={protectedProductUrl(data.id, artifact.key)} alt={artifact.label} loading="lazy" /><figcaption>Estimated people per 100 m cell inside {what} (WorldPop {year}, area-weighted).</figcaption></figure> : null;
+        const extra = key.includes("observed") && caveat?.text ? ` ${String(caveat.text)}` : "";
+        return artifact ? <figure key={key} className="fr-figure"><img src={protectedProductUrl(data.id, artifact.key)} alt={artifact.label} loading="lazy" /><figcaption>Estimated people per ~100 m cell inside {what} (WorldPop {year}, area-weighted).{extra}</figcaption></figure> : null;
       })}
     </section>
     <section className="fr-card" aria-label="Exposure sources">

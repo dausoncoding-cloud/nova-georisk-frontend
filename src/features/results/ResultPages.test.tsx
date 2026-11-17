@@ -257,9 +257,11 @@ function withExposure(status = "assessed") {
   (data.summary as Record<string, unknown>).flood_exposure = status !== "assessed" ? { status, reason: "WorldPop has no population grid for this area in 2024." } : {
     status, wording: "Estimated exposure: modelled people and detected buildings inside each extent. Not people affected, not damage.",
     population: { year: 2024, year_status: { status: "projected", text: "modelled estimate for 2024, a projection 2 years after the last census (2022)" }, citation: "Bondarenko M. et al. 2025 doi:10.5258/SOTON/WP00839", licence: "CC BY 4.0", release_caveat: "WorldPop R2025A is an alpha release: WorldPop states that it may change over the coming year as improvements are made, so these population figures may change." },
-    buildings: { version: "v3 (inference May 2023)", primary_threshold: 0.75, sensitivity_threshold: 0.65, threshold_note: "0.75 is our stated choice.", citation: "Sirko, W. et al. (2021) arXiv:2107.12283", licence: "CC BY 4.0", limitation: "Open Buildings detection quality varies between areas; informal buildings and thatched or vegetated roofs may be missed, so building counts may be too low.", spot_check: "pending: manual comparison with very-high-resolution imagery (owner)" },
+    buildings: { version: "v3 (inference May 2023)", primary_threshold: 0.75, sensitivity_threshold: 0.65, threshold_note: "0.75 is our stated choice.", citation: "Sirko, W. et al. (2021) arXiv:2107.12283", licence: "CC BY 4.0", limitation: "Open Buildings detection quality varies between areas; informal buildings and thatched or vegetated roofs may be missed, so building counts may be too low.", spot_check: "done 2026-11-17 by the owner on the Rufiji observed extent: about 95% or more of the building points sit on real structures" },
     permanent_water: "The observed flood candidates are reported as the flood map defines them. GloFAS permanent-water cells are excluded from the modelled return-period zones only.",
     glofas_zone_notice: "The return-period zones come from the GloFAS flood hazard maps: Derived from the GloFAS flood hazard maps v2.1 (JRC/CEMS). This derivative database is available under the Open Data Commons Open Database License (ODbL) v1.0; no further restrictions are added.",
+    observed_extent_caveat: { status: "assessed", users_accuracy_flood_pct: 48.9, text: "These figures inherit the flood map's commission error: against the independent Sentinel-2 reference, 48.9% of the pixels mapped as flood candidates were flooded (user's accuracy for flood), so part of these people and buildings may lie outside the real flood.", built_up_note: "Built-up areas can also produce SAR backscatter change unrelated to flooding." },
+    observed_cluster: { share_pct: 51, text: "About half of these people (51%) are in a settled area around 38.975–38.990°E, 7.940–7.955°S, where SAR change can be unrelated to flooding." },
     rows: [
       { extent: "whole_area", label: "Whole area (reference)", area_km2: 98.77, people: 57360.9, people_cells_touching: 57360.9, buildings: counted(7461, 9686) },
       { extent: "observed_extent", label: "Observed flood candidates (this run)", area_km2: 5.33, people: 2236.2, people_cells_touching: 15109.7, buildings: counted(337, 444), sensitivity_glofas_permanent_water_masked: { area_km2: 3.09, people: 2204.0 } },
@@ -290,7 +292,14 @@ describe("Exposure (Depth & Exposure module)", () => {
     expect(card).toHaveTextContent("Sensitivity only: masking the observed flood candidates with the coarser GloFAS permanent water would give 3.09 km² and 2,204 people.");
     expect(card).toHaveTextContent("WorldPop R2025A is an alpha release");
     expect(card).toHaveTextContent("informal buildings and thatched or vegetated roofs may be missed");
-    expect(card).toHaveTextContent("Spot-check: pending: manual comparison with very-high-resolution imagery (owner).");
+    expect(card).toHaveTextContent("Spot-check: done 2026-11-17 by the owner on the Rufiji observed extent");
+    const caveat = within(card).getByLabelText("Observed extent caveat");
+    expect(caveat).toHaveTextContent("48.9% of the pixels mapped as flood candidates were flooded (user's accuracy for flood)");
+    expect(caveat).toHaveTextContent("Built-up areas can also produce SAR backscatter change unrelated to flooding.");
+    expect(caveat).toHaveTextContent("38.975–38.990°E, 7.940–7.955°S");
+    const captions = within(screen.getByRole("region", { name: "Exposure maps" })).getAllByRole("figure").map((f) => f.textContent);
+    expect(captions[0]).toContain("user's accuracy for flood");
+    expect(captions[1]).not.toContain("user's accuracy for flood");
     expect(within(screen.getByRole("region", { name: "Exposure maps" })).getAllByRole("img")).toHaveLength(2);
     expect(screen.getByRole("region", { name: "Exposure sources" })).toHaveTextContent("doi:10.5258/SOTON/WP00839");
     expect(screen.getByRole("region", { name: "Exposure sources" })).toHaveTextContent("available under the Open Data Commons Open Database License (ODbL) v1.0");

@@ -59,6 +59,8 @@ export function ResultAccuracyTab({ data, artifacts }: { data: Result; artifacts
   const limitations = Array.from(new Set([...(data.analytics?.limitations ?? []), ...(dashboard?.limitations ?? [])]));
   const cells = independent ? confusionCells(independent) : null;
   const independentAuc = independent ? aucView(independent) : null;
+  // r6.1: the eligible reference coverage is always shown (assessed or not).
+  const coverageText = typeof independentRecord?.reference_coverage_text === "string" ? independentRecord.reference_coverage_text : null;
 
   return <div className="fr-tab-stack">
     <h2 className="fr-visually-hidden">Accuracy assessment</h2>
@@ -66,6 +68,7 @@ export function ResultAccuracyTab({ data, artifacts }: { data: Result; artifacts
       <section className="fr-card fr-section" aria-labelledby="accuracy-reference">
         <h3 id="accuracy-reference">Reference data</h3>
         {assessment?.independent_wording ? <p>{assessment.independent_wording}</p> : null}
+        {coverageText ? <p aria-label="Reference coverage">{coverageText}</p> : null}
         {referenceRule ? <p><strong>Reference rule:</strong> {referenceRule}</p> : null}
         {typeof opticalRole === "string" ? <p className="fr-help">Sentinel-2 role: {opticalRole}.</p> : null}
         <p>{typeof independentRecord?.method === "string" ? independentRecord.method.charAt(0).toUpperCase() + independentRecord.method.slice(1) : independent.method} · <span className="fr-num">n = {COUNT.format(independent.n)}</span> · IoU <span className="fr-num">{dec(independent.iou_flooded)}</span> · AP <span className="fr-num">{dec(independent.average_precision)}</span></p>
@@ -104,6 +107,7 @@ export function ResultAccuracyTab({ data, artifacts }: { data: Result; artifacts
       <section className="fr-box fr-box--warning fr-not-assessable" aria-labelledby="accuracy-not-assessable">
         <h3 id="accuracy-not-assessable">Independent accuracy {statusText}</h3>
         {assessment?.independent_reason ? <p><strong>Reason:</strong> {assessment.independent_reason}</p> : null}
+        {coverageText ? <p aria-label="Reference coverage">{coverageText}</p> : null}
         <p>This analysis has no map-accuracy figures. The numbers below are internal agreement with the training labels — they are not map accuracy.</p>
       </section>
     )}

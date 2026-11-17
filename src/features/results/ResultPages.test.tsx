@@ -156,6 +156,27 @@ describe("Accuracy assessment", () => {
     expect(await screen.findByText(POINTER)).toHaveTextContent("ROC thresholds by variable");
   });
 
+  it("r6.1: the reference coverage is always shown; below 70% the raw figures are never shown (Bundle 5)", async () => {
+    const assessed = rufiji();
+    (assessed.summary.independent_accuracy as Record<string, unknown>).reference_coverage_text = "Eligible reference pixels cover 98.8% of the analysed area.";
+    const first = setup(assessed, "accuracy");
+    expect(await screen.findByLabelText("Reference coverage")).toHaveTextContent("Eligible reference pixels cover 98.8% of the analysed area.");
+    first.unmount();
+    // The API's view of the stored Bundle 5 record (0c53d331): not assessable, raw figures only in the labelled block.
+    const COVER = "The Sentinel-2 reference covers only 0.42% of the area (at least 70% of the valid analysed area is required).";
+    const bundle5 = kilombero();
+    Object.assign(bundle5.validation_dashboard.accuracy_assessment, { independent_reason: COVER });
+    bundle5.summary.independent_accuracy = { status: "not_assessable", reason: COVER, coverage_rule: "failed",
+      reference_coverage_pct: 0.422, reference_coverage_text: "Eligible reference pixels cover 0.42% of the analysed area.",
+      unrepresentative_metrics: { label: "not representative", metrics: { n: 454, overall_accuracy_pct: 48.2, cohens_kappa: -0.015, roc_auc: 0.515 } } } as never;
+    setup(bundle5, "accuracy");
+    const box = await screen.findByRole("region", { name: "Independent accuracy not assessable" });
+    expect(box).toHaveTextContent(`Reason: ${COVER}`);
+    expect(box).toHaveTextContent("Eligible reference pixels cover 0.42% of the analysed area.");
+    expect(screen.queryByRole("region", { name: "Accuracy metrics" })).toBeNull();
+    expect(document.body.textContent).not.toMatch(/48\.2|-0\.015|0\.515|454/);
+  });
+
   it("not assessable (Kilombero): the API reason is prominent and no number is shown as map accuracy", async () => {
     setup(kilombero(), "accuracy");
     const box = await screen.findByRole("region", { name: "Independent accuracy not assessable" });

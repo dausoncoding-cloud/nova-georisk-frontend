@@ -15,13 +15,14 @@ export function nearestPassWindow(period: AnalysisPreflightPeriod): { pass: stri
   return { pass, start: pass < period.start ? pass : period.start, end: passEnd > period.end ? passEnd : period.end };
 }
 
-/** "Sentinel-2 3 granules on 2 dates (2 tiles: 36LZR, 37MBM), 88% of the area", as assessed by the run's own rule. */
+/** "Sentinel-2 3 granules on 2 dates (2 tiles: 36LZR, 37MBM), footprint covers 88% of the area; …", by the run's own rule.
+ *  r6.1: footprint coverage only; clouds and shadow inside the area are checked after the run. */
 export function sentinel2Text(period: AnalysisPreflightPeriod): string {
   const tiles = period.sentinel2_tiles ?? [];
   if (period.sentinel2_summary) {
     const summary = tiles.length ? `${period.sentinel2_summary.slice(0, -1)}: ${tiles.join(", ")})` : period.sentinel2_summary;
     const coverage = period.sentinel2_aoi_coverage_pct;
-    return ` · Sentinel-2 ${summary}${coverage != null ? `, ${coverage}% of the area` : ""}`;
+    return ` · Sentinel-2 ${summary}${coverage != null ? `, footprint covers ${coverage}% of the area; clouds and shadow inside the area are checked after the run` : ""}`;
   }
   const count = period.sentinel2_compliant_scenes;
   return count != null ? ` · ${count} compliant Sentinel-2 ${count === 1 ? "scene" : "scenes"}` : "";

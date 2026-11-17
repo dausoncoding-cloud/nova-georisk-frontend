@@ -35,7 +35,7 @@ describe("Sentinel-2 line in the period step", () => {
   const base = { start: "2024-05-01", end: "2024-06-01", sentinel1_pass_dates: [], relative_orbits: [] };
   it("shows granules, dates, tiles and the share of the area", () => {
     expect(sentinel2Text({ ...base, sentinel2_compliant_scenes: 4, sentinel2_summary: "4 granules on 1 date (2 tiles)", sentinel2_tiles: ["36LZR", "37MBM"], sentinel2_aoi_coverage_pct: 100 }))
-      .toBe(" · Sentinel-2 4 granules on 1 date (2 tiles: 36LZR, 37MBM), 100% of the area");
+      .toBe(" · Sentinel-2 4 granules on 1 date (2 tiles: 36LZR, 37MBM), footprint covers 100% of the area; clouds and shadow inside the area are checked after the run");
   });
   it("falls back to the scene count when the server sends no summary", () => {
     expect(sentinel2Text({ ...base, sentinel2_compliant_scenes: 0 })).toBe(" · 0 compliant Sentinel-2 scenes");

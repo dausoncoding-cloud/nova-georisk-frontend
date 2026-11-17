@@ -48,6 +48,8 @@ export type SatelliteWorkflowForm = {
   normalizeProjection: boolean;
   /** Depth & Exposure module: add the GloFAS modelled river-flood hazard as context (opt-in; never changes the flood map). */
   modelledFloodHazard: boolean;
+  /** Depth & Exposure module: estimated people and buildings inside each extent (needs the modelled hazard). */
+  floodExposure: boolean;
 };
 
 export const defaultSatelliteWorkflowForm: SatelliteWorkflowForm = {
@@ -64,6 +66,7 @@ export const defaultSatelliteWorkflowForm: SatelliteWorkflowForm = {
   sarSpeckleFilter: true,
   normalizeProjection: true,
   modelledFloodHazard: false,
+  floodExposure: false,
 };
 
 // Fixed parts of the FRRIS run (not user-editable). Shown read-only in the builder; sent as-is in the payload.
@@ -119,7 +122,9 @@ export function buildGeeSatelliteWorkflowParameters(form: SatelliteWorkflowForm)
       model: { algorithm: FIXED_RUN_SETTINGS.algorithm, version: FIXED_RUN_SETTINGS.modelVersion, n_estimators: FIXED_RUN_SETTINGS.nEstimators },
       quality: {},
       // Sent only when chosen, so requests without the option are unchanged.
-      ...(form.modelledFloodHazard ? { context: { modelled_flood_hazard: true } } : {}),
+      ...(form.modelledFloodHazard
+        ? { context: { modelled_flood_hazard: true, flood_exposure: form.floodExposure } }
+        : {}),
     },
   };
 }

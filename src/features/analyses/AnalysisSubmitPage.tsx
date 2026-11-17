@@ -243,7 +243,11 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
           <div className="fr-toggles">
             <label>
               <span><strong>Modelled flood hazard (GloFAS v2.1)</strong><small>Context next to the flood map: modelled river-flood depth for 10- to 500-year return periods, with the annual exceedance probability. A model, not an observation; it does not change the flood map.</small></span>
-              <input type="checkbox" role="switch" checked={form.modelledFloodHazard} onChange={(event) => configure("modelledFloodHazard", event.target.checked)} />
+              <input type="checkbox" role="switch" checked={form.modelledFloodHazard} onChange={(event) => setForm((current) => ({ ...current, modelledFloodHazard: event.target.checked, floodExposure: event.target.checked && current.floodExposure }))} />
+            </label>
+            <label>
+              <span><strong>Estimated exposure (WorldPop, Open Buildings)</strong><small>People and buildings inside the observed flood candidates and inside each modelled return-period zone. Estimates, not people affected. Switches on the modelled flood hazard, which it needs.</small></span>
+              <input type="checkbox" role="switch" checked={form.floodExposure} onChange={(event) => setForm((current) => ({ ...current, floodExposure: event.target.checked, modelledFloodHazard: event.target.checked || current.modelledFloodHazard }))} />
             </label>
           </div>
         </Step>
@@ -279,7 +283,7 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
             <div><dt>Reference</dt><dd>Sentinel-2 (independent accuracy)</dd></div>
             <div><dt>Quality</dt><dd>Cloud ≤ {form.maxCloudPct}% · cover ≥ {FIXED_RUN_SETTINGS.minimumValidCoveragePct}% · MSI ≤ 0.1%</dd></div>
             <div><dt>Products</dt><dd>{productLabels.length ? productLabels.join(", ") : "None selected"}</dd></div>
-            {form.modelledFloodHazard ? <div><dt>Context</dt><dd>Modelled flood hazard (GloFAS)</dd></div> : null}
+            {form.modelledFloodHazard ? <div><dt>Context</dt><dd>{form.floodExposure ? "Modelled flood hazard (GloFAS) and estimated exposure" : "Modelled flood hazard (GloFAS)"}</dd></div> : null}
             <div><dt>Sampling</dt><dd>{form.samplingStrategy.replaceAll("_", " ")} · {form.sampleSize.toLocaleString("en-GB")} · {(form.trainFraction * 100).toFixed(0)}% training</dd></div>
             <div><dt>Resolution</dt><dd>{form.scale} m</dd></div>
           </dl>

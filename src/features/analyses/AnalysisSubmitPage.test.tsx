@@ -120,7 +120,21 @@ describe("inclusive end dates (backlog §4.7 item 1)", () => {
     expect(screen.getByText("Modelled flood hazard (GloFAS)")).toBeInTheDocument(); // run summary
     selectExtent(); run();
     await waitFor(() => expect(submitAnalysisMock).toHaveBeenCalledOnce());
-    expect(submitAnalysisMock.mock.calls[0]![0].parameters.workflow.context).toEqual({ modelled_flood_hazard: true });
+    expect(submitAnalysisMock.mock.calls[0]![0].parameters.workflow.context).toEqual({ modelled_flood_hazard: true, flood_exposure: false });
+  });
+
+  it("Depth & Exposure: exposure switches the hazard on, and switching the hazard off switches exposure off", async () => {
+    renderBuilder();
+    await screen.findByText("Floodplain");
+    const hazard = screen.getByRole("switch", { name: /Modelled flood hazard \(GloFAS v2\.1\)/ });
+    const exposure = screen.getByRole("switch", { name: /Estimated exposure \(WorldPop, Open Buildings\)/ });
+    fireEvent.click(exposure);
+    expect(hazard).toBeChecked();
+    expect(exposure).toBeChecked();
+    expect(screen.getByText("Modelled flood hazard (GloFAS) and estimated exposure")).toBeInTheDocument();
+    fireEvent.click(hazard);
+    expect(hazard).not.toBeChecked();
+    expect(exposure).not.toBeChecked();
   });
 
   it("accepts today as the last day (API end = tomorrow) and refuses tomorrow without calling the API", async () => {

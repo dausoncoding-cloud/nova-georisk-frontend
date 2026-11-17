@@ -13,6 +13,7 @@ import { FIRRISGisViewer } from "./FIRRISGisViewer";
 import { QuantitativeDelivery } from "./QuantitativeDelivery";
 import { ResultAccuracyTab } from "./ResultAccuracyTab";
 import { ResultDownloadsTab } from "./ResultDownloadsTab";
+import { exposureRecord, ResultExposureTab } from "./ResultExposureTab";
 import { hazardRecord, ResultHazardTab } from "./ResultHazardTab";
 import { ResultOverviewTab } from "./ResultOverviewTab";
 import { ResultProvenanceTab } from "./ResultProvenanceTab";
@@ -27,6 +28,7 @@ const baseTabs = [
 ] as const;
 // Depth & Exposure module: the modelled hazard tab appears only on results that carry it.
 const HAZARD_TAB = { key: "hazard", label: "Modelled hazard" } as const;
+const EXPOSURE_TAB = { key: "exposure", label: "Exposure" } as const;
 // Links from before the refresh (?tab=validation|files|metadata) open the matching section.
 const TAB_ALIASES: Record<string, string> = { validation: "accuracy", files: "downloads", metadata: "provenance" };
 
@@ -35,8 +37,8 @@ export function ResultDetailPage() {
   const [params, setParams] = useSearchParams();
   const requested = params.get("tab") ?? "";
   const result = useQuery({ queryKey: queryKeys.results.detail(resultId), queryFn: () => fetchResult(resultId), enabled: Boolean(resultId) });
-  const tabs: readonly { key: string; label: string }[] = result.data && hazardRecord(result.data)
-    ? [baseTabs[0], baseTabs[1], HAZARD_TAB, ...baseTabs.slice(2)] : baseTabs;
+  const extra = result.data ? [...(hazardRecord(result.data) ? [HAZARD_TAB] : []), ...(exposureRecord(result.data) ? [EXPOSURE_TAB] : [])] : [];
+  const tabs: readonly { key: string; label: string }[] = [baseTabs[0], baseTabs[1], ...extra, ...baseTabs.slice(2)];
   const tab = tabs.find((item) => item.key === (TAB_ALIASES[requested] ?? requested))?.key ?? "overview";
   const aoiId = result.data?.aoi_id ?? "";
   const aoi = useQuery({ queryKey: queryKeys.aois.detail(aoiId), queryFn: () => fetchAoi(aoiId), enabled: Boolean(aoiId) });
@@ -92,6 +94,7 @@ export function ResultDetailPage() {
       {tab === "overview" ? <ResultOverviewTab data={data} artifacts={artifacts} aoiName={aoi.data?.name ?? null} viewer={viewer(true)} onOpenTab={navigateTab} /> : null}
       {tab === "accuracy" ? <ResultAccuracyTab data={data} artifacts={artifacts} /> : null}
       {tab === "hazard" ? <ResultHazardTab data={data} artifacts={artifacts} /> : null}
+      {tab === "exposure" ? <ResultExposureTab data={data} artifacts={artifacts} /> : null}
       {tab === "downloads" ? <ResultDownloadsTab resultId={data.id} artifacts={artifacts} createdAt={data.created_at} /> : null}
       {tab === "provenance" ? <ResultProvenanceTab data={data} /> : null}
       {tab === "maps" ? viewer(false) : null}

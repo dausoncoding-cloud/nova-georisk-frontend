@@ -37,7 +37,9 @@ describe("FIRRIS parameter payload", () => {
     const off = buildGeeSatelliteWorkflowParameters(defaultSatelliteWorkflowForm);
     expect(off?.workflow).not.toHaveProperty("context");
     const on = buildGeeSatelliteWorkflowParameters({ ...defaultSatelliteWorkflowForm, modelledFloodHazard: true });
-    expect(on?.workflow?.context).toEqual({ modelled_flood_hazard: true });
+    expect(on?.workflow?.context).toEqual({ modelled_flood_hazard: true, flood_exposure: false });
+    const both = buildGeeSatelliteWorkflowParameters({ ...defaultSatelliteWorkflowForm, modelledFloodHazard: true, floodExposure: true });
+    expect(both?.workflow?.context).toEqual({ modelled_flood_hazard: true, flood_exposure: true });
   });
 
   it("rejects reversed satellite date ranges", () => {

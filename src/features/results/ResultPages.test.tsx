@@ -247,6 +247,51 @@ describe("Modelled hazard (Depth & Exposure module)", () => {
   });
 });
 
+function withExposure(status = "assessed") {
+  const data = withHazard();
+  const counted = (c75: number, c65: number) => ({ status: "counted", "0.75": { count: c75, area_m2: 0 }, "0.65": { count: c65, area_m2: 0 } });
+  (data.summary as Record<string, unknown>).flood_exposure = status !== "assessed" ? { status, reason: "WorldPop has no population grid for this area in 2024." } : {
+    status, wording: "Estimated exposure: modelled people and detected buildings inside each extent. Not people affected, not damage.",
+    population: { year: 2024, year_status: { status: "projected", text: "modelled estimate for 2024, a projection 2 years after the last census (2022)" }, citation: "Bondarenko M. et al. 2025 doi:10.5258/SOTON/WP00839", licence: "CC BY 4.0" },
+    buildings: { version: "v3 (inference May 2023)", primary_threshold: 0.75, sensitivity_threshold: 0.65, threshold_note: "0.75 is our stated choice.", citation: "Sirko, W. et al. (2021) arXiv:2107.12283", licence: "CC BY 4.0" },
+    permanent_water: "GloFAS permanent-water cells are excluded from every extent.",
+    rows: [
+      { extent: "whole_area", label: "Whole area (reference)", area_km2: 98.77, people: 57360.9, people_cells_touching: 57360.9, buildings: counted(7461, 9686) },
+      { extent: "observed_extent", label: "Observed flood candidates (this run)", area_km2: 3.09, people: 2204.0, people_cells_touching: 15015.9, buildings: counted(333, 432), including_permanent_water: { area_km2: 5.33, people: 2236.2 } },
+      { extent: "rp100", label: "Modelled 1-in-100-year zone", area_km2: 31.13, people: 822.6, people_cells_touching: 1179.2, buildings: { status: "not_available", reason: "too dense" } },
+    ],
+  };
+  for (const key of ["exposed_population_observed_extent_map_png", "exposed_population_rp100_map_png"]) data.exports.push({ ...data.exports[0]!, key, label: key });
+  return data;
+}
+
+describe("Exposure (Depth & Exposure module)", () => {
+  it("has no tab without the exposure record", async () => {
+    setup(withHazard());
+    await screen.findByRole("tab", { name: "Modelled hazard" });
+    expect(screen.queryByRole("tab", { name: "Exposure" })).toBeNull();
+  });
+
+  it("shows the year as a projection, the table with buildings at both thresholds, the maps and the sources", async () => {
+    setup(withExposure(), "exposure");
+    const card = await screen.findByRole("region", { name: "Estimated exposure" });
+    expect(card).toHaveTextContent("Estimates — not people affected");
+    expect(card).toHaveTextContent("WorldPop R2025A, 2024 — modelled estimate for 2024, a projection 2 years after the last census (2022)");
+    const rows = within(card).getAllByRole("row").map((row) => row.textContent);
+    expect(rows[1]).toBe("Whole area (reference)98.7757,3617,461 (9,686)");
+    expect(rows[2]).toBe("Observed flood candidates (this run)3.092,204333 (432)");
+    expect(rows[3]).toBe("Modelled 1-in-100-year zone31.13823not available: too dense");
+    expect(card).toHaveTextContent("overstates exposure and is not used");
+    expect(within(screen.getByRole("region", { name: "Exposure maps" })).getAllByRole("img")).toHaveLength(2);
+    expect(screen.getByRole("region", { name: "Exposure sources" })).toHaveTextContent("doi:10.5258/SOTON/WP00839");
+  });
+
+  it("not available: the reason only", async () => {
+    setup(withExposure("not_available"), "exposure");
+    expect(await screen.findByRole("status", { name: "Estimated exposure" })).toHaveTextContent("WorldPop has no population grid for this area in 2024.");
+  });
+});
+
 describe("Downloads", () => {
   it("groups downloads with format and size from the API and keeps protected download URLs", async () => {
     setup(rufiji(), "downloads");

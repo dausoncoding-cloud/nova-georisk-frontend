@@ -2711,6 +2711,12 @@ export interface components {
          */
         FIRRISContextConfig: {
             /**
+             * Flood Exposure
+             * @description Add the estimated exposure (WorldPop R2025A people, Open Buildings v3 buildings) inside the observed flood extent and inside each modelled return-period zone. Needs the modelled flood hazard.
+             * @default false
+             */
+            flood_exposure: boolean;
+            /**
              * Modelled Flood Hazard
              * @description Add the GloFAS v2.1 modelled river-flood hazard (depth for return periods 10-500 years) as context. Earth Engine source only.
              * @default false

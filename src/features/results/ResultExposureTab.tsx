@@ -33,15 +33,15 @@ export function ResultExposureTab({ data, artifacts }: { data: Result; artifacts
   const yearStatus = asRecord(population.year_status) ?? {};
   const rows = (Array.isArray(record.rows) ? record.rows : []).map((row) => asRecord(row) ?? {});
   const observed = rows.find((row) => row.extent === "observed_extent");
-  const including = asRecord(observed?.including_permanent_water);
+  const masked = asRecord(observed?.sensitivity_glofas_permanent_water_masked);
   const byKey = new Map(artifacts.map((item) => [item.key, item]));
   const maps = [["exposed_population_observed_extent_map_png", "the observed flood candidates of this run"], ["exposed_population_rp100_map_png", "the modelled 1-in-100-year zone"]] as const;
   return <div className="fr-stack">
     <section className="fr-card" aria-label="Estimated exposure">
       <div className="fr-section__head"><h3>Estimated exposure</h3><span className="fr-badge">Estimates — not people affected</span></div>
       <p>{String(record.wording ?? "")}</p>
-      <p><strong>People:</strong> WorldPop R2025A, {year} — {String(yearStatus.text ?? "")}. Area-weighted: the people of each 100 m cell × the share of the cell inside the extent.</p>
-      <p><strong>Buildings:</strong> Google Open Buildings {String(buildings.version ?? "")}, centroid inside the extent, confidence ≥ {Number(buildings.primary_threshold ?? 0.75).toFixed(2)} (≥ {Number(buildings.sensitivity_threshold ?? 0.65).toFixed(2)} in brackets). {String(buildings.threshold_note ?? "")} Exact counts, no sampling.</p>
+      <p><strong>People:</strong> WorldPop R2025A, {year} — {String(yearStatus.text ?? "")}. Area-weighted: the people of each 100 m cell × the share of the cell inside the extent. {String(population.release_caveat ?? "")}</p>
+      <p><strong>Buildings:</strong> Google Open Buildings {String(buildings.version ?? "")}, centroid inside the extent, confidence ≥ {Number(buildings.primary_threshold ?? 0.75).toFixed(2)} (≥ {Number(buildings.sensitivity_threshold ?? 0.65).toFixed(2)} in brackets). {String(buildings.threshold_note ?? "")} Exact counts, no sampling. {String(buildings.limitation ?? "")} {buildings.spot_check ? `Spot-check: ${String(buildings.spot_check)}.` : ""}</p>
       <p className="fr-help">{String(record.permanent_water ?? "")}</p>
       <div className="fr-table-wrap">
         <table className="fr-table">
@@ -53,7 +53,7 @@ export function ResultExposureTab({ data, artifacts }: { data: Result; artifacts
           </tr>)}</tbody>
         </table>
       </div>
-      {observed && including ? <p className="fr-help">With GloFAS permanent water kept, the observed flood candidates cover {km2(including.area_km2)} km² with {int(including.people)} people. Counting every 100 m cell that touches the extent would give {int(observed.people_cells_touching)} people; that overstates exposure and is not used.</p> : null}
+      {observed ? <p className="fr-help">{masked ? `Sensitivity only: masking the observed flood candidates with the coarser GloFAS permanent water would give ${km2(masked.area_km2)} km² and ${int(masked.people)} people. ` : ""}Counting every 100 m cell that touches the observed extent would give {int(observed.people_cells_touching)} people; that overstates exposure and is not used.</p> : null}
     </section>
     <section className="fr-figures" aria-label="Exposure maps">
       {maps.map(([key, what]) => {
@@ -65,6 +65,7 @@ export function ResultExposureTab({ data, artifacts }: { data: Result; artifacts
       <h3>Sources and licences</h3>
       <p>{String(population.citation ?? "")}. Licence: {String(population.licence ?? "")}.</p>
       <p>{String(buildings.citation ?? "")}. Licence: {String(buildings.licence ?? "")}.</p>
+      {record.glofas_zone_notice ? <p>{String(record.glofas_zone_notice)}</p> : null}
     </section>
   </div>;
 }

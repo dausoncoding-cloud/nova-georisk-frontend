@@ -198,7 +198,9 @@ function hazardRecord(status = "assessed") {
     return_periods: [row(10, 26.7, 1.18, 2.61, 38.4), row(100, 31.5, 1.79, 3.41, 42.1), row(500, 32.8, 2.09, 3.75, 42.9)],
     occurrence: { years: [10, 30], rows: [10, 100, 500].map((t) => ({ return_period_years: t, aep: 1 / t, probability_at_least_once: { "10": 1 - (1 - 1 / t) ** 10, "30": 1 - (1 - 1 / t) ** 30 } })) },
     citation: "Baugh, C. et al. (2024): Global river flood hazard maps. PID http://data.europa.eu/89h/jrc-floods-floodmapgl_rp50y-tif",
-    attribution: "Contains modified GloFAS flood hazard map data v2.1", licence: "Licence under confirmation.",
+    attribution: "Contains data from GloFAS flood hazard maps (JRC/CEMS), ODbL v1.0. Baugh et al.", licence: "Open Data Commons Open Database License (ODbL) v1.0; access conditions: no limitations (JRC Data Catalogue).",
+    produced_work_notice: "Contains data from GloFAS flood hazard maps (JRC/CEMS), ODbL v1.0",
+    database_notice: "Derived from the GloFAS flood hazard maps v2.1 (JRC/CEMS). This derivative database is available under the Open Data Commons Open Database License (ODbL) v1.0; no further restrictions are added.",
   };
 }
 function withHazard(status = "assessed") {
@@ -236,7 +238,9 @@ describe("Modelled hazard (Depth & Exposure module)", () => {
     expect(within(screen.getByRole("region", { name: "Modelled depth maps" })).getAllByRole("img")).toHaveLength(3);
     const source = screen.getByRole("region", { name: "Source and licence" });
     expect(source).toHaveTextContent("jrc-floods-floodmapgl_rp50y-tif");
-    expect(source).toHaveTextContent("Licence: Licence under confirmation.");
+    expect(source).toHaveTextContent("Contains data from GloFAS flood hazard maps (JRC/CEMS), ODbL v1.0");
+    expect(source).toHaveTextContent("Licence: Open Data Commons Open Database License (ODbL) v1.0");
+    expect(source).toHaveTextContent("GIS layers and tables: Derived from the GloFAS flood hazard maps v2.1 (JRC/CEMS). This derivative database is available under the Open Data Commons Open Database License (ODbL) v1.0; no further restrictions are added.");
   });
 
   it("not available: the reason, no figures", async () => {
@@ -252,12 +256,13 @@ function withExposure(status = "assessed") {
   const counted = (c75: number, c65: number) => ({ status: "counted", "0.75": { count: c75, area_m2: 0 }, "0.65": { count: c65, area_m2: 0 } });
   (data.summary as Record<string, unknown>).flood_exposure = status !== "assessed" ? { status, reason: "WorldPop has no population grid for this area in 2024." } : {
     status, wording: "Estimated exposure: modelled people and detected buildings inside each extent. Not people affected, not damage.",
-    population: { year: 2024, year_status: { status: "projected", text: "modelled estimate for 2024, a projection 2 years after the last census (2022)" }, citation: "Bondarenko M. et al. 2025 doi:10.5258/SOTON/WP00839", licence: "CC BY 4.0" },
-    buildings: { version: "v3 (inference May 2023)", primary_threshold: 0.75, sensitivity_threshold: 0.65, threshold_note: "0.75 is our stated choice.", citation: "Sirko, W. et al. (2021) arXiv:2107.12283", licence: "CC BY 4.0" },
-    permanent_water: "GloFAS permanent-water cells are excluded from every extent.",
+    population: { year: 2024, year_status: { status: "projected", text: "modelled estimate for 2024, a projection 2 years after the last census (2022)" }, citation: "Bondarenko M. et al. 2025 doi:10.5258/SOTON/WP00839", licence: "CC BY 4.0", release_caveat: "WorldPop R2025A is an alpha release: WorldPop states that it may change over the coming year as improvements are made, so these population figures may change." },
+    buildings: { version: "v3 (inference May 2023)", primary_threshold: 0.75, sensitivity_threshold: 0.65, threshold_note: "0.75 is our stated choice.", citation: "Sirko, W. et al. (2021) arXiv:2107.12283", licence: "CC BY 4.0", limitation: "Open Buildings detection quality varies between areas; informal buildings and thatched or vegetated roofs may be missed, so building counts may be too low.", spot_check: "pending: manual comparison with very-high-resolution imagery (owner)" },
+    permanent_water: "The observed flood candidates are reported as the flood map defines them. GloFAS permanent-water cells are excluded from the modelled return-period zones only.",
+    glofas_zone_notice: "The return-period zones come from the GloFAS flood hazard maps: Derived from the GloFAS flood hazard maps v2.1 (JRC/CEMS). This derivative database is available under the Open Data Commons Open Database License (ODbL) v1.0; no further restrictions are added.",
     rows: [
       { extent: "whole_area", label: "Whole area (reference)", area_km2: 98.77, people: 57360.9, people_cells_touching: 57360.9, buildings: counted(7461, 9686) },
-      { extent: "observed_extent", label: "Observed flood candidates (this run)", area_km2: 3.09, people: 2204.0, people_cells_touching: 15015.9, buildings: counted(333, 432), including_permanent_water: { area_km2: 5.33, people: 2236.2 } },
+      { extent: "observed_extent", label: "Observed flood candidates (this run)", area_km2: 5.33, people: 2236.2, people_cells_touching: 15109.7, buildings: counted(337, 444), sensitivity_glofas_permanent_water_masked: { area_km2: 3.09, people: 2204.0 } },
       { extent: "rp100", label: "Modelled 1-in-100-year zone", area_km2: 31.13, people: 822.6, people_cells_touching: 1179.2, buildings: { status: "not_available", reason: "too dense" } },
     ],
   };
@@ -279,11 +284,16 @@ describe("Exposure (Depth & Exposure module)", () => {
     expect(card).toHaveTextContent("WorldPop R2025A, 2024 — modelled estimate for 2024, a projection 2 years after the last census (2022)");
     const rows = within(card).getAllByRole("row").map((row) => row.textContent);
     expect(rows[1]).toBe("Whole area (reference)98.7757,3617,461 (9,686)");
-    expect(rows[2]).toBe("Observed flood candidates (this run)3.092,204333 (432)");
+    expect(rows[2]).toBe("Observed flood candidates (this run)5.332,236337 (444)");
     expect(rows[3]).toBe("Modelled 1-in-100-year zone31.13823not available: too dense");
     expect(card).toHaveTextContent("overstates exposure and is not used");
+    expect(card).toHaveTextContent("Sensitivity only: masking the observed flood candidates with the coarser GloFAS permanent water would give 3.09 km² and 2,204 people.");
+    expect(card).toHaveTextContent("WorldPop R2025A is an alpha release");
+    expect(card).toHaveTextContent("informal buildings and thatched or vegetated roofs may be missed");
+    expect(card).toHaveTextContent("Spot-check: pending: manual comparison with very-high-resolution imagery (owner).");
     expect(within(screen.getByRole("region", { name: "Exposure maps" })).getAllByRole("img")).toHaveLength(2);
     expect(screen.getByRole("region", { name: "Exposure sources" })).toHaveTextContent("doi:10.5258/SOTON/WP00839");
+    expect(screen.getByRole("region", { name: "Exposure sources" })).toHaveTextContent("available under the Open Data Commons Open Database License (ODbL) v1.0");
   });
 
   it("not available: the reason only", async () => {

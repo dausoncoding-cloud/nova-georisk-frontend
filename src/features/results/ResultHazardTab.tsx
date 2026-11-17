@@ -30,9 +30,10 @@ export function ResultHazardTab({ data, artifacts }: { data: Result; artifacts: 
   const source = (
     <section className="fr-card" aria-label="Source and licence">
       <h3>Source and licence</h3>
+      {record.produced_work_notice ? <p><strong>{String(record.produced_work_notice)}</strong></p> : null}
       <p>{String(record.citation ?? "")}.</p>
-      <p>Attribution: {String(record.attribution ?? "")}</p>
       <p><strong>Licence:</strong> {String(record.licence ?? "")}</p>
+      {record.database_notice ? <p className="fr-help">GIS layers and tables: {String(record.database_notice)}</p> : null}
     </section>
   );
   if (record.status !== "assessed") {
@@ -89,7 +90,7 @@ export function ResultHazardTab({ data, artifacts }: { data: Result; artifacts: 
       </div>
     </section>
     <section className="fr-figures" aria-label="Modelled depth maps">
-      {MAP_PERIODS.map((period) => <Figure key={period} resultId={data.id} artifact={byKey.get(`modelled_flood_depth_rp${period}_map_png`)} caption={`Modelled flood depth, 1-in-${period}-year river discharge (undefended, ~90 m). Depth layers for every return period are under Downloads & GIS layers.`} />)}
+      {MAP_PERIODS.map((period) => <Figure key={period} resultId={data.id} artifact={byKey.get(`modelled_flood_depth_rp${period}_map_png`)} caption={`Modelled flood depth, 1-in-${period}-year river discharge (undefended, ~90 m; permanent water in grey). Depth layers for every return period are under Downloads & GIS layers.`} />)}
     </section>
     {source}
   </div>;

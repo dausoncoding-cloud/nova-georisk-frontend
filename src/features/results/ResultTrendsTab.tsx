@@ -26,9 +26,13 @@ export function statisticsLine(series: Row): string {
   if (change && typeof change.delta === "number") {
     parts.push(`change ${String(change.from)} → ${String(change.to)}: ${change.delta >= 0 ? "+" : ""}${num(change.delta)} ${units} (${String(change.percent_text)})`);
   }
-  const trend = summary.kind === "trend" ? asRecord(summary.trend) : null;
-  if (trend && typeof trend.slope === "number" && typeof trend.r_squared === "number" && typeof trend.p_value === "number") {
-    parts.push(`trend ${trend.slope >= 0 ? "+" : ""}${trend.slope.toFixed(3)} ${String(trend.slope_units)}, R² = ${trend.r_squared.toFixed(2)}, p = ${Number(trend.p_value.toPrecision(3))}`);
+  const trend = asRecord(summary.trend);
+  const fit = trend && typeof trend.p_value === "number" && typeof trend.r_squared === "number"
+    ? `p = ${Number(trend.p_value.toPrecision(3))}, R² = ${trend.r_squared.toFixed(2)}` : "p and R² undefined";
+  if (summary.kind === "trend" && trend && typeof trend.slope === "number") {
+    parts.push(`statistically significant trend ${trend.slope >= 0 ? "+" : ""}${trend.slope.toFixed(3)} ${String(trend.slope_units)}, ${fit} (dashed line; not a forecast)`);
+  } else if (summary.kind === "no_significant_trend") {
+    parts.push(`no statistically significant trend (${fit}); no trend line drawn`);
   } else if (summary.text) {
     parts.push(String(summary.text));
   }
@@ -76,7 +80,7 @@ function SeriesCard({ data, series, artifact, badge }: { data: Result; series: R
   return <section className="fr-card fr-section" aria-label={title}>
     <div className="fr-section__head"><h3>{title}</h3><span className="fr-pill fr-pill--neutral">{badge}</span></div>
     <LineChart points={points(series)} trend={chartTrend(series)} title={title} xLabel={series.x === "year" ? "Year" : "Date"} yLabel={yLabel} />
-    <p className="fr-help" aria-label="Chart key">Solid line: valid points. Hollow grey points: flagged (shown, not used).{chartTrend(series) ? " Dashed line: trend line, a visual aid describing the past, not a forecast." : ""}</p>
+    <p className="fr-help" aria-label="Chart key">Solid line: valid points. Hollow grey points: flagged (shown, not used; they break the line).{chartTrend(series) ? " Dashed line: statistically significant trend, a visual aid describing the past, not a forecast." : ""}</p>
     <p aria-label="Statistics">{statisticsLine(series)}</p>
     <p className="fr-help"><strong>Method:</strong> {String(series.method ?? "")}</p>
     <ul className="fr-help">{(Array.isArray(series.caveats) ? series.caveats : []).map((text) => <li key={String(text)}>{String(text)}</li>)}</ul>
@@ -99,7 +103,7 @@ export function ResultTrendsTab({ data, artifacts }: { data: Result; artifacts: 
   return <div className="fr-tab-stack">
     <section className="fr-card fr-section" aria-label="Trend analysis">
       <div className="fr-section__head"><h3>Trend analysis</h3><span className="fr-pill fr-pill--neutral">Describes the past — not a forecast</span></div>
-      <p>Three series describe this area over time. Every chart gives its units and source. A trend line is drawn only with at least 6 valid points; two points are a change, never a trend; flagged points are shown but not used; a percentage change from 0 is undefined.</p>
+      <p>Three series describe this area over time. Every chart gives its units and source. A trend is fitted only with at least 6 valid points and drawn only when it is statistically significant (p &lt; 0.05); otherwise the series reads "No statistically significant trend". The Sentinel-1 series needs passes spanning at least 2 years for a trend. Two points are a change, never a trend; flagged points are shown but not used; a percentage change from 0 is undefined.</p>
     </section>
     <SeriesCard data={data} series={get("surface_water_annual")} artifact={byKey.get("trend_surface_water_annual_csv")} badge="Surface water — not flood extent" />
     <SeriesCard data={data} series={get("rainfall_daily")} artifact={byKey.get("trend_rainfall_daily_csv")} badge="Rainfall — no trend line" />

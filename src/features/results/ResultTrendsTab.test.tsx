@@ -17,17 +17,31 @@ describe("Trends tab", () => {
     expect(trendRecord({ id: ID, summary: {} } as never)).toBeNull();
   });
 
-  it("annual surface water: line chart with units, 10 flagged years drawn hollow, a dashed trend line and the statistics", () => {
+  it("annual surface water: 10 flagged years hollow and as gaps, and no clear trend (no line, no slope headline)", () => {
     show();
     const card = screen.getByRole("region", { name: "Surface-water extent, annual (JRC, 1984–2021)" });
     const chart = within(card).getByRole("img");
     expect(chart).toHaveAccessibleName(/Surface water \(km²\) against Year/);
     expect(chart.querySelectorAll("[data-testid=flagged-point]")).toHaveLength(10);
-    expect(chart.querySelector("[data-testid=trend-line]")).not.toBeNull();
-    expect(within(card).getByLabelText("Statistics")).toHaveTextContent(/^n = 28 valid of 38 points; change 1986 → 2021: \+1\.67 km² \(83\.2%\); trend \+0\.083 km² per year, R² = 0\.12, p = 0\.0712$/);
-    expect(within(card).getByLabelText("Chart key")).toHaveTextContent("not a forecast");
+    expect(chart.querySelector("[data-testid=trend-line]")).toBeNull();
+    const path = chart.querySelector("[data-testid=series-line]")!.getAttribute("d")!;
+    expect(path.match(/M/g)!.length).toBeGreaterThan(1); // flagged years break the line
+    expect(within(card).getByLabelText("Statistics")).toHaveTextContent(
+      /^n = 28 valid of 38 points; change 1986 → 2021: \+1\.67 km² \(83\.2%\); no statistically significant trend \(p = 0\.0712, R² = 0\.12\); no trend line drawn$/);
+    expect(within(card).getByLabelText("Statistics")).not.toHaveTextContent("per year");
     expect(within(card).getByText(/Pekel/)).toBeInTheDocument();
     expect(within(card).getByRole("link", { name: "Download CSV" })).toHaveAttribute("href", `/api/v1/results/${ID}/products/trend_surface_water_annual_csv`);
+  });
+
+  it("a statistically significant trend is drawn dashed and worded with slope, p and R²", () => {
+    const trend = structuredClone(record) as unknown as { series: Record<string, Record<string, unknown>> };
+    trend.series.surface_water_annual!.summary = { kind: "trend", n_valid: 7, text: "Statistically significant trend",
+      change: { from: 2000, to: 2006, delta: 3.1, percent_text: "310.0%" },
+      trend: { slope: 0.5, intercept: -999, r_squared: 0.95, p_value: 0.0002, slope_units: "km² per year", significant: true } };
+    show(trend);
+    const card = screen.getByRole("region", { name: "Surface-water extent, annual (JRC, 1984–2021)" });
+    expect(within(card).getByRole("img").querySelector("[data-testid=trend-line]")).not.toBeNull();
+    expect(within(card).getByLabelText("Statistics")).toHaveTextContent("statistically significant trend +0.500 km² per year, p = 0.0002, R² = 0.95 (dashed line; not a forecast)");
   });
 
   it("rainfall: no trend line, the anomaly table and its CSV", () => {
@@ -48,6 +62,8 @@ describe("Trends tab", () => {
     expect(card).toHaveTextContent("Not the FRRIS flood map and not accuracy-assessed.");
     expect(card).toHaveTextContent("Can miss water roughened by wind");
     expect(within(card).getByRole("img")).toHaveAccessibleName(/SAR open water \(km²\) against Date/);
+    expect(within(card).getByRole("img").querySelector("[data-testid=trend-line]")).toBeNull();
+    expect(within(card).getByLabelText("Statistics")).toHaveTextContent("seasonal; too short for a trend (the points span 0.8 years; a trend line needs at least 2)");
   });
 
   it("two points are a change, never a trend", () => {

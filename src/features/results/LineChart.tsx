@@ -1,7 +1,7 @@
 // Trend Analysis (plan §2, §5): a small SVG line chart, drawn like the other charts in the app (no chart library).
 // X = time (years or ISO dates), Y = the indicator with its units. Valid points are joined; flagged points are drawn
-// hollow and never joined; the dashed trend line is drawn only when the API gives one (n ≥ 6) and is labelled as a
-// visual aid, not a forecast.
+// hollow and break the line; the dashed trend line is drawn only when the API reports a statistically significant
+// trend, and is labelled as a visual aid, not a forecast.
 export type ChartPoint = { t: number | string; value: number | null; flagged?: boolean };
 export type ChartTrend = { slope: number; intercept: number } | null;
 
@@ -44,7 +44,14 @@ export function LineChart({ points, trend, xLabel, yLabel, title, colour = "#007
   const sy = (y: number) => H - M.bottom - (Math.max(0, y) / yMax) * (H - M.top - M.bottom);
   const valid = drawn.filter((point) => !point.flagged);
   const flagged = drawn.filter((point) => point.flagged);
-  const path = valid.map((point, index) => `${index ? "L" : "M"}${sx(decimalYear(point.t)).toFixed(1)},${sy(point.value as number).toFixed(1)}`).join(" ");
+  // A flagged or missing point breaks the line (a gap), so flagged years never look like part of the series.
+  let pen = false;
+  const path = points.map((point) => {
+    if (point.flagged || point.value === null || !Number.isFinite(point.value)) { pen = false; return ""; }
+    const step = `${pen ? "L" : "M"}${sx(decimalYear(point.t)).toFixed(1)},${sy(point.value).toFixed(1)}`;
+    pen = true;
+    return step;
+  }).filter(Boolean).join(" ");
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * yMax);
   const xTicks = Array.from({ length: 6 }, (_, i) => x0 + (i / 5) * (x1 - x0));
   const trendEnds = trend && valid.length ? [decimalYear(valid[0]!.t), decimalYear(valid[valid.length - 1]!.t)] : null;

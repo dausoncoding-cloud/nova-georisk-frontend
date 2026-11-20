@@ -30,9 +30,11 @@ export async function cancelTask(taskId: string) {
   );
 }
 
-export async function retryTask(taskId: string) {
+export async function retryTask(taskId: string, idempotencyKey?: string) {
   return unwrapResponse(
-    await apiClient.POST("/api/v1/tasks/{task_id}/retry", { params: { path: { task_id: taskId } } }),
+    await apiClient.POST("/api/v1/tasks/{task_id}/retry", {
+      params: { path: { task_id: taskId }, ...(idempotencyKey ? { header: { "Idempotency-Key": idempotencyKey } } : {}) },
+    }),
   );
 }
 

@@ -262,6 +262,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Ledger */
+        get: operations["get_ledger_api_v1_billing_ledger_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Billing Summary */
+        get: operations["get_billing_summary_api_v1_billing_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/engines": {
         parameters: {
             query?: never;
@@ -2092,6 +2126,13 @@ export interface components {
             /** Method */
             method: string;
         };
+        /** BillingSummaryResponse */
+        BillingSummaryResponse: {
+            /** Enforcement Enabled */
+            enforcement_enabled: boolean;
+            /** Subscriptions */
+            subscriptions: components["schemas"]["SubscriptionSummary"][];
+        };
         /** Body_list_geopackage_layers_api_v1_aoi_gpkg_layers_post */
         Body_list_geopackage_layers_api_v1_aoi_gpkg_layers_post: {
             /**
@@ -2388,6 +2429,25 @@ export interface components {
             /** Total */
             total: number;
             users_accuracy: components["schemas"]["AccuracyRatio"];
+        };
+        /** CreditSummary */
+        CreditSummary: {
+            /** Available */
+            available: number;
+            /** Granted */
+            granted: number;
+            /** Level */
+            level: number | null;
+            /** Period */
+            period: string;
+            /** Remaining */
+            remaining: number;
+            /** Top Ups */
+            top_ups: number;
+            /** Used */
+            used: number;
+            /** Used Percent */
+            used_percent: number;
         };
         /** CriRequest */
         CriRequest: {
@@ -3088,6 +3148,44 @@ export interface components {
              * @enum {string}
              */
             status: "pending" | "expired" | "redeemed";
+        };
+        /** LedgerEntryResponse */
+        LedgerEntryResponse: {
+            /** Amount */
+            amount: number;
+            /** Balance After */
+            balance_after: number;
+            /** Bucket */
+            bucket: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Period */
+            period: string;
+            /** Reason */
+            reason: string | null;
+            /** Task Id */
+            task_id: string | null;
+        };
+        /** LedgerPage */
+        LedgerPage: {
+            /** Items */
+            items: components["schemas"]["LedgerEntryResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
         };
         /** LiveEventPage */
         LiveEventPage: {
@@ -4231,6 +4329,37 @@ export interface components {
             /** Y */
             y: number;
         };
+        /** SubscriptionSummary */
+        SubscriptionSummary: {
+            /** Block Code */
+            block_code: string | null;
+            /** Block Message */
+            block_message: string | null;
+            /** Can Submit */
+            can_submit: boolean;
+            credits: components["schemas"]["CreditSummary"];
+            /** Ends At */
+            ends_at: string | null;
+            /** Engines */
+            engines: string[];
+            /** Family */
+            family: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Plan Key */
+            plan_key: string | null;
+            /** Plan Name */
+            plan_name: string | null;
+            /** Starts At */
+            starts_at: string | null;
+            /** Status */
+            status: string;
+            /** Status Label */
+            status_label: string;
+        };
         /** SusceptibilityRequest */
         SusceptibilityRequest: {
             /** Susceptibility */
@@ -4390,7 +4519,9 @@ export interface operations {
     submit_analysis_api_v1_analyses_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -4774,7 +4905,9 @@ export interface operations {
     submit_source_bound_analysis_api_v1_analyses_source_bound_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5568,6 +5701,158 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AOICapacityResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_ledger_api_v1_billing_ledger_get: {
+        parameters: {
+            query?: {
+                family?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerPage"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_billing_summary_api_v1_billing_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingSummaryResponse"];
                 };
             };
             /** @description Bad request */
@@ -10700,7 +10985,9 @@ export interface operations {
     retry_task_api_v1_tasks__task_id__retry_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
             path: {
                 task_id: string;
             };

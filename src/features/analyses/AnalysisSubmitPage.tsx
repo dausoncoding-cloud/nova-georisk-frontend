@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FRRIS_ROUTES } from "../../app/routes";
 import { describeApiError } from "../../shared/api/errors";
+import { IdempotentAction } from "../../shared/api/idempotency";
 import { queryKeys } from "../../shared/api/queryKeys";
 import { FRRIS_ENGINE_KEY } from "../../shared/productName";
 import { Disclosure } from "../../shared/ui/Disclosure";
@@ -131,14 +132,16 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
     else setForm((current) => ({ ...current, baselineStart: start, baselineLast: toLastDay(end) }));
   };
 
+  const submitAction = useRef(new IdempotentAction()).current;
   const submit = useMutation({
     mutationFn: async () => {
       if (!selectedAoi || !project.data || !firris) throw new Error("Project, engine and AOI are required.");
       if (project.data.engine_key !== firris.key) throw new Error("This project is not configured for the entitled FRRIS engine.");
-      return submitAnalysis(buildRequest(products)!);
+      const request = buildRequest(products)!;
+      return submitAnalysis(request, submitAction.keyFor(request));
     },
-    onSuccess: (response) => navigate(`/tasks/${response.task.task_id}`),
-    onError: (caught) => setProblems([describeApiError(caught)]),
+    onSuccess: (response) => { submitAction.settle(); navigate(`/tasks/${response.task.task_id}`); },
+    onError: (caught) => { submitAction.settle(caught); setProblems([describeApiError(caught)]); },
   });
 
   function run() {

@@ -572,3 +572,6 @@ a.fr-switcher__option .fr-switcher__state { color: var(--fr-primary-text); font-
 .fr-meter__bar--over { background: var(--fr-danger-text); }
 @media (max-width: 699px) { .fr-pg-map { height: 340px; } }
 .fr-pg-advice { color: var(--fr-warning-text) !important; }
+
+/* Trend Analysis: SVG line charts scale with their card. */
+.fr-line-chart { display: block; width: 100%; max-width: 760px; height: auto; }

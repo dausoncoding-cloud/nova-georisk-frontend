@@ -14,7 +14,7 @@ import { getGeometryBoundingBox } from "../aois/geometry";
 import { useAvailableEngines, useEngineContract } from "../engines/engineQueries";
 import { fetchProject, fetchProjects } from "../projects/projectsApi";
 import { preflightAnalysis, submitAnalysis, type AnalysisSubmitRequest, type FirrisProduct } from "./analysisApi";
-import { buildGeeSatelliteWorkflowParameters, defaultSatelliteWorkflowForm, FIXED_RUN_SETTINGS, type SatelliteWorkflowForm } from "./parameters";
+import { buildGeeSatelliteWorkflowParameters, defaultSatelliteWorkflowForm, FIXED_RUN_SETTINGS, TREND_RAINFALL_DAYS, type SatelliteWorkflowForm, type TrendRainfallDays } from "./parameters";
 import { periodProblem, SENTINEL1_START, todayIso, toApiEnd, toLastDay, formatPeriod, type InclusivePeriod } from "./periods";
 import { DATE_ISSUES, downloadSizeText, MIB, PreflightPanel } from "./PreflightPanel";
 
@@ -25,17 +25,21 @@ export const NO_PRODUCT_MESSAGE = "Select at least one product (step 4).";
 const FEATURE_LABELS: Record<string, string> = { sar_vv_target: "SAR VV (target)", sar_change: "SAR change", elevation: "Elevation", slope: "Slope", rainfall: "Rainfall (CHIRPS)" };
 
 /** Form state in UI terms: windows end on an inclusive last day (backlog §4.7 item 1). */
-export type BuilderForm = Omit<SatelliteWorkflowForm, "targetEnd" | "baselineEnd"> & { targetLast: string; baselineLast: string };
+export type BuilderForm = Omit<SatelliteWorkflowForm, "targetEnd" | "baselineEnd" | "trendSarEnd"> & {
+  targetLast: string; baselineLast: string; trendSarLast: string;
+};
 
 export const defaultBuilderForm: BuilderForm = (() => {
-  const { targetEnd, baselineEnd, ...rest } = defaultSatelliteWorkflowForm;
-  return { ...rest, targetLast: toLastDay(targetEnd), baselineLast: toLastDay(baselineEnd) };
+  const { targetEnd, baselineEnd, trendSarEnd: _unused, ...rest } = defaultSatelliteWorkflowForm;
+  return { ...rest, targetLast: toLastDay(targetEnd), baselineLast: toLastDay(baselineEnd), trendSarLast: "" };
 })();
 
-/** UI form → API form: the only change is the +1 day on each end date. */
+/** UI form → API form: +1 day on each end date. A Sentinel-1 trend window is sent only when both of its dates are set. */
 export function toApiForm(form: BuilderForm): SatelliteWorkflowForm {
-  const { targetLast, baselineLast, ...rest } = form;
-  return { ...rest, targetEnd: toApiEnd(targetLast), baselineEnd: toApiEnd(baselineLast) };
+  const { targetLast, baselineLast, trendSarLast, ...rest } = form;
+  const sarWindow = form.trendSarStart && trendSarLast;
+  return { ...rest, targetEnd: toApiEnd(targetLast), baselineEnd: toApiEnd(baselineLast),
+           trendSarStart: sarWindow ? form.trendSarStart : "", trendSarEnd: sarWindow ? toApiEnd(trendSarLast) : "" };
 }
 
 function Step({ number, title, children, id }: { number: number; title: string; children: ReactNode; id: string }) {
@@ -107,7 +111,9 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
   // No preflight without a product: the API would refuse the request, and the reason is shown here instead.
   const preflightRequest = firris && project.data?.engine_key === firris.key && !noProduct ? buildRequest(products) : null;
   const preflight = useQuery({
-    queryKey: ["analysis-preflight", projectId, selectedAoi?.id, apiForm?.targetStart, apiForm?.targetEnd, apiForm?.baselineStart, apiForm?.baselineEnd, form.maxCloudPct, form.scale],
+    // The Trend analysis switch and its Sentinel-1 window change the pass count, so they re-run the check; the rainfall window does not.
+    queryKey: ["analysis-preflight", projectId, selectedAoi?.id, apiForm?.targetStart, apiForm?.targetEnd, apiForm?.baselineStart, apiForm?.baselineEnd, form.maxCloudPct, form.scale,
+      form.trendAnalysis, apiForm?.trendSarStart, apiForm?.trendSarEnd],
     queryFn: () => preflightAnalysis(preflightRequest!),
     enabled: preflightRequest !== null,
     staleTime: 60_000,
@@ -249,7 +255,27 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
               <span><strong>Estimated exposure (WorldPop, Open Buildings)</strong><small>People and buildings inside the observed flood candidates and inside each modelled return-period zone. Estimates, not people affected. Switches on the modelled flood hazard, which it needs.</small></span>
               <input type="checkbox" role="switch" checked={form.floodExposure} onChange={(event) => setForm((current) => ({ ...current, floodExposure: event.target.checked, modelledFloodHazard: event.target.checked || current.modelledFloodHazard }))} />
             </label>
+            <label>
+              <span><strong>Trend analysis</strong><small>Surface water each year since 1984 (JRC), rainfall before the target date with its anomaly (CHIRPS), and SAR open water (VV &lt; −18 dB) on each Sentinel-1 pass. Line charts, tables and CSV. Context only; it does not change the flood map. Adds about 1–3 minutes.</small></span>
+              <input type="checkbox" role="switch" checked={form.trendAnalysis} onChange={(event) => setForm((current) => ({ ...current, trendAnalysis: event.target.checked }))} />
+            </label>
           </div>
+          {form.trendAnalysis ? <div className="fr-periods">
+            <fieldset aria-label="Trend analysis options"><legend>Trend analysis</legend>
+              <label className="fr-field"><span>Rainfall window</span>
+                <select value={form.trendRainfallDays} onChange={(event) => setForm((current) => ({ ...current, trendRainfallDays: Number(event.target.value) as TrendRainfallDays }))}>
+                  {TREND_RAINFALL_DAYS.map((days) => <option key={days} value={days}>{days} days</option>)}
+                </select>
+              </label>
+              <label className="fr-field"><span>Sentinel-1 series from</span>
+                <input type="date" min={SENTINEL1_START} max={today} value={form.trendSarStart} onChange={(event) => setForm((current) => ({ ...current, trendSarStart: event.target.value }))} />
+              </label>
+              <label className="fr-field"><span>Sentinel-1 series to (included)</span>
+                <input type="date" min={SENTINEL1_START} max={today} value={form.trendSarLast} onChange={(event) => setForm((current) => ({ ...current, trendSarLast: event.target.value }))} />
+              </label>
+            </fieldset>
+          </div> : null}
+          {form.trendAnalysis ? <p className="fr-help">The rainfall window ends on the target's last day. Leave the Sentinel-1 dates empty to use the baseline's first day to the target's last day. The latest 24 passes on the run's orbit are used at most.</p> : null}
         </Step>
 
         <Step number={5} title="Processing and sampling" id={id("processing")}>
@@ -284,6 +310,7 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
             <div><dt>Quality</dt><dd>Cloud ≤ {form.maxCloudPct}% · cover ≥ {FIXED_RUN_SETTINGS.minimumValidCoveragePct}% · MSI ≤ 0.1%</dd></div>
             <div><dt>Products</dt><dd>{productLabels.length ? productLabels.join(", ") : "None selected"}</dd></div>
             {form.modelledFloodHazard ? <div><dt>Context</dt><dd>{form.floodExposure ? "Modelled flood hazard (GloFAS) and estimated exposure" : "Modelled flood hazard (GloFAS)"}</dd></div> : null}
+            {form.trendAnalysis ? <div><dt>Trends</dt><dd>Trend analysis · rainfall {form.trendRainfallDays} days · Sentinel-1 {form.trendSarStart && form.trendSarLast ? formatPeriod({ start: form.trendSarStart, lastDay: form.trendSarLast }) : "baseline start to target end"}</dd></div> : null}
             <div><dt>Sampling</dt><dd>{form.samplingStrategy.replaceAll("_", " ")} · {form.sampleSize.toLocaleString("en-GB")} · {(form.trainFraction * 100).toFixed(0)}% training</dd></div>
             <div><dt>Resolution</dt><dd>{form.scale} m</dd></div>
           </dl>

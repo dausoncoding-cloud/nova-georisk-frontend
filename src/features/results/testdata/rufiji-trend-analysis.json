@@ -1,0 +1,1496 @@
+{
+ "status": "assessed",
+ "reason": null,
+ "method_version": "frris-trend-1",
+ "rules": {
+  "min_trend_points": 6,
+  "two_points": "Change, never Trend",
+  "trend_line": "Trend line: ordinary least squares, a visual aid describing the past; not a forecast.",
+  "significance_alpha": 0.05,
+  "not_significant": "No statistically significant trend (no line drawn)",
+  "sar_min_trend_span_years": 2.0,
+  "percent_change_zero_previous": "undefined"
+ },
+ "options": {
+  "rainfall_days": 90,
+  "sar_series": {
+   "first_day": "2022-08-28",
+   "last_day": "2024-05-25"
+  }
+ },
+ "series": {
+  "surface_water_annual": {
+   "status": "assessed",
+   "key": "surface_water_annual",
+   "title": "Surface-water extent, annual (JRC, 1984\u20132021)",
+   "indicator": "Surface-water extent (seasonal + permanent)",
+   "axis_label": "Surface water",
+   "units": "km\u00b2",
+   "x": "year",
+   "source": "Pekel, J.-F., Cottam, A., Gorelick, N., Belward, A. S. (2016). High-resolution mapping of global surface water and its long-term changes. Nature 540, 418\u2013422. JRC Global Surface Water v1.4, YearlyHistory 1984\u20132021 (Google Earth Engine JRC/GSW1_4/YearlyHistory).",
+   "method": "Area of JRC YearlyHistory classes 2 (seasonal) and 3 (permanent) inside the area, summed on a 30 m grid.",
+   "caveats": [
+    "Surface water (seasonal and permanent) mapped from Landsat; not flood extent.",
+    "A year is flagged when more than 30% of the surface-water footprint has no observation; flagged years are shown but not used for the trend line."
+   ],
+   "columns": {
+    "seasonal_km2": "Seasonal water (km\u00b2)",
+    "permanent_km2": "Permanent water (km\u00b2)",
+    "nodata_pct": "No data in the surface-water footprint (%)"
+   },
+   "points": [
+    {
+     "t": 1984,
+     "value": 1.452870155487659,
+     "seasonal_km2": 0.7503226104260015,
+     "permanent_km2": 0.7025475450616576,
+     "footprint_km2": 10.66968472481043,
+     "nodata_pct": 54.08717097000139,
+     "flagged": true,
+     "flag": "54.1% of the surface-water footprint has no data (> 30%)"
+    },
+    {
+     "t": 1985,
+     "value": 0.6066773462402343,
+     "seasonal_km2": 0.1363854152832031,
+     "permanent_km2": 0.47029193095703126,
+     "footprint_km2": 10.669684724810429,
+     "nodata_pct": 71.47608582745262,
+     "flagged": true,
+     "flag": "71.5% of the surface-water footprint has no data (> 30%)"
+    },
+    {
+     "t": 1986,
+     "value": 2.0119957414569933,
+     "seasonal_km2": 1.1685852247426949,
+     "permanent_km2": 0.8434105167142983,
+     "footprint_km2": 10.669684724810434,
+     "nodata_pct": 22.457453434210166,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 1987,
+     "value": 0.8293178688440659,
+     "seasonal_km2": 0.16039826587584252,
+     "permanent_km2": 0.6689196029682234,
+     "footprint_km2": 10.66968472481043,
+     "nodata_pct": 89.66257050514301,
+     "flagged": true,
+     "flag": "89.7% of the surface-water footprint has no data (> 30%)"
+    },
+    {
+     "t": 1988,
+     "value": 0.0,
+     "seasonal_km2": 0.0,
+     "permanent_km2": 0.0,
+     "footprint_km2": 10.669684724810434,
+     "nodata_pct": 100.0,
+     "flagged": true,
+     "flag": "100.0% of the surface-water footprint has no data (> 30%)"
+    },
+    {
+     "t": 1989,
+     "value": 0.8397780570314893,
+     "seasonal_km2": 0.26519052304041246,
+     "permanent_km2": 0.5745875339910769,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 85.24110760124238,
+     "flagged": true,
+     "flag": "85.2% of the surface-water footprint has no data (> 30%)"
+    },
+    {
+     "t": 1990,
+     "value": 1.133336527747061,
+     "seasonal_km2": 0.5127742025146484,
+     "permanent_km2": 0.6205623252324125,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 70.50956132467499,
+     "flagged": true,
+     "flag": "70.5% of the surface-water footprint has no data (> 30%)"
+    },
+    {
+     "t": 1991,
+     "value": 0.8781833229721966,
+     "seasonal_km2": 0.2966828409423828,
+     "permanent_km2": 0.5815004820298137,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 36.32221791655822,
+     "flagged": true,
+     "flag": "36.3% of the surface-water footprint has no data (> 30%)"
+    },
+    {
+     "t": 1992,
+     "value": 0.7790413085145241,
+     "seasonal_km2": 0.1709248741455078,
+     "permanent_km2": 0.6081164343690163,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 52.17239091220867,
+     "flagged": true,
+     "flag": "52.2% of the surface-water footprint has no data (> 30%)"
+    },
+    {
+     "t": 1993,
+     "value": 2.1027502892379464,
+     "seasonal_km2": 1.1860777638635973,
+     "permanent_km2": 0.916672525374349,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 31.90290674774413,
+     "flagged": true,
+     "flag": "31.9% of the surface-water footprint has no data (> 30%)"
+    },
+    {
+     "t": 1994,
+     "value": 2.756154892500096,
+     "seasonal_km2": 1.6528253631555891,
+     "permanent_km2": 1.1033295293445067,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 15.038366162084213,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 1995,
+     "value": 1.939127433041083,
+     "seasonal_km2": 0.838885318426394,
+     "permanent_km2": 1.100242114614689,
+     "footprint_km2": 10.669684724810434,
+     "nodata_pct": 21.714619710553094,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 1996,
+     "value": 1.5204488255481203,
+     "seasonal_km2": 0.557048351196289,
+     "permanent_km2": 0.9634004743518311,
+     "footprint_km2": 10.66968472481043,
+     "nodata_pct": 78.1446001596795,
+     "flagged": true,
+     "flag": "78.1% of the surface-water footprint has no data (> 30%)"
+    },
+    {
+     "t": 1997,
+     "value": 2.4688324498587817,
+     "seasonal_km2": 1.6409326225406422,
+     "permanent_km2": 0.8278998273181396,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 22.894619841387883,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 1998,
+     "value": 4.9338506134054745,
+     "seasonal_km2": 3.822095710460707,
+     "permanent_km2": 1.111754902944767,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 22.85294299619872,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 1999,
+     "value": 2.1785903534902538,
+     "seasonal_km2": 1.0562076799766391,
+     "permanent_km2": 1.1223826735136146,
+     "footprint_km2": 10.66968472481043,
+     "nodata_pct": 28.578883165166097,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2000,
+     "value": 2.136824571832635,
+     "seasonal_km2": 1.0782073533361098,
+     "permanent_km2": 1.0586172184965252,
+     "footprint_km2": 10.66968472481043,
+     "nodata_pct": 14.990239569876481,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2001,
+     "value": 3.2635956815695373,
+     "seasonal_km2": 2.245286033755792,
+     "permanent_km2": 1.0183096478137452,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 16.467009286260456,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2002,
+     "value": 8.45014299588671,
+     "seasonal_km2": 7.3423854783219875,
+     "permanent_km2": 1.1077575175647216,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 6.98689899738702,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2003,
+     "value": 3.739534384941071,
+     "seasonal_km2": 2.6251222880876126,
+     "permanent_km2": 1.1144120968534585,
+     "footprint_km2": 10.669684724810434,
+     "nodata_pct": 6.284924455546519,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2004,
+     "value": 1.9866230287966267,
+     "seasonal_km2": 0.8952370762302772,
+     "permanent_km2": 1.0913859525663494,
+     "footprint_km2": 10.66968472481043,
+     "nodata_pct": 16.801905591857835,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2005,
+     "value": 2.3416115070085124,
+     "seasonal_km2": 1.4264651179187253,
+     "permanent_km2": 0.9151463890897868,
+     "footprint_km2": 10.669684724810434,
+     "nodata_pct": 25.083846547872852,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2006,
+     "value": 2.2688458081947473,
+     "seasonal_km2": 1.70443113329384,
+     "permanent_km2": 0.5644146749009077,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 9.176876111881949,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2007,
+     "value": 2.5676567972407316,
+     "seasonal_km2": 2.3372710270704076,
+     "permanent_km2": 0.23038577017032397,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 7.446909035814545,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2008,
+     "value": 2.073479721187576,
+     "seasonal_km2": 1.8148301118001298,
+     "permanent_km2": 0.25864960938744636,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 5.078158020842054,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2009,
+     "value": 2.99159220672727,
+     "seasonal_km2": 2.7728443080456295,
+     "permanent_km2": 0.2187478986816406,
+     "footprint_km2": 10.66968472481043,
+     "nodata_pct": 5.756850032981796,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2010,
+     "value": 1.3747994525093827,
+     "seasonal_km2": 1.148966710504988,
+     "permanent_km2": 0.22583274200439452,
+     "footprint_km2": 10.66968472481043,
+     "nodata_pct": 13.234781018722808,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2011,
+     "value": 0.8347985198560527,
+     "seasonal_km2": 0.5345735878492167,
+     "permanent_km2": 0.3002249320068359,
+     "footprint_km2": 10.66968472481043,
+     "nodata_pct": 17.641623833532492,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2012,
+     "value": 1.7556090732457776,
+     "seasonal_km2": 1.493465780826344,
+     "permanent_km2": 0.26214329241943357,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 11.05467936793236,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2013,
+     "value": 3.0955984517704977,
+     "seasonal_km2": 2.85648134337206,
+     "permanent_km2": 0.2391171083984375,
+     "footprint_km2": 10.66968472481043,
+     "nodata_pct": 0.8455576245872589,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2014,
+     "value": 2.982858920674881,
+     "seasonal_km2": 2.971345828145584,
+     "permanent_km2": 0.011513092529296875,
+     "footprint_km2": 10.669684724810432,
+     "nodata_pct": 0.6976621693947842,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2015,
+     "value": 1.8517524071942502,
+     "seasonal_km2": 1.1027962358367325,
+     "permanent_km2": 0.7489561713575178,
+     "footprint_km2": 11.47921345689051,
+     "nodata_pct": 0.26228729685904456,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2016,
+     "value": 4.532479869907035,
+     "seasonal_km2": 3.931424021522671,
+     "permanent_km2": 0.6010558483843635,
+     "footprint_km2": 11.479213456890509,
+     "nodata_pct": 2.3108023425954247,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2017,
+     "value": 7.68326539899352,
+     "seasonal_km2": 7.172015641623823,
+     "permanent_km2": 0.5112497573696959,
+     "footprint_km2": 11.479213456890509,
+     "nodata_pct": 0.7020420110108004,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2018,
+     "value": 5.8108279219345995,
+     "seasonal_km2": 4.678273021496343,
+     "permanent_km2": 1.1325549004382565,
+     "footprint_km2": 11.479213456890509,
+     "nodata_pct": 0.8023584307110955,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2019,
+     "value": 4.059375543734203,
+     "seasonal_km2": 2.9401057467505356,
+     "permanent_km2": 1.1192697969836667,
+     "footprint_km2": 11.479213456890509,
+     "nodata_pct": 0.37800282132026697,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2020,
+     "value": 9.523731009328804,
+     "seasonal_km2": 8.260989926822678,
+     "permanent_km2": 1.2627410825061272,
+     "footprint_km2": 11.521620638626398,
+     "nodata_pct": 0.3114007687016605,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": 2021,
+     "value": 3.6861973226323146,
+     "seasonal_km2": 2.3207231248918125,
+     "permanent_km2": 1.3654741977405018,
+     "footprint_km2": 11.573377994014008,
+     "nodata_pct": 0.5212639791500577,
+     "flagged": false,
+     "flag": null
+    }
+   ],
+   "n_points": 38,
+   "n_flagged": 10,
+   "summary": {
+    "kind": "no_significant_trend",
+    "n_valid": 28,
+    "change": {
+     "from": 1986,
+     "to": 2021,
+     "from_value": 2.0119957414569933,
+     "to_value": 3.6861973226323146,
+     "delta": 1.6742015811753213,
+     "percent": 83.21099029578177,
+     "percent_text": "83.2%"
+    },
+    "span_years": 35.0,
+    "trend": {
+     "slope": 0.08270078506579537,
+     "intercept": -162.58872745067072,
+     "r": 0.3461160294802515,
+     "r_squared": 0.11979630586317433,
+     "p_value": 0.07119934440649067,
+     "slope_units": "km\u00b2 per year",
+     "x": "decimal year",
+     "note": "Trend line: ordinary least squares, a visual aid describing the past; not a forecast.",
+     "alpha": 0.05,
+     "significant": false
+    },
+    "text": "No statistically significant trend over 28 valid points (p = 0.0712, R\u00b2 = 0.12); no trend line is drawn."
+   }
+  },
+  "rainfall_daily": {
+   "status": "assessed",
+   "key": "rainfall_daily",
+   "title": "Daily rainfall, 90 days to 25 May 2024",
+   "indicator": "Rainfall",
+   "axis_label": "Rainfall",
+   "units": "mm/day",
+   "x": "date",
+   "source": "Funk, C. et al. (2015). The climate hazards infrared precipitation with stations \u2014 a new environmental record for monitoring extremes. Scientific Data 2, 150066. CHIRPS daily v2.0 (Google Earth Engine UCSB-CHG/CHIRPS/DAILY).",
+   "method": "CHIRPS daily precipitation, area-weighted mean over the area.",
+   "caveats": [
+    "CHIRPS cells are about 5.5 km; values are area-weighted means over the analysis area.",
+    "Rainfall over the area only; rainfall upstream in the catchment is not included."
+   ],
+   "columns": {},
+   "points": [
+    {
+     "t": "2024-02-26",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-02-27",
+     "value": 6.5852746666591155,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-02-28",
+     "value": 3.3557748666884444,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-02-29",
+     "value": 3.8077677982681863,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-01",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-02",
+     "value": 8.964555818740637,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-03",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-04",
+     "value": 35.85822327496255,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-05",
+     "value": 3.2770757829564,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-06",
+     "value": 6.054222715004888,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-07",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-08",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-09",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-10",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-11",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-12",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-13",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-14",
+     "value": 10.879706347122285,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-15",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-16",
+     "value": 12.369367664807465,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-17",
+     "value": 4.11179780960083,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-18",
+     "value": 11.272044313057869,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-19",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-20",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-21",
+     "value": 8.510794040423402,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-22",
+     "value": 8.510794040423402,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-23",
+     "value": 26.269374500621446,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-24",
+     "value": 9.247784410882858,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-25",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-26",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-27",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-28",
+     "value": 36.919562191327806,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-29",
+     "value": 20.959899415411662,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-30",
+     "value": 14.407349889334824,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-31",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-01",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-02",
+     "value": 0.19613123474501137,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-03",
+     "value": 28.33471175653403,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-04",
+     "value": 32.718017573374446,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-05",
+     "value": 18.69601087700831,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-06",
+     "value": 40.523269762583126,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-07",
+     "value": 7.5000393672719845,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-08",
+     "value": 13.027417211425707,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-09",
+     "value": 5.789038474651825,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-10",
+     "value": 19.16811698162986,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-11",
+     "value": 16.33268839454889,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-12",
+     "value": 20.52872379630767,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-13",
+     "value": 28.13229463228105,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-14",
+     "value": 13.728710410900758,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-15",
+     "value": 8.76265668275199,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-16",
+     "value": 25.622155611126093,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-17",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-18",
+     "value": 15.608576502627779,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-19",
+     "value": 32.0149982447642,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-20",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-21",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-22",
+     "value": 13.2070885405297,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-23",
+     "value": 50.17756252835133,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-24",
+     "value": 38.231443937213754,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-25",
+     "value": 25.60092551443972,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-26",
+     "value": 70.20810222982024,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-27",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-28",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-29",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-30",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-01",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-02",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-03",
+     "value": 0.7731051890372042,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-04",
+     "value": 42.52288558978963,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-05",
+     "value": 86.10015856789177,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-06",
+     "value": 32.554541382368,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-07",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-08",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-09",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-10",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-11",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-12",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-13",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-14",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-15",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-16",
+     "value": 0.10453741284896843,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-17",
+     "value": 1.270423174201329,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-18",
+     "value": 5.258367308643954,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-19",
+     "value": 1.5154566977122057,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-20",
+     "value": 15.222609188607146,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-21",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-22",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-23",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-24",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-25",
+     "value": 0.0,
+     "flagged": false,
+     "flag": null
+    }
+   ],
+   "n_points": 90,
+   "n_flagged": 0,
+   "summary": {
+    "kind": "values",
+    "n_valid": 90,
+    "max": {
+     "t": "2024-05-05",
+     "value": 86.10015856789177
+    },
+    "text": "Highest 86.1 mm/day (2024-05-05). No change or trend is computed for rainfall; the window total is compared with the 1991\u20132020 mean in the rainfall anomaly."
+   }
+  },
+  "rainfall_dekadal": {
+   "status": "assessed",
+   "key": "rainfall_dekadal",
+   "title": "10-day rainfall totals, 90 days to 25 May 2024",
+   "indicator": "Rainfall, 10-day total",
+   "axis_label": "Rainfall, 10-day total",
+   "units": "mm per 10 days",
+   "x": "date",
+   "source": "Funk, C. et al. (2015). The climate hazards infrared precipitation with stations \u2014 a new environmental record for monitoring extremes. Scientific Data 2, 150066. CHIRPS daily v2.0 (Google Earth Engine UCSB-CHG/CHIRPS/DAILY).",
+   "method": "Sum of the daily values in 10-day blocks ending on the target's last day; incomplete blocks flagged.",
+   "caveats": [
+    "CHIRPS cells are about 5.5 km; values are area-weighted means over the analysis area.",
+    "Rainfall over the area only; rainfall upstream in the catchment is not included."
+   ],
+   "columns": {
+    "start": "First day",
+    "end": "Last day"
+   },
+   "points": [
+    {
+     "t": "2024-03-06",
+     "start": "2024-02-26",
+     "end": "2024-03-06",
+     "value": 67.90289492328021,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-16",
+     "start": "2024-03-07",
+     "end": "2024-03-16",
+     "value": 23.24907401192975,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-26",
+     "start": "2024-03-17",
+     "end": "2024-03-26",
+     "value": 67.9225891150098,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-05",
+     "start": "2024-03-27",
+     "end": "2024-04-05",
+     "value": 152.2316829377361,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-15",
+     "start": "2024-04-06",
+     "end": "2024-04-15",
+     "value": 173.49295571435286,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-25",
+     "start": "2024-04-16",
+     "end": "2024-04-25",
+     "value": 200.46275087905258,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-05",
+     "start": "2024-04-26",
+     "end": "2024-05-05",
+     "value": 199.60425157653884,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-15",
+     "start": "2024-05-06",
+     "end": "2024-05-15",
+     "value": 32.554541382368,
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-25",
+     "start": "2024-05-16",
+     "end": "2024-05-25",
+     "value": 23.371393782013605,
+     "flagged": false,
+     "flag": null
+    }
+   ],
+   "n_points": 9,
+   "n_flagged": 0,
+   "summary": {
+    "kind": "values",
+    "n_valid": 9,
+    "max": {
+     "t": "2024-04-25",
+     "value": 200.46275087905258
+    },
+    "text": "Highest 200.5 mm per 10 days (2024-04-25). No change or trend is computed for rainfall; the window total is compared with the 1991\u20132020 mean in the rainfall anomaly."
+   }
+  },
+  "sar_open_water": {
+   "status": "assessed",
+   "key": "sar_open_water",
+   "title": "SAR open water (VV < -18 dB) per Sentinel-1 pass",
+   "indicator": "SAR open water (VV < -18 dB)",
+   "axis_label": "SAR open water",
+   "units": "km\u00b2",
+   "x": "date",
+   "source": "Copernicus Sentinel-1 GRD, IW, VV (Google Earth Engine COPERNICUS/S1_GRD), the run's relative orbit.",
+   "method": "SAR open water (VV < -18 dB): VV backscatter after the run's 50 m focal-median speckle filter; SRTM slope > 5\u00b0 excluded; area summed on the run's 30 m grid. A pass covering less than 70% of the area is flagged. At most the latest 24 passes. Rule fixed before any series was computed (owner sign-off 2026-11-20).",
+   "caveats": [
+    "Not the FRRIS flood map and not accuracy-assessed.",
+    "Can miss water roughened by wind and water under vegetation or trees.",
+    "Can wrongly include smooth dry surfaces (some sand, tarmac, very dry bare soil).",
+    "Use it for change over time, not as a flood map."
+   ],
+   "columns": {
+    "water_outside_permanent_km2": "Outside JRC permanent water (km\u00b2)",
+    "coverage_pct": "Pass coverage (%)",
+    "steep_excluded_km2": "Steep ground excluded (km\u00b2)"
+   },
+   "points": [
+    {
+     "t": "2023-08-23",
+     "value": 1.2031974439297544,
+     "water_outside_permanent_km2": 1.2023118202725278,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20230823T154639_20230823T154704_050004_060418_63EC"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2023-09-04",
+     "value": 1.5403102677150344,
+     "water_outside_permanent_km2": 1.5394246440578079,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20230904T154640_20230904T154705_050179_060A21_E1B5"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2023-09-16",
+     "value": 1.1114479493408203,
+     "water_outside_permanent_km2": 1.1105623256835937,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20230916T154640_20230916T154705_050354_06100A_2406"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2023-09-28",
+     "value": 0.9206312440161611,
+     "water_outside_permanent_km2": 0.9197456203589346,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20230928T154641_20230928T154706_050529_061605_1319"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2023-10-10",
+     "value": 1.1694357672382425,
+     "water_outside_permanent_km2": 1.168550143581016,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20231010T154640_20231010T154705_050704_061C0B_D7D3"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2023-10-22",
+     "value": 1.1599845217050588,
+     "water_outside_permanent_km2": 1.1590988980478323,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20231022T154641_20231022T154706_050879_0621FD_C165"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2023-11-03",
+     "value": 1.391992889115157,
+     "water_outside_permanent_km2": 1.3911072654579304,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20231103T154640_20231103T154705_051054_0627FE_1303"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2023-11-15",
+     "value": 1.3477360665130012,
+     "water_outside_permanent_km2": 1.3468504428557746,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20231115T154640_20231115T154705_051229_062E0B_52D5"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2023-11-27",
+     "value": 1.3641074693546067,
+     "water_outside_permanent_km2": 1.3632218456973801,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20231127T154639_20231127T154704_051404_063414_F758"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2023-12-09",
+     "value": 1.4469242074431767,
+     "water_outside_permanent_km2": 1.4460385837859502,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20231209T154639_20231209T154704_051579_063A22_4FB7"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2023-12-21",
+     "value": 1.44426832395929,
+     "water_outside_permanent_km2": 1.4433827003020634,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20231221T154638_20231221T154703_051754_06403C_963B"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-01-02",
+     "value": 1.3043402479094854,
+     "water_outside_permanent_km2": 1.3034546242522589,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240102T154638_20240102T154703_051929_064638_DC3B"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-01-14",
+     "value": 1.434071351997644,
+     "water_outside_permanent_km2": 1.4331857283404175,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240114T154637_20240114T154702_052104_064C34_E725"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-01-26",
+     "value": 1.3229384347380988,
+     "water_outside_permanent_km2": 1.3220528110808722,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240126T154637_20240126T154702_052279_065210_7FA3"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-02-07",
+     "value": 1.0531787790209008,
+     "water_outside_permanent_km2": 1.0531787790209008,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240207T154636_20240207T154701_052454_065801_409C"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-02-19",
+     "value": 1.4407255876922,
+     "water_outside_permanent_km2": 1.4398399640349735,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240219T154636_20240219T154701_052629_065DEC_ADC2"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-02",
+     "value": 1.4513527044524541,
+     "water_outside_permanent_km2": 1.4504670807952276,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240302T154637_20240302T154702_052804_0663E1_2C1A"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-14",
+     "value": 6.053312113476083,
+     "water_outside_permanent_km2": 6.052426489818856,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240314T154637_20240314T154702_052979_0669D7_4942"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-03-26",
+     "value": 2.374896686423866,
+     "water_outside_permanent_km2": 2.3740110627666393,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240326T154636_20240326T154701_053154_067094_D410"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-07",
+     "value": 13.888702519780898,
+     "water_outside_permanent_km2": 13.887816896123672,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240407T154637_20240407T154702_053329_06774F_05AD"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-04-19",
+     "value": 13.389912571460204,
+     "water_outside_permanent_km2": 13.389026947802977,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240419T154638_20240419T154703_053504_067E41_A2DF"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-01",
+     "value": 11.431057400689099,
+     "water_outside_permanent_km2": 11.430171777031871,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240501T154638_20240501T154703_053679_068517_A5EB"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-13",
+     "value": 3.749258848664407,
+     "water_outside_permanent_km2": 3.7483732250071804,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240513T154638_20240513T154703_053854_068B9E_BB10"
+     ],
+     "flagged": false,
+     "flag": null
+    },
+    {
+     "t": "2024-05-25",
+     "value": 2.0207049653882785,
+     "water_outside_permanent_km2": 2.019819341731052,
+     "coverage_pct": 99.59036174217822,
+     "steep_excluded_km2": 5.698080412859985,
+     "scenes": [
+      "S1A_IW_GRDH_1SDV_20240525T154638_20240525T154703_054029_0691A0_579F"
+     ],
+     "flagged": false,
+     "flag": null
+    }
+   ],
+   "n_points": 24,
+   "n_flagged": 0,
+   "summary": {
+    "kind": "change",
+    "n_valid": 24,
+    "change": {
+     "from": "2023-08-23",
+     "to": "2024-05-25",
+     "from_value": 1.2031974439297544,
+     "to_value": 2.0207049653882785,
+     "delta": 0.8175075214585241,
+     "percent": 67.94458595161812,
+     "percent_text": "67.9%"
+    },
+    "span_years": 0.7550789729771168,
+    "text": "Change between the first and last valid points; seasonal; too short for a trend (the points span 0.8 years; a trend line needs at least 2)."
+   },
+   "window": {
+    "first_day": "2022-08-28",
+    "last_day": "2024-05-25"
+   },
+   "orbit": 57,
+   "passes_in_window": 53,
+   "passes_used": 24,
+   "capped": true
+  }
+ },
+ "rainfall_anomaly": {
+  "status": "assessed",
+  "window_days": 90,
+  "last_day": "2024-05-25",
+  "missing_days": 0,
+  "climatology_years": [
+   1991,
+   2020
+  ],
+  "total_mm": 940.7921343222819,
+  "climatology_mean_mm": 567.2847987945128,
+  "anomaly_percent": 65.84123817903756,
+  "anomaly_text": "+65.8% of the 1991\u20132020 mean",
+  "source": "Funk, C. et al. (2015). The climate hazards infrared precipitation with stations \u2014 a new environmental record for monitoring extremes. Scientific Data 2, 150066. CHIRPS daily v2.0 (Google Earth Engine UCSB-CHG/CHIRPS/DAILY)."
+ },
+ "s1_rule": {
+  "name": "SAR open water (VV < -18 dB)",
+  "threshold_db": -18.0,
+  "speckle_radius_m": 50,
+  "slope_max_deg": 5.0,
+  "coverage_min_pct": 70.0,
+  "max_passes": 24,
+  "permanent_occurrence_pct": 90,
+  "signed_off": "owner, 2026-11-20"
+ },
+ "datasets": [
+  "JRC/GSW1_4/YearlyHistory",
+  "UCSB-CHG/CHIRPS/DAILY",
+  "COPERNICUS/S1_GRD",
+  "JRC/GSW1_4/GlobalSurfaceWater",
+  "USGS/SRTMGL1_003"
+ ]
+}

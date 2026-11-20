@@ -123,6 +123,45 @@ describe("inclusive end dates (backlog §4.7 item 1)", () => {
     expect(submitAnalysisMock.mock.calls[0]![0].parameters.workflow.context).toEqual({ modelled_flood_hazard: true, flood_exposure: false });
   });
 
+  it("Trend analysis: opt-in, options shown when on, default window sent as rainfall days only", async () => {
+    renderBuilder();
+    await screen.findByText("Floodplain");
+    const toggle = screen.getByRole("switch", { name: /^Trend analysis/ });
+    expect(toggle).not.toBeChecked();
+    expect(screen.queryByRole("group", { name: "Trend analysis options" })).toBeNull();
+    const d = dates();
+    setDate(d.targetStart, "2024-05-24"); setDate(d.targetLast, "2024-05-25");
+    setDate(d.baselineStart, "2022-08-28"); setDate(d.baselineLast, "2022-09-02");
+    await waitFor(() => expect(lastPreflight()?.parameters.workflow.source.target_period).toEqual({ start: "2024-05-24", end: "2024-05-26" }));
+    fireEvent.click(toggle);
+    const options = screen.getByRole("group", { name: "Trend analysis options" });
+    expect(within(options).getByRole("combobox", { name: "Rainfall window" })).toHaveValue("90");
+    expect(screen.getByText("Trend analysis · rainfall 90 days · Sentinel-1 baseline start to target end")).toBeInTheDocument(); // run summary
+    selectExtent(); run();
+    await waitFor(() => expect(submitAnalysisMock).toHaveBeenCalledOnce());
+    expect(submitAnalysisMock.mock.calls[0]![0].parameters.workflow.context).toEqual({
+      modelled_flood_hazard: false, flood_exposure: false, trend_analysis: { rainfall_days: 90 } });
+  });
+
+  it("Trend analysis: a chosen Sentinel-1 window is sent with an exclusive end, like the other periods", async () => {
+    renderBuilder();
+    await screen.findByText("Floodplain");
+    const d = dates();
+    setDate(d.targetStart, "2024-05-24"); setDate(d.targetLast, "2024-05-25");
+    setDate(d.baselineStart, "2022-08-28"); setDate(d.baselineLast, "2022-09-02");
+    fireEvent.click(screen.getByRole("switch", { name: /^Trend analysis/ }));
+    const options = screen.getByRole("group", { name: "Trend analysis options" });
+    fireEvent.change(within(options).getByRole("combobox", { name: "Rainfall window" }), { target: { value: "30" } });
+    fireEvent.change(within(options).getByLabelText("Sentinel-1 series from"), { target: { value: "2023-10-01" } });
+    fireEvent.change(within(options).getByLabelText("Sentinel-1 series to (included)"), { target: { value: "2024-06-30" } });
+    expect(screen.getByText("Trend analysis · rainfall 30 days · Sentinel-1 1 Oct 2023 – 30 Jun 2024")).toBeInTheDocument();
+    await waitFor(() => expect(lastPreflight()?.parameters.workflow.source.target_period).toEqual({ start: "2024-05-24", end: "2024-05-26" }));
+    selectExtent(); run();
+    await waitFor(() => expect(submitAnalysisMock).toHaveBeenCalledOnce());
+    expect(submitAnalysisMock.mock.calls[0]![0].parameters.workflow.context.trend_analysis).toEqual({
+      rainfall_days: 30, sar_series: { start: "2023-10-01", end: "2024-07-01" } });
+  });
+
   it("Depth & Exposure: exposure switches the hazard on, and switching the hazard off switches exposure off", async () => {
     renderBuilder();
     await screen.findByText("Floodplain");

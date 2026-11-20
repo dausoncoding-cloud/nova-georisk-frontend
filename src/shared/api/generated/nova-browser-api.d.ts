@@ -279,6 +279,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Plan Catalogue
+         * @description The plan table on "My subscription" (prices are public list prices, not organisation data).
+         */
+        get: operations["get_plan_catalogue_api_v1_billing_plans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billing/summary": {
         parameters: {
             query?: never;
@@ -3153,6 +3173,8 @@ export interface components {
         LedgerEntryResponse: {
             /** Amount */
             amount: number;
+            /** Aoi Name */
+            aoi_name: string | null;
             /** Balance After */
             balance_after: number;
             /** Bucket */
@@ -3171,6 +3193,10 @@ export interface components {
             kind: string;
             /** Period */
             period: string;
+            /** Plan Name */
+            plan_name: string | null;
+            /** Project Name */
+            project_name: string | null;
             /** Reason */
             reason: string | null;
             /** Task Id */
@@ -3467,6 +3493,40 @@ export interface components {
             text: string;
             /** Valid Area Km2 */
             valid_area_km2: number | null;
+        };
+        /** PlanCatalogueResponse */
+        PlanCatalogueResponse: {
+            /** Family */
+            family: string;
+            /** Plans */
+            plans: components["schemas"]["PlanOption"][];
+        };
+        /** PlanLimits */
+        PlanLimits: {
+            /** Monthly Credits */
+            monthly_credits: number | null;
+            /** Seat Limit */
+            seat_limit: number | null;
+            /** Session Limit */
+            session_limit: number | null;
+            /** Storage Bytes */
+            storage_bytes: number | null;
+        };
+        /** PlanOption */
+        PlanOption: {
+            /** Currency */
+            currency: string;
+            /** Family */
+            family: string;
+            /** Is Custom */
+            is_custom: boolean;
+            /** Key */
+            key: string;
+            limits: components["schemas"]["PlanLimits"];
+            /** Monthly Price */
+            monthly_price: number | null;
+            /** Name */
+            name: string;
         };
         /** PrPoint */
         PrPoint: {
@@ -4338,6 +4398,8 @@ export interface components {
             /** Can Submit */
             can_submit: boolean;
             credits: components["schemas"]["CreditSummary"];
+            /** Currency */
+            currency: string;
             /** Ends At */
             ends_at: string | null;
             /** Engines */
@@ -4349,16 +4411,26 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            limits: components["schemas"]["PlanLimits"];
+            /** Monthly Price */
+            monthly_price: number | null;
             /** Plan Key */
             plan_key: string | null;
             /** Plan Name */
             plan_name: string | null;
+            /** Renews On */
+            renews_on: string | null;
+            /** Seats Used */
+            seats_used: number;
             /** Starts At */
             starts_at: string | null;
             /** Status */
             status: string;
             /** Status Label */
             status_label: string;
+            top_up: components["schemas"]["TopUpOffer"] | null;
+            /** Warning Levels */
+            warning_levels: number[];
         };
         /** SusceptibilityRequest */
         SusceptibilityRequest: {
@@ -4470,6 +4542,15 @@ export interface components {
              * Format: date-time
              */
             start: string;
+        };
+        /** TopUpOffer */
+        TopUpOffer: {
+            /** Credits */
+            credits: number;
+            /** Currency */
+            currency: string;
+            /** Price */
+            price: number;
         };
         /** ValidationDashboard */
         ValidationDashboard: {
@@ -5779,6 +5860,82 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LedgerPage"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_plan_catalogue_api_v1_billing_plans_get: {
+        parameters: {
+            query: {
+                family: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanCatalogueResponse"];
                 };
             };
             /** @description Bad request */

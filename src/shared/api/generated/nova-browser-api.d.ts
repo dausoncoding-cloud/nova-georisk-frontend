@@ -1870,8 +1870,33 @@ export interface components {
             /** Shared Relative Orbits */
             shared_relative_orbits?: number[];
             target?: components["schemas"]["AnalysisPreflightPeriod"] | null;
+            trend_sar_passes?: components["schemas"]["AnalysisPreflightTrendPasses"] | null;
             /** Warnings */
             warnings?: components["schemas"]["AnalysisPreflightIssue"][];
+        };
+        /**
+         * AnalysisPreflightTrendPasses
+         * @description Trend Analysis: Sentinel-1 passes in the series window on the shared orbit (informational; never blocking).
+         */
+        AnalysisPreflightTrendPasses: {
+            /** Count */
+            count: number;
+            /**
+             * First Day
+             * Format: date
+             */
+            first_day: string;
+            /**
+             * Last Day
+             * Format: date
+             */
+            last_day: string;
+            /** Orbit */
+            orbit: number;
+            /** Span Years */
+            span_years?: number | null;
+            /** Used */
+            used: number;
         };
         /** AnalysisSubmitRequest */
         AnalysisSubmitRequest: {

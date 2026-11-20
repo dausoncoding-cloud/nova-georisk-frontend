@@ -111,7 +111,9 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
   // No preflight without a product: the API would refuse the request, and the reason is shown here instead.
   const preflightRequest = firris && project.data?.engine_key === firris.key && !noProduct ? buildRequest(products) : null;
   const preflight = useQuery({
-    queryKey: ["analysis-preflight", projectId, selectedAoi?.id, apiForm?.targetStart, apiForm?.targetEnd, apiForm?.baselineStart, apiForm?.baselineEnd, form.maxCloudPct, form.scale],
+    // The Trend analysis switch and its Sentinel-1 window change the pass count, so they re-run the check; the rainfall window does not.
+    queryKey: ["analysis-preflight", projectId, selectedAoi?.id, apiForm?.targetStart, apiForm?.targetEnd, apiForm?.baselineStart, apiForm?.baselineEnd, form.maxCloudPct, form.scale,
+      form.trendAnalysis, apiForm?.trendSarStart, apiForm?.trendSarEnd],
     queryFn: () => preflightAnalysis(preflightRequest!),
     enabled: preflightRequest !== null,
     staleTime: 60_000,

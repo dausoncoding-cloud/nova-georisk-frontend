@@ -42,3 +42,13 @@ describe("Sentinel-2 line in the period step", () => {
     expect(sentinel2Text(base)).toBe("");
   });
 });
+
+describe("Trend analysis pass count (preflight)", () => {
+  it("reads the count, the window, the cap and the span", async () => {
+    const { trendPassesText } = await import("./PreflightPanel");
+    expect(trendPassesText({ orbit: 57, first_day: "2022-08-28", last_day: "2024-05-25", count: 53, used: 24, span_years: 0.76 }))
+      .toBe("53 Sentinel-1 passes on orbit 57 (28 Aug 2022 – 25 May 2024); latest 24 used, spanning 0.8 years");
+    expect(trendPassesText({ orbit: 57, first_day: "2024-05-01", last_day: "2024-05-25", count: 1, used: 1, span_years: null }))
+      .toBe("1 Sentinel-1 pass on orbit 57 (1–25 May 2024)");
+  });
+});

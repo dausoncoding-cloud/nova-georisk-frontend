@@ -1,6 +1,6 @@
 import type { AnalysisPreflightPeriod, AnalysisPreflightResponse } from "./analysisApi";
 import { Icon } from "../../shared/ui/Icon";
-import { addDays, formatDay } from "./periods";
+import { addDays, formatDay, formatPeriod } from "./periods";
 
 export { SENTINEL1_START, todayIso } from "./periods";
 
@@ -54,6 +54,13 @@ type Props = {
   onUseNearestPass: (period: "target" | "baseline", start: string, end: string) => void;
 };
 
+/** "30 Sentinel-1 passes on orbit 57 (28 Aug 2022 – 25 May 2024); latest 24 used, spanning 2.3 years". */
+export function trendPassesText(passes: NonNullable<AnalysisPreflightResponse["trend_sar_passes"]>): string {
+  const used = passes.used < passes.count ? `; latest ${passes.used} used` : "";
+  const span = typeof passes.span_years === "number" ? `, spanning ${passes.span_years.toFixed(1)} years` : "";
+  return `${passes.count} Sentinel-1 pass${passes.count === 1 ? "" : "es"} on orbit ${passes.orbit} (${formatPeriod({ start: passes.first_day, lastDay: passes.last_day })})${used}${span}`;
+}
+
 export function PreflightPanel({ result, isFetching, error, onUseNearestPass }: Props) {
   if (isFetching && !result) return <div className="fr-box fr-box--info" role="status" aria-label="Satellite availability">Checking satellite availability…</div>;
   if (error && !result) return <div className="fr-box fr-box--info" role="status" aria-label="Satellite availability">{error} The server checks availability again when you submit.</div>;
@@ -67,6 +74,7 @@ export function PreflightPanel({ result, isFetching, error, onUseNearestPass }: 
     <dl className="fr-avail__rows">
       <PeriodRow label="Target" period={result.target} />
       <PeriodRow label="Baseline" period={result.baseline} />
+      {result.trend_sar_passes ? <div className="fr-avail__row"><dt>Trend analysis</dt><dd><span>{trendPassesText(result.trend_sar_passes)}</span></dd></div> : null}
       {capacity ? <div className="fr-avail__row"><dt>Download size</dt><dd><span className="fr-num">{downloadSizeText(capacity)}</span><span className="fr-avail__optical">at {capacity.scale_m} m</span></dd></div> : null}
     </dl>
     {blocking.length === 0 ? <p className="fr-box fr-box--success" role="status"><Icon name="check" width={18} height={18} strokeWidth={2.4} />

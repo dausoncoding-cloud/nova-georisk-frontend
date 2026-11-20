@@ -48,7 +48,8 @@ describe("Trends tab", () => {
     show();
     const daily = screen.getByRole("region", { name: "Daily rainfall, 90 days to 25 May 2024" });
     expect(within(daily).getByRole("img").querySelector("[data-testid=trend-line]")).toBeNull();
-    expect(within(daily).getByLabelText("Statistics")).toHaveTextContent("no trend line is fitted to this series");
+    expect(within(daily).getByLabelText("Statistics")).toHaveTextContent(/^n = 90 valid of 90 points; Highest 86\.\d mm\/day \(2024-05-05\)\. No change or trend is computed for rainfall/);
+    expect(within(daily).getByLabelText("Statistics")).not.toHaveTextContent("change 2024");
     const anomaly = screen.getByRole("region", { name: "Rainfall anomaly" });
     expect(anomaly).toHaveTextContent("90 days to 2024-05-25");
     expect(anomaly).toHaveTextContent("940.8");

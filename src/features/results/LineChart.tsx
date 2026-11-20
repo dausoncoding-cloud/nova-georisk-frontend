@@ -21,7 +21,7 @@ function tickLabel(value: number, years: boolean): string {
   if (years) return String(Math.round(value));
   const year = Math.floor(value);
   const ms = Date.UTC(year, 0, 1) + (value - year) * (Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1));
-  const date = new Date(ms);
+  const date = new Date(Math.round(ms / 86_400_000) * 86_400_000); // nearest whole day (no off-by-one from rounding)
   return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${String(date.getUTCFullYear()).slice(2)}`;
 }
 
@@ -53,7 +53,11 @@ export function LineChart({ points, trend, xLabel, yLabel, title, colour = "#007
     return step;
   }).filter(Boolean).join(" ");
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * yMax);
-  const xTicks = Array.from({ length: 6 }, (_, i) => x0 + (i / 5) * (x1 - x0));
+  // Years: ticks on round years (every 5 or 10); dates: six evenly spaced ticks.
+  const step = x1 - x0 > 40 ? 10 : 5;
+  const xTicks = years
+    ? Array.from({ length: Math.floor(x1 / step) - Math.ceil(x0 / step) + 1 }, (_, i) => (Math.ceil(x0 / step) + i) * step)
+    : Array.from({ length: 6 }, (_, i) => x0 + (i / 5) * (x1 - x0));
   const trendEnds = trend && valid.length ? [decimalYear(valid[0]!.t), decimalYear(valid[valid.length - 1]!.t)] : null;
   return (
     <svg className="fr-line-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${title}. ${yLabel} against ${xLabel}.`}>
@@ -62,7 +66,8 @@ export function LineChart({ points, trend, xLabel, yLabel, title, colour = "#007
         <line x1={M.left} x2={W - M.right} y1={sy(tick)} y2={sy(tick)} stroke="#e3e3e3" />
         <text x={M.left - 6} y={sy(tick)} textAnchor="end" dominantBaseline="middle" fontSize="11" fill="#555">{Number(tick.toPrecision(3)).toLocaleString("en-GB")}</text>
       </g>)}
-      {xTicks.map((tick) => <text key={tick} x={sx(tick)} y={H - M.bottom + 16} textAnchor="middle" fontSize="11" fill="#555">{tickLabel(tick, years)}</text>)}
+      {xTicks.map((tick, index) => <text key={tick} x={sx(tick)} y={H - M.bottom + 16} fontSize="11" fill="#555"
+        textAnchor={!years && index === 0 ? "start" : !years && index === xTicks.length - 1 ? "end" : "middle"}>{tickLabel(tick, years)}</text>)}
       <line x1={M.left} x2={W - M.right} y1={H - M.bottom} y2={H - M.bottom} stroke="#888" />
       <line x1={M.left} x2={M.left} y1={M.top} y2={H - M.bottom} stroke="#888" />
       <text x={(M.left + W - M.right) / 2} y={H - 6} textAnchor="middle" fontSize="12" fill="#333">{xLabel}</text>

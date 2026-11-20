@@ -1010,18 +1010,13 @@
    "n_points": 90,
    "n_flagged": 0,
    "summary": {
-    "kind": "change",
+    "kind": "values",
     "n_valid": 90,
-    "change": {
-     "from": "2024-02-26",
-     "to": "2024-05-25",
-     "from_value": 0.0,
-     "to_value": 0.0,
-     "delta": 0.0,
-     "percent": null,
-     "percent_text": "undefined"
+    "max": {
+     "t": "2024-05-05",
+     "value": 86.10015856789177
     },
-    "text": "Change between the first and last valid points; no trend line is fitted to this series."
+    "text": "Highest 86.1 mm/day (2024-05-05). No change or trend is computed for rainfall; the window total is compared with the 1991\u20132020 mean in the rainfall anomaly."
    }
   },
   "rainfall_dekadal": {
@@ -1119,18 +1114,13 @@
    "n_points": 9,
    "n_flagged": 0,
    "summary": {
-    "kind": "change",
+    "kind": "values",
     "n_valid": 9,
-    "change": {
-     "from": "2024-03-06",
-     "to": "2024-05-25",
-     "from_value": 67.90289492328021,
-     "to_value": 23.371393782013605,
-     "delta": -44.53150114126661,
-     "percent": -65.58115260266933,
-     "percent_text": "-65.6%"
+    "max": {
+     "t": "2024-04-25",
+     "value": 200.46275087905258
     },
-    "text": "Change between the first and last valid points; no trend line is fitted to this series."
+    "text": "Highest 200.5 mm per 10 days (2024-04-25). No change or trend is computed for rainfall; the window total is compared with the 1991\u20132020 mean in the rainfall anomaly."
    }
   },
   "sar_open_water": {

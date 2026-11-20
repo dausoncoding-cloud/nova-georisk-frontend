@@ -264,7 +264,7 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
             <fieldset aria-label="Trend analysis options"><legend>Trend analysis</legend>
               <label className="fr-field"><span>Rainfall window</span>
                 <select value={form.trendRainfallDays} onChange={(event) => setForm((current) => ({ ...current, trendRainfallDays: Number(event.target.value) as TrendRainfallDays }))}>
-                  {TREND_RAINFALL_DAYS.map((days) => <option key={days} value={days}>{days} days to the target's last day</option>)}
+                  {TREND_RAINFALL_DAYS.map((days) => <option key={days} value={days}>{days} days</option>)}
                 </select>
               </label>
               <label className="fr-field"><span>Sentinel-1 series from</span>
@@ -275,7 +275,7 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
               </label>
             </fieldset>
           </div> : null}
-          {form.trendAnalysis ? <p className="fr-help">Leave the Sentinel-1 dates empty to use the baseline's first day to the target's last day. The latest 24 passes on the run's orbit are used at most.</p> : null}
+          {form.trendAnalysis ? <p className="fr-help">The rainfall window ends on the target's last day. Leave the Sentinel-1 dates empty to use the baseline's first day to the target's last day. The latest 24 passes on the run's orbit are used at most.</p> : null}
         </Step>
 
         <Step number={5} title="Processing and sampling" id={id("processing")}>

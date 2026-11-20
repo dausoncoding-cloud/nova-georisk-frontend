@@ -103,7 +103,7 @@ describe("inclusive end dates (backlog §4.7 item 1)", () => {
     expect(payload.parameters.workflow.source.target_period).toEqual({ start: "2024-05-24", end: "2024-05-26" });
     expect(payload.parameters.workflow.source.baseline_period).toEqual({ start: "2022-08-28", end: "2022-09-03" });
     expect(payload.gis_metadata.acquisition_date).toBe("2024-05-26"); // unchanged meaning: the API end of the target window
-    expect(screen.getByText("task page")).toBeInTheDocument();
+    expect(await screen.findByText("task page")).toBeInTheDocument(); // the navigation after submit is asynchronous
   });
 
   it("Depth & Exposure: the modelled hazard is opt-in, shown in the run summary and sent as workflow.context", async () => {
@@ -253,10 +253,11 @@ describe("FRRIS analysis builder", () => {
   it("lets the user choose an FRRIS project when opened from FRRIS, and loads that project's areas", async () => {
     renderBuilder("/frris/analyses/new");
     const select = await screen.findByRole("combobox", { name: "Project" });
-    expect([...select.querySelectorAll("option")].map((option) => option.textContent)).toEqual(["Lower Basin", "Upper Basin"]);
-    expect(await screen.findByRole("radio", { name: /Floodplain/ })).toBeChecked();
+    // The projects, the areas and the default selection arrive asynchronously: wait for each state, not just the element.
+    await waitFor(() => expect([...select.querySelectorAll("option")].map((option) => option.textContent)).toEqual(["Lower Basin", "Upper Basin"]));
+    await waitFor(() => expect(screen.getByRole("radio", { name: /Floodplain/ })).toBeChecked());
     fireEvent.change(select, { target: { value: "project-2" } });
-    expect(await screen.findByRole("radio", { name: /Upper reach/ })).toBeChecked();
+    await waitFor(() => expect(screen.getByRole("radio", { name: /Upper reach/ })).toBeChecked());
     expect(screen.getByRole("link", { name: "← Analyses" })).toHaveAttribute("href", "/frris/analyses");
   });
 

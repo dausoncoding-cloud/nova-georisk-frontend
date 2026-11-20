@@ -25,7 +25,7 @@ export function ResultExposureTab({ data, artifacts }: { data: Result; artifacts
   const record = exposureRecord(data);
   if (!record) return null;
   if (record.status !== "assessed") {
-    return <section className="fr-notice" role="status" aria-label="Estimated exposure"><strong>Estimated exposure: not available.</strong> <span>{String(record.reason ?? "")}</span></section>;
+    return <section className="fr-box fr-box--warning" role="status" aria-label="Estimated exposure"><span><strong>Estimated exposure: not available.</strong> {String(record.reason ?? "")}</span></section>;
   }
   const population = asRecord(record.population) ?? {};
   const buildings = asRecord(record.buildings) ?? {};
@@ -39,9 +39,9 @@ export function ResultExposureTab({ data, artifacts }: { data: Result; artifacts
   const cluster = asRecord(record.observed_cluster);
   const byKey = new Map(artifacts.map((item) => [item.key, item]));
   const maps = [["exposed_population_observed_extent_map_png", "the observed flood candidates of this run"], ["exposed_population_rp100_map_png", "the modelled 1-in-100-year zone"]] as const;
-  return <div className="fr-stack">
-    <section className="fr-card" aria-label="Estimated exposure">
-      <div className="fr-section__head"><h3>Estimated exposure</h3><span className="fr-badge">Estimates — not people affected</span></div>
+  return <div className="fr-tab-stack">
+    <section className="fr-card fr-section" aria-label="Estimated exposure">
+      <div className="fr-section__head"><h3>Estimated exposure</h3><span className="fr-pill fr-pill--neutral">Estimates — not people affected</span></div>
       <p>{String(record.wording ?? "")}</p>
       <p><strong>People:</strong> WorldPop R2025A, {year} — {String(yearStatus.text ?? "")}. Area-weighted: the people of each 100 m cell × the share of the cell inside the extent. {String(population.release_caveat ?? "")}</p>
       <p><strong>Buildings:</strong> Google Open Buildings {String(buildings.version ?? "")}, centroid inside the extent, confidence ≥ {Number(buildings.primary_threshold ?? 0.75).toFixed(2)} (≥ {Number(buildings.sensitivity_threshold ?? 0.65).toFixed(2)} in brackets). {String(buildings.threshold_note ?? "")} Exact counts, no sampling. {String(buildings.limitation ?? "")} {buildings.spot_check ? `Spot-check: ${String(buildings.spot_check)}.` : ""}</p>
@@ -56,7 +56,7 @@ export function ResultExposureTab({ data, artifacts }: { data: Result; artifacts
           </tr>)}</tbody>
         </table>
       </div>
-      {observed && caveat ? <p className="fr-notice" aria-label="Observed extent caveat"><strong>Observed flood candidates:</strong> {String(caveat.text ?? "")} {String(caveat.built_up_note ?? "")}{cluster?.text ? ` ${String(cluster.text)}` : ""}</p> : null}
+      {observed && caveat ? <p className="fr-box fr-box--warning" aria-label="Observed extent caveat"><span><strong>Observed flood candidates:</strong> {String(caveat.text ?? "")} {String(caveat.built_up_note ?? "")}{cluster?.text ? ` ${String(cluster.text)}` : ""}</span></p> : null}
       {observed ? <p className="fr-help">{masked ? `Sensitivity only: masking the observed flood candidates with the coarser GloFAS permanent water would give ${km2(masked.area_km2)} km² and ${int(masked.people)} people. ` : ""}Counting every 100 m cell that touches the observed extent would give {int(observed.people_cells_touching)} people; that overstates exposure and is not used.</p> : null}
     </section>
     <section className="fr-figures" aria-label="Exposure maps">
@@ -66,7 +66,7 @@ export function ResultExposureTab({ data, artifacts }: { data: Result; artifacts
         return artifact ? <figure key={key} className="fr-figure"><img src={protectedProductUrl(data.id, artifact.key)} alt={artifact.label} loading="lazy" /><figcaption>Estimated people per ~100 m cell inside {what} (WorldPop {year}, area-weighted).{extra}</figcaption></figure> : null;
       })}
     </section>
-    <section className="fr-card" aria-label="Exposure sources">
+    <section className="fr-card fr-section" aria-label="Exposure sources">
       <h3>Sources and licences</h3>
       <p>{String(population.citation ?? "")}. Licence: {String(population.licence ?? "")}.</p>
       <p>{String(buildings.citation ?? "")}. Licence: {String(buildings.licence ?? "")}.</p>

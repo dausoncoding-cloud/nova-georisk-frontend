@@ -330,6 +330,23 @@ describe("Exposure (Depth & Exposure module)", () => {
     setup(withExposure("not_available"), "exposure");
     expect(await screen.findByRole("status", { name: "Estimated exposure" })).toHaveTextContent("WorldPop has no population grid for this area in 2024.");
   });
+
+  it("r6.2 (backlog 26): hazard and exposure cards are padded sections and notices are styled boxes", async () => {
+    const exposure = setup(withExposure(), "exposure");
+    await screen.findByRole("region", { name: "Estimated exposure" });
+    for (const name of ["Estimated exposure", "Exposure sources"]) {
+      expect(screen.getByRole("region", { name })).toHaveClass("fr-card", "fr-section");
+    }
+    expect(screen.getByLabelText("Observed extent caveat")).toHaveClass("fr-box", "fr-box--warning");
+    expect(document.querySelector(".fr-stack, .fr-notice, .fr-badge")).toBeNull(); // undefined classes are gone
+    exposure.unmount();
+    const hazard = setup(withHazard(), "hazard");
+    expect(await screen.findByRole("region", { name: "Modelled flood hazard" })).toHaveClass("fr-card", "fr-section");
+    expect(screen.getByRole("region", { name: "Probability of at least one occurrence" })).toHaveClass("fr-card", "fr-section");
+    hazard.unmount();
+    setup(withExposure("not_available"), "exposure");
+    expect(await screen.findByRole("status", { name: "Estimated exposure" })).toHaveClass("fr-box", "fr-box--warning");
+  });
 });
 
 describe("Downloads", () => {

@@ -28,7 +28,7 @@ export function ResultHazardTab({ data, artifacts }: { data: Result; artifacts: 
   const byKey = new Map(artifacts.map((item) => [item.key, item]));
   const method = asRecord(record.method);
   const source = (
-    <section className="fr-card" aria-label="Source and licence">
+    <section className="fr-card fr-section" aria-label="Source and licence">
       <h3>Source and licence</h3>
       {record.produced_work_notice ? <p><strong>{String(record.produced_work_notice)}</strong></p> : null}
       <p>{String(record.citation ?? "")}.</p>
@@ -37,8 +37,8 @@ export function ResultHazardTab({ data, artifacts }: { data: Result; artifacts: 
     </section>
   );
   if (record.status !== "assessed") {
-    return <div className="fr-stack">
-      <section className="fr-notice" role="status" aria-label="Modelled flood hazard"><strong>Modelled flood hazard: not available.</strong> <span>{String(record.reason ?? "")}</span></section>
+    return <div className="fr-tab-stack">
+      <section className="fr-box fr-box--warning" role="status" aria-label="Modelled flood hazard"><span><strong>Modelled flood hazard: not available.</strong> {String(record.reason ?? "")}</span></section>
       {source}
     </div>;
   }
@@ -50,9 +50,9 @@ export function ResultHazardTab({ data, artifacts }: { data: Result; artifacts: 
   const hasObserved = periods.some((row) => row.observed_extent);
   const first = asRecord(periods[0]?.including_permanent_water);
   const last = asRecord(periods[periods.length - 1]?.including_permanent_water);
-  return <div className="fr-stack">
-    <section className="fr-card" aria-label="Modelled flood hazard">
-      <div className="fr-section__head"><h3>Modelled flood hazard (GloFAS v2.1)</h3><span className="fr-badge">Context — not an observation</span></div>
+  return <div className="fr-tab-stack">
+    <section className="fr-card fr-section" aria-label="Modelled flood hazard">
+      <div className="fr-section__head"><h3>Modelled flood hazard (GloFAS v2.1)</h3><span className="fr-pill fr-pill--neutral">Context — not an observation</span></div>
       <p>{String(method?.note ?? "")}</p>
       <p className="fr-help">Area {num(area.area_km2)} km², {num(area.covered_pct, 1)}% inside the GloFAS maps. Permanent water ({num(record.permanent_water_km2)} km², {num(record.permanent_water_pct_of_aoi, 1)}% of the area) is not flooding: it is excluded below and delivered as a separate layer. Including it, the wet share would be {num(first?.wet_pct_of_aoi, 1)}% to {num(last?.wet_pct_of_aoi, 1)}%.</p>
       <div className="fr-table-wrap">
@@ -77,7 +77,7 @@ export function ResultHazardTab({ data, artifacts }: { data: Result; artifacts: 
       <Figure resultId={data.id} artifact={byKey.get("figure_modelled_hazard_depth_by_return_period_png")} caption="Modelled flood depth by return period of the river discharge, with the wet share of the area." />
       <Figure resultId={data.id} artifact={byKey.get("figure_modelled_hazard_aep_png")} caption="AEP = 1/T, and the probability of at least one occurrence in n years, 1 − (1 − 1/T)ⁿ." />
     </section>
-    <section className="fr-card" aria-label="Probability of at least one occurrence">
+    <section className="fr-card fr-section" aria-label="Probability of at least one occurrence">
       <div className="fr-table-wrap">
         <table className="fr-table">
           <caption>Probability of at least one occurrence of the T-year river discharge in n years (independent years)</caption>

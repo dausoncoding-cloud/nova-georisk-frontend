@@ -1,0 +1,106 @@
+/* NOVA ARI console (board 14: docs/design/subscriptions/NOVA-ARI_Admin_dashboard.png). Scoped to .ari-*; uses the --fr-* tokens. */
+.ari-shell { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 100vh; background: linear-gradient(to right, var(--fr-brand) 300px, var(--fr-bg) 300px); color: var(--fr-ink); font-family: var(--fr-sans); }
+.ari-shell :is(button, a, input, select, textarea, summary):focus-visible { outline: 2px solid var(--fr-focus); outline-offset: 2px; }
+.ari-shell .visually-hidden { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+
+.ari-sidebar { background: var(--fr-brand); color: #fff; display: flex; flex-direction: column; gap: 28px; padding: 28px 20px; position: sticky; top: 0; height: 100vh; box-sizing: border-box; }
+.ari-brand { align-items: center; display: flex; gap: 12px; padding: 0 10px; }
+.ari-brand__mark { align-items: center; background: #fff; border-radius: 10px; color: var(--fr-brand); display: inline-flex; font-size: 22px; height: 40px; justify-content: center; width: 40px; }
+.ari-brand strong { display: block; font-size: 18px; }
+.ari-brand span span { color: #C9D6E6; display: block; font-size: 14px; }
+.ari-sidebar nav ul { display: grid; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.ari-sidebar nav a { border-radius: 10px; color: #E3EAF3; display: block; font-size: 16px; padding: 12px 16px; text-decoration: none; }
+.ari-sidebar nav a:hover { background: rgba(255, 255, 255, 0.08); }
+.ari-sidebar nav a.active { background: rgba(255, 255, 255, 0.14); color: #fff; font-weight: 700; }
+.ari-sidebar__account { border-top: 1px solid rgba(255, 255, 255, 0.18); display: grid; gap: 4px; margin-top: auto; padding: 18px 10px 0; }
+.ari-sidebar__account span { color: #C9D6E6; font-size: 14px; }
+.ari-sidebar__account .logout-control { justify-self: start; }
+.ari-sidebar__account .button { background: transparent; border: 0; color: #fff; padding: 4px 0; text-decoration: underline; min-height: 0; }
+
+.ari-main { min-width: 0; padding: 40px 48px 56px; }
+.ari-page { display: grid; gap: 24px; max-width: 1480px; }
+.ari-page__header { align-items: flex-start; display: flex; gap: 16px; justify-content: space-between; }
+.ari-page__header h1 { font-size: 34px; letter-spacing: -0.01em; margin: 0 0 6px; }
+.ari-page__header p { color: var(--fr-muted); font-size: 17px; margin: 0; }
+
+.ari-tiles { display: grid; gap: 18px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ari-tile { background: var(--fr-surface); border: 1px solid var(--fr-line); border-radius: 14px; display: grid; gap: 10px; padding: 22px 24px; }
+.ari-tile span { color: var(--fr-muted); font-size: 15px; }
+.ari-tile strong { font-family: var(--fr-mono); font-size: 34px; font-weight: 500; }
+.ari-tile__value--warning { color: var(--fr-warning-text); }
+
+.ari-card { background: var(--fr-surface); border: 1px solid var(--fr-line); border-radius: 14px; overflow: hidden; }
+.ari-card > :not(.table-wrap) { margin-left: 24px; margin-right: 24px; }
+.ari-card__head { align-items: flex-end; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; padding: 22px 0 16px; }
+.ari-card__head--wrap { align-items: baseline; }
+.ari-card__head h2 { font-size: 21px; margin: 0; }
+.ari-filters { display: flex; flex-wrap: wrap; gap: 12px; }
+.ari-filters .field { font-size: 13px; color: var(--fr-muted); min-width: 140px; }
+.ari-filters input[type="search"] { min-width: 240px; }
+
+.ari-table { border-collapse: collapse; width: 100%; }
+.ari-table th { border-bottom: 1px solid var(--fr-line); color: var(--fr-muted); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; padding: 14px 16px; text-align: left; text-transform: uppercase; white-space: nowrap; }
+.ari-table td { border-bottom: 1px solid var(--fr-line-soft); overflow-wrap: normal; padding: 16px; vertical-align: top; word-break: normal; }
+.ari-table td[data-label="Plan"] { min-width: 120px; }
+.ari-table th:first-child, .ari-table td:first-child { padding-left: 24px; }
+.ari-table tr.is-selected td { background: var(--fr-primary-soft); }
+.ari-table tr.is-attention td { background: #FEF8EC; }
+.ari-table tr.is-muted td { color: var(--fr-muted); }
+.ari-table--compact td { padding: 12px 16px; }
+.ari-num { font-family: var(--fr-mono); white-space: nowrap; }
+.ari-sub { color: var(--fr-muted); font-size: 13px; }
+.ari-sub--warning { color: var(--fr-warning-text); }
+.ari-link { background: none; border: 0; color: var(--fr-ink); cursor: pointer; font: inherit; font-weight: 700; padding: 0; text-align: left; }
+.ari-link:hover { color: var(--fr-primary-text); text-decoration: underline; }
+.ari-empty { color: var(--fr-muted); padding: 8px 0 20px; }
+.ari-result--ok { color: var(--fr-success-text); }
+.ari-result--warning { color: var(--fr-warning-text); font-weight: 700; }
+
+.ari-pill { border-radius: 999px; display: inline-block; font-size: 13px; font-weight: 600; padding: 3px 12px; white-space: nowrap; }
+.ari-pill--success { background: var(--fr-success-soft); color: var(--fr-success-text); }
+.ari-pill--danger { background: var(--fr-danger-soft); color: var(--fr-danger-text); }
+.ari-pill--warning { background: var(--fr-warning-soft); color: var(--fr-warning-text); }
+.ari-pill--neutral { background: var(--fr-neutral-soft); color: var(--fr-ink-2); }
+.ari-pill--info { background: var(--fr-primary-soft); color: var(--fr-primary-text); }
+.ari-flags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.ari-panels { align-items: start; display: grid; gap: 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ari-usage { display: grid; gap: 18px 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; padding-bottom: 20px; border-bottom: 1px solid var(--fr-line); }
+.ari-usage dt { color: var(--fr-muted); }
+.ari-usage dd { font-family: var(--fr-mono); font-size: 18px; margin: 4px 0 0; }
+.ari-actions h3 { font-size: 17px; margin: 18px 0 12px; }
+.ari-actions__buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+.ari-actions__buttons .button { min-height: 44px; }
+.ari-actions__buttons .button--quiet { background: var(--fr-surface); border: 1px solid var(--fr-line-strong); color: var(--fr-ink); }
+.ari-actions__buttons .button--danger-quiet { background: var(--fr-surface); border: 1px solid #E3A8A3; color: var(--fr-danger-text); }
+.ari-note { color: var(--fr-muted); font-size: 14px; margin-bottom: 22px; }
+
+.ari-dialog { background: var(--fr-surface); border-radius: 14px; box-shadow: 0 24px 60px rgba(4, 19, 30, 0.3); box-sizing: border-box; color: var(--fr-ink); font-family: var(--fr-sans); max-height: calc(100vh - 32px); max-width: 640px; overflow: auto; padding: 24px 28px; width: calc(100vw - 32px); }
+.ari-dialog h2 { font-size: 22px; margin: 0 0 12px; }
+.ari-dialog form { display: grid; gap: 14px; }
+.ari-dialog .form-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.ari-dialog .button--danger { background: var(--fr-danger-text); color: #fff; }
+.ari-dialog__intro p { color: var(--fr-ink-2); margin-top: 0; }
+.ari-dialog textarea { font: inherit; resize: vertical; width: 100%; }
+.ari-grid { display: grid; gap: 12px 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ari-fieldset { border: 0; display: flex; gap: 18px; margin: 0 0 12px; padding: 0; }
+.ari-fieldset legend { font-weight: 600; margin-bottom: 6px; }
+
+.ari-denied { margin: 64px auto; max-width: 640px; padding: 0 16px; }
+
+@media (max-width: 1100px) {
+  .ari-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ari-panels { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .ari-shell { grid-template-columns: minmax(0, 1fr); }
+  .ari-sidebar { height: auto; position: static; padding: 16px; }
+  .ari-sidebar nav ul { display: flex; flex-wrap: wrap; }
+  .ari-main { padding: 20px 16px 40px; }
+  .ari-page__header { flex-direction: column; }
+  .ari-grid, .ari-usage { grid-template-columns: minmax(0, 1fr); }
+  .ari-table thead { display: none; }
+  .ari-table tr { border-bottom: 1px solid var(--fr-line); display: block; padding: 8px 0; }
+  .ari-table td { border: 0; display: grid; gap: 8px; grid-template-columns: 110px minmax(0, 1fr); padding: 6px 16px; }
+  .ari-table td::before { color: var(--fr-muted); content: attr(data-label); font-size: 13px; }
+}

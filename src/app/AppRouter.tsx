@@ -28,6 +28,12 @@ const SettingsPage = lazy(() => import("../features/settings/SettingsPage").then
 const PortfolioCapabilityPage = lazy(() => import("../features/projects/PortfolioCapabilityPage").then((module) => ({ default: module.PortfolioCapabilityPage })));
 
 const AdministrationPage = lazy(() => import("../features/management/AdministrationPage").then(m => ({ default: m.AdministrationPage })));
+const PlatformAdminLayout = lazy(() => import("../features/platformAdmin/PlatformAdminLayout").then(m => ({ default: m.PlatformAdminLayout })));
+const CustomersPage = lazy(() => import("../features/platformAdmin/CustomersPage").then(m => ({ default: m.CustomersPage })));
+const PaymentsPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.PaymentsPage })));
+const PlansPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.PlansPage })));
+const SecurityAlertsPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.SecurityAlertsPage })));
+const AuditLogPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.AuditLogPage })));
 const ExternalDataPage = lazy(() => import("../features/management/ExternalDataPage").then(m => ({ default: m.ExternalDataPage })));
 
 export function AppRouter() {
@@ -36,6 +42,14 @@ export function AppRouter() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireSession />}>
+          {/* Subscriptions M4: NOVA ARI console; the API allows platform admins only. */}
+          <Route path="nova-ari" element={<PlatformAdminLayout />}>
+            <Route index element={<CustomersPage />} />
+            <Route path="payments" element={<PaymentsPage />} />
+            <Route path="plans" element={<PlansPage />} />
+            <Route path="security-alerts" element={<SecurityAlertsPage />} />
+            <Route path="audit" element={<AuditLogPage />} />
+          </Route>
           <Route element={<OrganizationContextProvider><Outlet /></OrganizationContextProvider>}>
             <Route index element={<SuiteHomePage />} />
             <Route element={<AuthenticatedLayout />}>

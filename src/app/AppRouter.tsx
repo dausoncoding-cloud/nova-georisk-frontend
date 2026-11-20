@@ -34,6 +34,7 @@ const PaymentsPage = lazy(() => import("../features/platformAdmin/ConsolePages")
 const PlansPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.PlansPage })));
 const SecurityAlertsPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.SecurityAlertsPage })));
 const AuditLogPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.AuditLogPage })));
+const SubscriptionPage = lazy(() => import("../features/subscription/SubscriptionPage").then(m => ({ default: m.SubscriptionPage })));
 const ExternalDataPage = lazy(() => import("../features/management/ExternalDataPage").then(m => ({ default: m.ExternalDataPage })));
 
 export function AppRouter() {
@@ -88,6 +89,7 @@ export function AppRouter() {
               <Route path="administration" element={<AdministrationPage />} />
               <Route path="external-data" element={<ExternalDataPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="subscription" element={<SubscriptionPage />} />
             </Route>
           </Route>
         </Route>

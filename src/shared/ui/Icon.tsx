@@ -29,6 +29,7 @@ const paths: Record<string, ReactNode> = {
   close: <path d="m6 6 12 12M18 6 6 18"/>,
   check: <path d="m5 12 4 4L19 6"/>,
   upload: <><path d="M12 16V4m-4 4 4-4 4 4"/><path d="M4 20h16"/></>,
+  card: <><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></>,
   warning: <><path d="M12 3 2 21h20z"/><path d="M12 9v5m0 3h.01"/></>,
 };
 

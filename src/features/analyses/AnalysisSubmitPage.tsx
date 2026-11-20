@@ -18,6 +18,8 @@ import { preflightAnalysis, submitAnalysis, type AnalysisSubmitRequest, type Fir
 import { buildGeeSatelliteWorkflowParameters, defaultSatelliteWorkflowForm, FIXED_RUN_SETTINGS, TREND_RAINFALL_DAYS, type SatelliteWorkflowForm, type TrendRainfallDays } from "./parameters";
 import { periodProblem, SENTINEL1_START, todayIso, toApiEnd, toLastDay, formatPeriod, type InclusivePeriod } from "./periods";
 import { DATE_ISSUES, downloadSizeText, MIB, PreflightPanel } from "./PreflightPanel";
+import { CreditNotice } from "../subscription/SubscriptionNotices";
+import { useCreditStatus } from "../subscription/subscriptionApi";
 
 const PRODUCT_KEYS = new Set<string>(["flood_extent", "flood_depth", "flood_velocity", "flood_hazard", "flood_probability", "flood_duration", "flood_exposure", "flood_vulnerability", "flood_risk", "flood_susceptibility", "flood_hazard_zonation"]);
 const SATELLITE_PRODUCTS = new Set(["flood_extent", "flood_probability"]);
@@ -121,6 +123,7 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
     retry: false,
   });
   const blocked = (preflight.data?.blocking?.length ?? 0) > 0;
+  const credits = useCreditStatus("firris"); // subscriptions M5: the server answers 402 too
   const opticalWarnings = (preflight.data?.warnings ?? []).filter((issue) => issue.code === "no_compliant_sentinel2" || issue.code === "sentinel2_partial_coverage");
   const opticalReason = opticalWarnings.some((issue) => issue.code === "no_compliant_sentinel2") ? "no compliant Sentinel-2 scene" : "Sentinel-2 does not cover the whole area";
   // Backlog §4.7 item 5: name the window(s) concerned.
@@ -327,7 +330,8 @@ export function AnalysisSubmitPage({ embedded = false }: { embedded?: boolean })
             </div>
           ) : null}
           {problems.length ? <div className="fr-box fr-box--danger" role="alert"><ul>{problems.map((problem) => <li key={problem}>{problem}</li>)}</ul></div> : null}
-          <button type="button" className="fr-button fr-button--primary fr-summary__run" disabled={blocked || noProduct || submit.isPending} onClick={run}>{submit.isPending ? "Submitting…" : "Run analysis"}</button>
+          <CreditNotice engine="firris" />
+          <button type="button" className="fr-button fr-button--primary fr-summary__run" disabled={blocked || noProduct || credits.blocked || submit.isPending} onClick={run}>{submit.isPending ? "Submitting…" : "Run analysis"}</button>
           {noProduct ? <span className="fr-summary__hint" role="status" aria-label="Before you run">{NO_PRODUCT_MESSAGE}</span> : null}
           {blocked ? <span className="fr-summary__hint" role="status">{(preflight.data?.blocking ?? []).every((issue) => DATE_ISSUES.has(issue.code)) ? "Resolve the blocked dates above to continue." : "Resolve the blocked items above to continue."}</span> : null}
           {!blocked && opticalWarnings.length ? <span className="fr-summary__hint fr-summary__hint--warning" role="status" aria-label="Before you continue">Independent accuracy not assessable for {opticalWhere} (see the warning above).</span> : null}

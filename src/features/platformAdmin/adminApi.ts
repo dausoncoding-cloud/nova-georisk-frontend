@@ -53,6 +53,11 @@ export const endSessions = async (organization_id: string, body: S["EndSessionsR
   unwrapResponse(await apiClient.POST("/api/v1/platform-admin/customers/{organization_id}/sessions/end", { params: { path: { organization_id } }, body }));
 export const fetchPayments = async (offset: number) =>
   unwrapResponse(await apiClient.GET("/api/v1/platform-admin/payments", { params: { query: { offset, limit: 50 } } }));
+export type CustomerRequest = S["AdminRequest"];
+export const fetchRequests = async () =>
+  unwrapResponse(await apiClient.GET("/api/v1/platform-admin/requests", { params: { query: { state: "open", limit: 50 } } }));
+export const closeRequest = async (request_id: string, body: S["CloseRequest"]) =>
+  unwrapResponse(await apiClient.POST("/api/v1/platform-admin/requests/{request_id}/close", { params: { path: { request_id } }, body }));
 export const fetchPlans = async () => unwrapResponse(await apiClient.GET("/api/v1/platform-admin/plans"));
 export const changePrice = async (plan_key: string, body: S["PriceChangeRequest"]) =>
   unwrapResponse(await apiClient.POST("/api/v1/platform-admin/plans/{plan_key}/prices", { params: { path: { plan_key } }, body }));

@@ -279,6 +279,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Payments
+         * @description Payments NOVA ARI recorded for this organisation (owners and admins only). Admin notes are not shown.
+         */
+        get: operations["get_payments_api_v1_billing_payments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billing/plans": {
         parameters: {
             query?: never;
@@ -1839,6 +1859,15 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Allowance */
+        Allowance: {
+            /** Level */
+            level: number | null;
+            /** Limit */
+            limit: number | null;
+            /** Used */
+            used: number;
+        };
         /** AnalysisDateRange */
         AnalysisDateRange: {
             /**
@@ -2150,6 +2179,10 @@ export interface components {
         BillingSummaryResponse: {
             /** Enforcement Enabled */
             enforcement_enabled: boolean;
+            seats: components["schemas"]["Allowance"];
+            storage: components["schemas"]["Allowance"];
+            /** Storage Blocks At Limit */
+            storage_blocks_at_limit: boolean;
             /** Subscriptions */
             subscriptions: components["schemas"]["SubscriptionSummary"][];
         };
@@ -2464,6 +2497,11 @@ export interface components {
             remaining: number;
             /** Top Ups */
             top_ups: number;
+            /**
+             * Unlimited
+             * @default false
+             */
+            unlimited: boolean;
             /** Used */
             used: number;
             /** Used Percent */
@@ -3494,6 +3532,57 @@ export interface components {
             /** Valid Area Km2 */
             valid_area_km2: number | null;
         };
+        /** PaymentPage */
+        PaymentPage: {
+            /** Items */
+            items: components["schemas"]["PaymentResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** PaymentResponse */
+        PaymentResponse: {
+            /** Amount */
+            amount: number;
+            /** Covers From */
+            covers_from: string | null;
+            /** Covers Until */
+            covers_until: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Credits */
+            credits: number | null;
+            /** Currency */
+            currency: string;
+            /** Family */
+            family: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Method */
+            method: string;
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Purpose */
+            purpose: string;
+            /** Reference */
+            reference: string | null;
+            /** Reversed */
+            reversed: boolean;
+            /** Reverses Payment Id */
+            reverses_payment_id: string | null;
+        };
         /** PlanCatalogueResponse */
         PlanCatalogueResponse: {
             /** Family */
@@ -4411,6 +4500,11 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Is Internal
+             * @default false
+             */
+            is_internal: boolean;
             limits: components["schemas"]["PlanLimits"];
             /** Monthly Price */
             monthly_price: number | null;
@@ -5860,6 +5954,83 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LedgerPage"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_payments_api_v1_billing_payments_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentPage"];
                 };
             };
             /** @description Bad request */

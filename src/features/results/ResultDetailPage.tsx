@@ -14,6 +14,7 @@ import { QuantitativeDelivery } from "./QuantitativeDelivery";
 import { ResultAccuracyTab } from "./ResultAccuracyTab";
 import { ResultDownloadsTab } from "./ResultDownloadsTab";
 import { exposureRecord, ResultExposureTab } from "./ResultExposureTab";
+import { ResultTrendsTab, trendRecord } from "./ResultTrendsTab";
 import { hazardRecord, ResultHazardTab } from "./ResultHazardTab";
 import { ResultOverviewTab } from "./ResultOverviewTab";
 import { ResultProvenanceTab } from "./ResultProvenanceTab";
@@ -29,6 +30,8 @@ const baseTabs = [
 // Depth & Exposure module: the modelled hazard tab appears only on results that carry it.
 const HAZARD_TAB = { key: "hazard", label: "Modelled hazard" } as const;
 const EXPOSURE_TAB = { key: "exposure", label: "Exposure" } as const;
+// Trend Analysis: the Trends tab appears only on results that carry it.
+const TRENDS_TAB = { key: "trends", label: "Trends" } as const;
 // Links from before the refresh (?tab=validation|files|metadata) open the matching section.
 const TAB_ALIASES: Record<string, string> = { validation: "accuracy", files: "downloads", metadata: "provenance" };
 
@@ -37,7 +40,8 @@ export function ResultDetailPage() {
   const [params, setParams] = useSearchParams();
   const requested = params.get("tab") ?? "";
   const result = useQuery({ queryKey: queryKeys.results.detail(resultId), queryFn: () => fetchResult(resultId), enabled: Boolean(resultId) });
-  const extra = result.data ? [...(hazardRecord(result.data) ? [HAZARD_TAB] : []), ...(exposureRecord(result.data) ? [EXPOSURE_TAB] : [])] : [];
+  const extra = result.data ? [...(hazardRecord(result.data) ? [HAZARD_TAB] : []), ...(exposureRecord(result.data) ? [EXPOSURE_TAB] : []),
+    ...(trendRecord(result.data) ? [TRENDS_TAB] : [])] : [];
   const tabs: readonly { key: string; label: string }[] = [baseTabs[0], baseTabs[1], ...extra, ...baseTabs.slice(2)];
   const tab = tabs.find((item) => item.key === (TAB_ALIASES[requested] ?? requested))?.key ?? "overview";
   const aoiId = result.data?.aoi_id ?? "";
@@ -95,6 +99,7 @@ export function ResultDetailPage() {
       {tab === "accuracy" ? <ResultAccuracyTab data={data} artifacts={artifacts} /> : null}
       {tab === "hazard" ? <ResultHazardTab data={data} artifacts={artifacts} /> : null}
       {tab === "exposure" ? <ResultExposureTab data={data} artifacts={artifacts} /> : null}
+      {tab === "trends" ? <ResultTrendsTab data={data} artifacts={artifacts} /> : null}
       {tab === "downloads" ? <ResultDownloadsTab resultId={data.id} artifacts={artifacts} createdAt={data.created_at} /> : null}
       {tab === "provenance" ? <ResultProvenanceTab data={data} /> : null}
       {tab === "maps" ? viewer(false) : null}

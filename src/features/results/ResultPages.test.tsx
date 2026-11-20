@@ -331,6 +331,18 @@ describe("Exposure (Depth & Exposure module)", () => {
     expect(await screen.findByRole("status", { name: "Estimated exposure" })).toHaveTextContent("WorldPop has no population grid for this area in 2024.");
   });
 
+  it("Trend Analysis: the Trends tab appears only on results with a trend record", async () => {
+    const plain = setup(rufiji());
+    await screen.findByRole("tab", { name: "Overview" });
+    expect(screen.queryByRole("tab", { name: "Trends" })).toBeNull();
+    plain.unmount();
+    const data = rufiji();
+    (data.summary as Record<string, unknown>).trend_analysis = { status: "not_available", reason: "No trend series could be read for this run; the flood map is unaffected." };
+    setup(data, "trends");
+    expect(await screen.findByRole("tab", { name: "Trends" })).toHaveAttribute("aria-selected", "true");
+    expect(await screen.findByRole("status", { name: "Trend analysis" })).toHaveTextContent("the flood map is unaffected");
+  });
+
   it("r6.2 (backlog 26): hazard and exposure cards are padded sections and notices are styled boxes", async () => {
     const exposure = setup(withExposure(), "exposure");
     await screen.findByRole("region", { name: "Estimated exposure" });

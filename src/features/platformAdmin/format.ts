@@ -7,11 +7,11 @@ export const STATUS_TONE: Record<string, string> = {
 };
 export const FLAG_LABEL: Record<string, string> = {
   payment_overdue: "Payment overdue", expiring_soon: "Expiring soon", new_device: "New device",
-  credits_low: "Credits low", storage_high: "Storage high", suspended: "Suspended",
+  credits_low: "Credits low", storage_high: "Storage high", suspended: "Suspended", request_open: "Request open",
 };
 export const FLAG_TONE: Record<string, string> = {
   payment_overdue: "danger", expiring_soon: "warning", new_device: "warning", credits_low: "warning",
-  storage_high: "warning", suspended: "neutral",
+  storage_high: "warning", suspended: "neutral", request_open: "info",
 };
 export const RESULT_LABEL: Record<string, string> = {
   active: "Signed in", signed_out: "Signed out", replaced: "Replaced by a newer sign-in",

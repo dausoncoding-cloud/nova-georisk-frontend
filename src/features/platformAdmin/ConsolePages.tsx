@@ -5,8 +5,8 @@ import { Disclosure } from "../../shared/ui/Disclosure";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
 import { Pagination } from "../../shared/ui/Pagination";
-import { acknowledgeAlert, changeLimits, changePrice, fetchAlerts, fetchAudit, fetchPayments, fetchPlans, reversePayment,
-  type AdminPayment, type AdminPlan, type SecurityAlert } from "./adminApi";
+import { acknowledgeAlert, changeLimits, changePrice, closeRequest, fetchAlerts, fetchAudit, fetchPayments, fetchPlans, fetchRequests, reversePayment,
+  type AdminPayment, type AdminPlan, type CustomerRequest, type SecurityAlert } from "./adminApi";
 import { ReasonDialog } from "./ReasonDialog";
 import { FAMILY_LABEL, dateTime, gigabytes, shortDate, tzs } from "./format";
 
@@ -31,6 +31,7 @@ export function PaymentsPage() {
   return (
     <div className="ari-page">
       <PageHeader title="Payments" intro="Payments recorded by NOVA ARI. A payment is never edited; a mistake is reversed with a reason." />
+      <CustomerRequests />
       <section className="ari-card">
         {list.isPending ? <LoadingState label="Loading payments…" /> : list.isError ? <ErrorState title="Payments unavailable" error={list.error} /> : <>
           <div className="table-wrap"><table className="ari-table">
@@ -55,6 +56,45 @@ export function PaymentsPage() {
       </section>
       {reversing ? <ReverseDialog payment={reversing} onClose={() => setReversing(null)} /> : null}
     </div>
+  );
+}
+
+// "Request top-up" / "Request upgrade" from customers' My subscription page.
+function CustomerRequests() {
+  const requests = useQuery({ queryKey: ["platform-admin", "requests"], queryFn: fetchRequests });
+  const [closing, setClosing] = useState<{ request: CustomerRequest; outcome: "done" | "declined" } | null>(null);
+  if (!requests.data?.items.length) return null;
+  return (
+    <section className="ari-card" aria-labelledby="requests-heading">
+      <div className="ari-card__head"><h2 id="requests-heading">Requests from customers</h2>
+        <span className="ari-sub">Record the payment or change the plan first, then mark the request done.</span></div>
+      <div className="table-wrap"><table className="ari-table">
+        <thead><tr><th scope="col">Requested</th><th scope="col">Customer</th><th scope="col">Request</th><th scope="col">By</th><th scope="col"><span className="visually-hidden">Actions</span></th></tr></thead>
+        <tbody>{requests.data.items.map((request) => (
+          <tr key={request.id}>
+            <td data-label="Requested">{dateTime(request.created_at)}</td>
+            <td data-label="Customer">{request.organization_name}<div className="ari-sub">{request.current_plan}</div></td>
+            <td data-label="Request">{request.kind === "top_up" ? `Top-up: ${request.credits} credits` : `Upgrade to ${request.plan_name ?? request.plan_key}`}</td>
+            <td data-label="By">{request.requested_by ?? "—"}</td>
+            <td data-label="Actions"><div className="row-links">
+              <button type="button" className="button button--quiet button--small" onClick={() => setClosing({ request, outcome: "done" })}>Done</button>
+              <button type="button" className="button button--quiet button--small" onClick={() => setClosing({ request, outcome: "declined" })}>Decline</button>
+            </div></td>
+          </tr>
+        ))}</tbody>
+      </table></div>
+      {closing ? <CloseRequestDialog {...closing} onClose={() => setClosing(null)} /> : null}
+    </section>
+  );
+}
+
+function CloseRequestDialog({ request, outcome, onClose }: { request: CustomerRequest; outcome: "done" | "declined"; onClose: () => void }) {
+  const refresh = useRefresh();
+  const mutation = useMutation({ mutationFn: (reason: string) => closeRequest(request.id, { outcome, reason }), onSuccess: () => { refresh(); onClose(); } });
+  return (
+    <ReasonDialog title={`${outcome === "done" ? "Mark done" : "Decline"} · ${request.organization_name}`} confirmLabel={outcome === "done" ? "Mark done" : "Decline request"}
+      tone={outcome === "done" ? "primary" : "danger"} busy={mutation.isPending} error={mutation.error} onClose={onClose} onConfirm={(reason) => mutation.mutate(reason)}
+      intro={<p>The customer sees the request as {outcome === "done" ? "done" : "declined"} on their subscription page.</p>} />
   );
 }
 

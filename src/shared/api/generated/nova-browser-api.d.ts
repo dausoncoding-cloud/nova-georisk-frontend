@@ -2722,6 +2722,8 @@ export interface components {
              * @default false
              */
             modelled_flood_hazard: boolean;
+            /** @description Add Trend Analysis: JRC annual surface water 1984-2021, CHIRPS rainfall and anomaly, and Sentinel-1 SAR open water per pass (VV < -18 dB). Earth Engine source only. */
+            trend_analysis?: components["schemas"]["FIRRISTrendAnalysisConfig"] | null;
         };
         /** FIRRISModelConfig */
         FIRRISModelConfig: {
@@ -2847,6 +2849,21 @@ export interface components {
             source: components["schemas"]["SatelliteSourceConfig"];
             /** Valid Mask */
             valid_mask?: boolean[][] | null;
+        };
+        /**
+         * FIRRISTrendAnalysisConfig
+         * @description Trend Analysis options (docs/FRRIS_TREND_ANALYSIS_PLAN.md). Context next to the flood map; never changes it.
+         */
+        FIRRISTrendAnalysisConfig: {
+            /**
+             * Rainfall Days
+             * @description CHIRPS rainfall window in days, ending on the target's last day (daily, 10-day totals and anomaly).
+             * @default 90
+             * @enum {integer}
+             */
+            rainfall_days: 30 | 60 | 90 | 180;
+            /** @description Sentinel-1 open-water series window (end exclusive, like the target and baseline periods). Default: the baseline start to the target end. At most the latest 24 passes on the run's orbit are used. */
+            sar_series?: components["schemas"]["AnalysisDateRange"] | null;
         };
         /** FiiRequest */
         FiiRequest: {

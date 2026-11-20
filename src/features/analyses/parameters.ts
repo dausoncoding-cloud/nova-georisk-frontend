@@ -50,7 +50,17 @@ export type SatelliteWorkflowForm = {
   modelledFloodHazard: boolean;
   /** Depth & Exposure module: estimated people and buildings inside each extent (needs the modelled hazard). */
   floodExposure: boolean;
+  /** Trend Analysis (opt-in; never changes the flood map): JRC annual surface water, CHIRPS rainfall, Sentinel-1 open water. */
+  trendAnalysis: boolean;
+  /** CHIRPS window in days, ending on the target's last day. */
+  trendRainfallDays: TrendRainfallDays;
+  /** Sentinel-1 series window in API terms (end exclusive); both empty = the default (baseline start to target end). */
+  trendSarStart: string;
+  trendSarEnd: string;
 };
+
+export const TREND_RAINFALL_DAYS = [30, 60, 90, 180] as const;
+export type TrendRainfallDays = (typeof TREND_RAINFALL_DAYS)[number];
 
 export const defaultSatelliteWorkflowForm: SatelliteWorkflowForm = {
   targetStart: "2025-03-01",
@@ -67,6 +77,10 @@ export const defaultSatelliteWorkflowForm: SatelliteWorkflowForm = {
   normalizeProjection: true,
   modelledFloodHazard: false,
   floodExposure: false,
+  trendAnalysis: false,
+  trendRainfallDays: 90,
+  trendSarStart: "",
+  trendSarEnd: "",
 };
 
 // Fixed parts of the FRRIS run (not user-editable). Shown read-only in the builder; sent as-is in the payload.
@@ -121,11 +135,23 @@ export function buildGeeSatelliteWorkflowParameters(form: SatelliteWorkflowForm)
       },
       model: { algorithm: FIXED_RUN_SETTINGS.algorithm, version: FIXED_RUN_SETTINGS.modelVersion, n_estimators: FIXED_RUN_SETTINGS.nEstimators },
       quality: {},
-      // Sent only when chosen, so requests without the option are unchanged.
-      ...(form.modelledFloodHazard
-        ? { context: { modelled_flood_hazard: true, flood_exposure: form.floodExposure } }
-        : {}),
+      // Sent only when chosen, so requests without the options are unchanged.
+      ...(form.modelledFloodHazard || form.trendAnalysis ? { context: buildContext(form) } : {}),
     },
+  };
+}
+
+function buildContext(form: SatelliteWorkflowForm) {
+  return {
+    modelled_flood_hazard: form.modelledFloodHazard,
+    flood_exposure: form.modelledFloodHazard && form.floodExposure,
+    ...(form.trendAnalysis ? {
+      trend_analysis: {
+        rainfall_days: form.trendRainfallDays,
+        // Only a window the user chose is sent; otherwise the server uses the baseline start to the target end.
+        ...(form.trendSarStart && form.trendSarEnd ? { sar_series: { start: form.trendSarStart, end: form.trendSarEnd } } : {}),
+      },
+    } : {}),
   };
 }
 

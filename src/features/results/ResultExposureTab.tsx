@@ -4,6 +4,7 @@ import type { components } from "../../shared/api/generated/nova-browser-api";
 import type { ResultArtifact } from "./gisViewer";
 import { protectedProductUrl } from "./resultsApi";
 import { asRecord } from "./resultView";
+import { ResultAdminExposure } from "./ResultAdminExposure";
 
 type Result = components["schemas"]["ResultResponse"];
 type Row = Record<string, unknown>;
@@ -59,6 +60,7 @@ export function ResultExposureTab({ data, artifacts }: { data: Result; artifacts
       {observed && caveat ? <p className="fr-box fr-box--warning" aria-label="Observed extent caveat"><span><strong>Observed flood candidates:</strong> {String(caveat.text ?? "")} {String(caveat.built_up_note ?? "")}{cluster?.text ? ` ${String(cluster.text)}` : ""}</span></p> : null}
       {observed ? <p className="fr-help">{masked ? `Sensitivity only: masking the observed flood candidates with the coarser GloFAS permanent water would give ${km2(masked.area_km2)} km² and ${int(masked.people)} people. ` : ""}Counting every 100 m cell that touches the observed extent would give {int(observed.people_cells_touching)} people; that overstates exposure and is not used.</p> : null}
     </section>
+    {record.by_admin_unit ? <ResultAdminExposure record={record} resultId={data.id} artifacts={artifacts} /> : null}
     <section className="fr-figures" aria-label="Exposure maps">
       {maps.map(([key, what]) => {
         const artifact = byKey.get(key);

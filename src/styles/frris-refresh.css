@@ -575,3 +575,4 @@ a.fr-switcher__option .fr-switcher__state { color: var(--fr-primary-text); font-
 
 /* Trend Analysis: SVG line charts scale with their card. */
 .fr-line-chart { display: block; width: 100%; max-width: 760px; height: auto; }
+.fr-bar-chart { display: block; width: 100%; max-width: 760px; height: auto; margin: 8px 0 12px; }

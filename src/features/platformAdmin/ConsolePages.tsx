@@ -11,7 +11,7 @@ import { ReasonDialog } from "./ReasonDialog";
 import { FAMILY_LABEL, dateTime, gigabytes, shortDate, tzs } from "./format";
 
 const METHOD: Record<string, string> = { bank_transfer: "Bank transfer", mobile_money: "Mobile money", cash: "Cash", other: "Other" };
-const PURPOSE: Record<string, string> = { plan_period: "Plan period", top_up: "Top-up", reversal: "Reversal" };
+const PURPOSE: Record<string, string> = { plan_period: "Plan period", top_up: "Top-up", reversal: "Reversal", test: "Test payment (no credits)" };
 
 function useRefresh() {
   const cache = useQueryClient();

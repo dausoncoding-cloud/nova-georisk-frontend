@@ -1207,6 +1207,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform-admin/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Integrations */
+        get: operations["list_integrations_api_v1_platform_admin_integrations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform-admin/integrations/{name}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Integration
+         * @description Test connection: audited, at most once per 30 s per integration, result code only.
+         */
+        post: operations["test_integration_api_v1_platform_admin_integrations__name__test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform-admin/mobile-payments": {
         parameters: {
             query?: never;
@@ -4415,6 +4452,48 @@ export interface components {
             indicators: {
                 [key: string]: number[];
             };
+        };
+        /**
+         * IntegrationResponse
+         * @description Read-only. There is no field that could carry a secret or a value.
+         */
+        IntegrationResponse: {
+            /** Configured */
+            configured: boolean;
+            /** Enabled */
+            enabled: boolean | null;
+            /** Label */
+            label: string;
+            /** Last Error At */
+            last_error_at: string | null;
+            /** Last Error Code */
+            last_error_code: string | null;
+            /** Last Success At */
+            last_success_at: string | null;
+            /** Last Test At */
+            last_test_at: string | null;
+            /** Last Test Result */
+            last_test_result: string | null;
+            /** Last Webhook At */
+            last_webhook_at: string | null;
+            /** Last Webhook Event */
+            last_webhook_event: string | null;
+            /** Missing */
+            missing: string[];
+            /**
+             * Name
+             * @enum {string}
+             */
+            name: "abliner" | "gee" | "auth0";
+        };
+        /** IntegrationTestResult */
+        IntegrationTestResult: {
+            /** Name */
+            name: string;
+            /** Ok */
+            ok: boolean;
+            /** Result */
+            result: string;
         };
         /** InvitationView */
         InvitationView: {
@@ -11726,6 +11805,156 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomerCreated"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    list_integrations_api_v1_platform_admin_integrations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationResponse"][];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    test_integration_api_v1_platform_admin_integrations__name__test_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationTestResult"];
                 };
             };
             /** @description Bad request */

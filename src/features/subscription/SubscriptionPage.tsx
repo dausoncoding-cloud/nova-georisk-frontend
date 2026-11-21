@@ -7,6 +7,7 @@ import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
 import { useOrganizationContext } from "../organization/OrganizationContext";
 import { MobileMoneyPay } from "./MobileMoney";
+import { StorageCard } from "./Storage";
 import { SubscriptionBanner } from "./SubscriptionNotices";
 import {
   FAMILY_NAME, SYSTEM_NAME, fetchDevices, fetchLedger, fetchLogins, fetchPayments, fetchPlans, fetchRequests,
@@ -28,6 +29,9 @@ function activity(entry: LedgerEntry): string {
   if (entry.kind === "top_up") return `${entry.label} · ${entry.amount} credits`;
   return entry.label;
 }
+
+// Q9 (decided 2026-11-21): the same notice is on the sign-in page.
+export const PRIVACY_NOTICE = "For security we record sign-ins (device, approximate location and IP address). IP addresses are deleted after 30 days.";
 
 export function SubscriptionPage() {
   const summary = useBillingSummary();
@@ -68,20 +72,34 @@ export function SubscriptionPage() {
       <CreditActivity family={subscription.family} />
       <div className="sub-grid">
         <TopUpCard subscription={subscription} canManage={canManage} />
-        <SessionsCard subscription={subscription} />
+        <StorageCard subscription={subscription} canManage={canManage} />
       </div>
+      <SessionsCard subscription={subscription} />
       <PlansTable subscription={subscription} canManage={canManage} />
       <LoginHistory />
       {canManage ? <Payments /> : null}
+      <Seller seller={summary.data.seller} />
     </div>
+  );
+}
+
+function Seller({ seller }: { seller?: { legal_name: string; tin?: string | null; address?: string | null; vat_mode: string; vat_rate_percent: number } | null }) {
+  if (!seller) return null;
+  const vat = seller.vat_mode === "none" ? "VAT is not charged." : seller.vat_mode === "inclusive"
+    ? `Prices include VAT at ${seller.vat_rate_percent}%.` : `VAT at ${seller.vat_rate_percent}% is added to the prices shown.`;
+  return (
+    <footer className="sub-seller sub-muted sub-small">
+      Sold by {seller.legal_name}{seller.tin ? ` · TIN ${seller.tin}` : ""}{seller.address ? ` · ${seller.address}` : ""}. {vat} Receipts are payment receipts, not TRA fiscal receipts.
+    </footer>
   );
 }
 
 function PlanCard({ subscription, seatsUsed, storage, canManage }: { subscription: Subscription; seatsUsed: number; storage: { used: number; limit?: number | null }; canManage: boolean }) {
   const devices = useQuery({ queryKey: subscriptionKeys.devices, queryFn: fetchDevices });
   const status = subscription.status;
+  const ended = status === "expired" || status === "canceled";
   return (
-    <section className="sub-card" aria-labelledby="plan-heading">
+    <section className="sub-card" id="renew" aria-labelledby="plan-heading">
       <div className="sub-card__top">
         <span className="sub-eyebrow">Current plan</span>
         <span className={`sub-pill sub-pill--${status === "active" ? "success" : status === "suspended" ? "neutral" : "danger"}`}><span aria-hidden="true">●</span> {STATUS[status] ?? status}</span>
@@ -94,7 +112,11 @@ function PlanCard({ subscription, seatsUsed, storage, canManage }: { subscriptio
         <div><dt>Storage</dt><dd>{gb(storage.used)}{storage.limit != null ? ` of ${gb(storage.limit)}` : ""}</dd></div>
         <div><dt>{subscription.ends_at && subscription.renews_on === subscription.ends_at ? "Ends on" : "Renews on"}</dt><dd>{day(subscription.renews_on ?? subscription.ends_at)}</dd></div>
       </dl>
+      {ended ? <p className="inline-alert" role="alert">
+        New analyses are stopped. {subscription.access_ends_at ? `You can view and download your results until ${time(subscription.access_ends_at)}; then access closes until the plan is renewed.` : "You can still view and download your results."} Renew the plan to continue.
+      </p> : null}
       <MobileMoneyPay subscription={subscription} purpose="renewal" canManage={canManage} />
+      {ended && !canManage ? <p className="sub-muted sub-small">Ask your organisation's owner or admin to renew the plan.</p> : null}
     </section>
   );
 }
@@ -163,7 +185,9 @@ function TopUpCard({ subscription, canManage }: { subscription: Subscription; ca
     <section className="sub-card" id="top-up" aria-labelledby="topup-heading">
       <h2 id="topup-heading">Buy additional credits</h2>
       <p className="sub-muted">Add credits without changing your plan. They are added to this period's balance once payment is confirmed, and they do not expire at month end.</p>
-      {offer && !subscription.is_internal ? <>
+      {offer && !subscription.is_internal && (subscription.status === "expired" || subscription.status === "canceled") ? (
+        <p className="sub-muted">Renew your plan first: top-up credits can only be used with an active plan. <a href="#renew">Renew plan</a></p>
+      ) : offer && !subscription.is_internal ? <>
         <div className="sub-offer">
           <div><strong>{offer.credits} credits</strong><span className="sub-mono">{offer.currency} {money(offer.price)}</span></div>
           {canManage
@@ -208,6 +232,7 @@ function SessionsCard({ subscription }: { subscription: Subscription }) {
         </ul>
       )}
       {devices.data?.location_attribution ? <p className="sub-muted sub-small">Locations are approximate. {devices.data.location_attribution}.</p> : null}
+      <p className="sub-muted sub-small sub-privacy">{PRIVACY_NOTICE}</p>
       {signOut.isError ? <p className="inline-alert" role="alert">{getErrorMessage(signOut.error)}</p> : null}
     </section>
   );
@@ -275,13 +300,15 @@ function Payments() {
     <section className="sub-card sub-card--table" aria-labelledby="payments-heading">
       <div className="sub-card__head"><h2 id="payments-heading">Payments</h2><span className="sub-muted">Recorded by NOVA ARI</span></div>
       <div className="table-wrap"><table className="sub-table">
-        <thead><tr><th scope="col">Paid on</th><th scope="col">For</th><th scope="col" className="sub-num">Amount</th><th scope="col">Reference</th></tr></thead>
+        <thead><tr><th scope="col">Paid on</th><th scope="col">For</th><th scope="col" className="sub-num">Amount</th><th scope="col">Reference</th><th scope="col">Receipt</th></tr></thead>
         <tbody>{payments.data.items.map((payment) => (
           <tr key={payment.id}>
             <td data-label="Paid on">{day(payment.paid_on)}</td>
             <td data-label="For">{payment.purpose === "plan_period" ? `Plan · ${day(payment.covers_from)} to ${day(payment.covers_until)}` : payment.purpose === "top_up" ? `Top-up · ${payment.credits} credits` : payment.purpose === "test" ? "Test payment (no credits)" : "Reversal"}{payment.reversed ? " (reversed)" : ""}</td>
             <td data-label="Amount" className="sub-num">{payment.currency} {payment.amount.toLocaleString("en-GB")}</td>
             <td data-label="Reference">{payment.reference ?? "—"}</td>
+            <td data-label="Receipt">{payment.receipt_number
+              ? <a href={`/api/v1/billing/payments/${payment.id}/receipt`} download>{payment.receipt_number} (PDF)</a> : "—"}</td>
           </tr>
         ))}</tbody>
       </table></div>

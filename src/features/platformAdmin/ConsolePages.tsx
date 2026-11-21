@@ -44,7 +44,8 @@ export function PaymentsPage() {
                 <td data-label="For">{PURPOSE[payment.purpose] ?? payment.purpose}
                   <div className="ari-sub">{payment.purpose === "plan_period" ? `${shortDate(payment.covers_from)} – ${shortDate(payment.covers_until)}` : payment.credits ? `${payment.credits} credits` : ""}{payment.reversed ? " · reversed" : ""}</div></td>
                 <td data-label="Amount" className="ari-num">{tzs(payment.amount)}{payment.expected_amount != null && payment.expected_amount !== payment.amount ? <div className="ari-sub">List price {tzs(payment.expected_amount)}</div> : null}</td>
-                <td data-label="Method">{METHOD[payment.method] ?? payment.method}<div className="ari-sub">{payment.reference}</div></td>
+                <td data-label="Method">{METHOD[payment.method] ?? payment.method}<div className="ari-sub">{payment.reference}</div>
+                  {payment.receipt_number ? <div className="ari-sub"><a href={`/api/v1/platform-admin/payments/${payment.id}/receipt`} download>Receipt {payment.receipt_number}</a></div> : null}</td>
                 <td data-label="Recorded by">{payment.recorded_by ?? "—"}{payment.note ? <Disclosure title="Note">{payment.note}</Disclosure> : null}</td>
                 <td data-label="Actions">{payment.purpose !== "reversal" && !payment.reversed
                   ? <button type="button" className="button button--quiet button--small" onClick={() => setReversing(payment)}>Reverse</button> : null}</td>
@@ -118,7 +119,7 @@ function CustomerRequests() {
           <tr key={request.id}>
             <td data-label="Requested">{dateTime(request.created_at)}</td>
             <td data-label="Customer">{request.organization_name}<div className="ari-sub">{request.current_plan}</div></td>
-            <td data-label="Request">{request.kind === "top_up" ? `Top-up: ${request.credits} credits` : `Upgrade to ${request.plan_name ?? request.plan_key}`}</td>
+            <td data-label="Request">{request.kind === "top_up" ? `Top-up: ${request.credits} credits` : request.kind === "storage" ? `Extra storage: ${request.storage_gb} GB` : `Upgrade to ${request.plan_name ?? request.plan_key}`}</td>
             <td data-label="By">{request.requested_by ?? "—"}</td>
             <td data-label="Actions"><div className="row-links">
               <button type="button" className="button button--quiet button--small" onClick={() => setClosing({ request, outcome: "done" })}>Done</button>

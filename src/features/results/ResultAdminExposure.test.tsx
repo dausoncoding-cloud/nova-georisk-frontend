@@ -22,10 +22,10 @@ const record = {
     levels: [
       { level: "L1", level_name: "Region", status: "assessed", provenance: prov, rows: [{ unit_id: "region:Pwani", name: "Pwani", parent: null, share_of_unit_in_aoi: 0.01,
         extents: { observed_extent: cell(observedPeople, observedBuildings), whole_area: cell(1, 1), rp100: cell(1, null) } }],
-        check: { ok: true, extents: { observed_extent: { people_total: observedPeople, buildings_total: observedBuildings, buildings_ok: true } } } },
+        check: { ok: true, extents: { observed_extent: { people_total: observedPeople, buildings_total: observedBuildings, buildings_065_total: observedBuildings + 17, buildings_ok: true } } } },
       { level: "L2", level_name: "District", status: "assessed", provenance: prov, rows: [...districts, outside],
         buildings_note: "Buildings are counted per unit for the observed extent and the 1-in-100-year zone only.",
-        check: { ok: true, extents: { observed_extent: { people_total: observedPeople, buildings_total: observedBuildings, buildings_ok: true } } } },
+        check: { ok: true, extents: { observed_extent: { people_total: observedPeople, buildings_total: observedBuildings, buildings_065_total: observedBuildings + 17, buildings_ok: true } } } },
       { level: "L3", level_name: "Ward", status: "not_provided", reason: "Ward boundaries not yet provided" },
     ],
   },
@@ -51,7 +51,7 @@ describe("exposure by administrative unit", () => {
     expect(within(table).getAllByRole("row")).toHaveLength(1 + 17 + 1 + 1);
     expect(within(table).getByRole("rowheader", { name: "District 16" }).closest("tr")).toHaveTextContent("Pwani25.0%26026 (27)");
     expect(within(table).getByRole("rowheader", { name: "District 00" }).closest("tr")).toHaveTextContent("100%");
-    expect(within(table).getByRole("rowheader", { name: "Total (the area totals)" }).closest("tr")).toHaveTextContent(`${observedPeople.toLocaleString("en-GB")}${observedBuildings}`);
+    expect(within(table).getByRole("rowheader", { name: "Total (the area totals)" }).closest("tr")).toHaveTextContent(`${observedPeople.toLocaleString("en-GB")}${observedBuildings} (${observedBuildings + 17})`);
     expect(observedPeople).toBe(3061);
     expect(screen.getByText(`Units add up to the area total: ${observedPeople.toLocaleString("en-GB")} people, ${observedBuildings} buildings.`, { exact: false })).toHaveTextContent("TZA-ADM2-72390352");
     expect(screen.getByText(/counted per unit for the observed extent/)).toBeInTheDocument();
@@ -68,7 +68,7 @@ describe("exposure by administrative unit", () => {
     fireEvent.click(screen.getByRole("button", { name: "Regions" }));
     expect(within(screen.getByRole("table")).getAllByRole("columnheader", { name: "Region" })).toHaveLength(1);  // the level column only
     fireEvent.click(screen.getByRole("button", { name: "Wards" }));
-    expect(screen.getByRole("status")).toHaveTextContent("Wards: Ward boundaries not yet provided");
+    expect(screen.getByRole("status")).toHaveTextContent("Wards: Ward boundaries not yet provided.");
     expect(screen.queryByRole("table")).toBeNull();
     expect(screen.queryByRole("link")).toBeNull();
   });

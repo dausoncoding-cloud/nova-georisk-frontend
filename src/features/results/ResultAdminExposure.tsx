@@ -24,7 +24,9 @@ const share = (value: number | null) => {
   const pct = value * 100;
   return pct >= 99.95 ? "100%" : pct > 0 && pct < 0.1 ? "< 0.1%" : `${pct.toFixed(1)}%`;
 };
-const buildingsText = (cell: Cell) => (cell.buildings === null ? "not counted" : `${int(cell.buildings)} (${int(cell.buildings065)})`);
+const sentence = (text: string) => (/[.!?]$/.test(text) ? text : `${text}.`);
+const buildingsText = (cell: Cell) => (cell.buildings === null ? "not counted"
+  : cell.buildings065 === null ? int(cell.buildings) : `${int(cell.buildings)} (${int(cell.buildings065)})`);
 
 function cellOf(row: Row, extent: string): Cell {
   const values = asRecord(asRecord(row.extents)?.[extent]) ?? {};
@@ -59,7 +61,7 @@ export function chartBars(lines: readonly UnitLine[], top = TOP_UNITS): UnitLine
 
 function BarChart({ bars, title }: { bars: readonly UnitLine[]; title: string }) {
   const max = Math.max(1, ...bars.map((bar) => bar.cell.people ?? 0));
-  const W = 640, LABEL = 170, VALUE = 150, ROW = 24, TOP = 6;
+  const W = 640, LABEL = 150, VALUE = 230, ROW = 24, TOP = 6;  // VALUE leaves room for "12,345 people · 1,234 buildings"
   const H = TOP * 2 + bars.length * ROW;
   const width = W - LABEL - VALUE;
   return <svg className="fr-bar-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={title}>
@@ -128,7 +130,7 @@ export function ResultAdminExposure({ record, resultId, artifacts }: { record: R
     </div>
     <p className="fr-help">Each unit is clipped to the analysis area; a unit only partly inside is never reported as if whole, and its share inside the area is shown. Units add up to the area totals (buildings exactly, people within 0.5 person or 0.01%). Estimates, not people affected.</p>
     {!level ? <p className="fr-help">No administrative level was assessed for this run.</p>
-      : level.status !== "assessed" ? <p className="fr-box fr-box--warning" role="status"><span><strong>{PLURAL[levelName] ?? levelName}:</strong> {String(level.reason ?? "not available")}</span></p>
+      : level.status !== "assessed" ? <p className="fr-box fr-box--warning" role="status"><span><strong>{PLURAL[levelName] ?? levelName}:</strong> {sentence(String(level.reason ?? "not available"))}</span></p>
         : <>
           <label className="field"><span>Extent</span>
             <select value={extent} onChange={(event) => setExtent(event.target.value)}>
@@ -139,13 +141,13 @@ export function ResultAdminExposure({ record, resultId, artifacts }: { record: R
           <div className="fr-table-wrap">
             <table className="fr-table">
               <caption>Estimated exposure by {levelName.toLowerCase()}: {extentLabel} (WorldPop R2025A, area-weighted; Open Buildings v3, centroid inside)</caption>
-              <thead><tr><th scope="col">{levelName}</th>{levelCode !== "L1" ? <th scope="col">Region</th> : null}<th scope="col">Share of the unit inside the area</th><th scope="col">People (estimate)</th><th scope="col">Buildings ≥ 0.75 (≥ 0.65)</th></tr></thead>
+              <thead><tr><th scope="col">{levelName}</th>{levelCode !== "L1" ? <th scope="col">Region</th> : null}<th scope="col">Share inside the area</th><th scope="col">People (estimate)</th><th scope="col">Buildings ≥ 0.75 (≥ 0.65)</th></tr></thead>
               <tbody>
                 {lines.map((line) => <tr key={line.name}>
                   <th scope="row">{line.name}</th>{levelCode !== "L1" ? <td>{line.parent ?? "—"}</td> : null}<td className="fr-num">{share(line.share)}</td>
                   <td className="fr-num">{int(line.cell.people)}</td><td className="fr-num">{buildingsText(line.cell)}</td>
                 </tr>)}
-                <tr><th scope="row">Total (the area totals)</th>{levelCode !== "L1" ? <td /> : null}<td /><td className="fr-num">{int(num(total?.people_total))}</td><td className="fr-num">{int(num(total?.buildings_total))}</td></tr>
+                <tr><th scope="row">Total (the area totals)</th>{levelCode !== "L1" ? <td /> : null}<td /><td className="fr-num">{int(num(total?.people_total))}</td><td className="fr-num">{num(total?.buildings_total) === null ? "—" : buildingsText({ people: null, buildings: num(total?.buildings_total), buildings065: num(total?.buildings_065_total) })}</td></tr>
               </tbody>
             </table>
           </div>

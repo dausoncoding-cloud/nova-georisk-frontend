@@ -141,7 +141,7 @@ export function ResultAdminExposure({ record, resultId, artifacts }: { record: R
           <div className="fr-table-wrap">
             <table className="fr-table">
               <caption>Estimated exposure by {levelName.toLowerCase()}: {extentLabel} (WorldPop R2025A, area-weighted; Open Buildings v3, centroid inside)</caption>
-              <thead><tr><th scope="col">{levelName}</th>{levelCode !== "L1" ? <th scope="col">Region</th> : null}<th scope="col">Share inside the area</th><th scope="col">People (estimate)</th><th scope="col">Buildings ≥ 0.75 (≥ 0.65)</th></tr></thead>
+              <thead><tr><th scope="col">{levelName}</th>{levelCode !== "L1" ? <th scope="col" className="fr-nowrap">Region</th> : null}<th scope="col">Share inside the area</th><th scope="col">People (estimate)</th><th scope="col">Buildings ≥ 0.75 (≥ 0.65)</th></tr></thead>
               <tbody>
                 {lines.map((line) => <tr key={line.name}>
                   <th scope="row">{line.name}</th>{levelCode !== "L1" ? <td>{line.parent ?? "—"}</td> : null}<td className="fr-num">{share(line.share)}</td>

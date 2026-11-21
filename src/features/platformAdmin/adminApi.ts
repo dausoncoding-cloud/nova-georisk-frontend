@@ -27,8 +27,9 @@ export const fetchCustomers = async (query: CustomerFilters) =>
   }));
 export const fetchCustomer = async (organization_id: string) =>
   unwrapResponse(await apiClient.GET("/api/v1/platform-admin/customers/{organization_id}", { params: { path: { organization_id } } }));
+// A POST: viewing another organisation's sign-ins is an audited action (security review L4).
 export const fetchLoginHistory = async (organization_id: string) =>
-  unwrapResponse(await apiClient.GET("/api/v1/platform-admin/customers/{organization_id}/login-history", {
+  unwrapResponse(await apiClient.POST("/api/v1/platform-admin/customers/{organization_id}/login-history", {
     params: { path: { organization_id }, query: { limit: 10 } },
   }));
 export const addCustomer = async (body: AddCustomerBody) =>

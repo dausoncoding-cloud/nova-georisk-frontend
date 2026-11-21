@@ -1097,10 +1097,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Customer Login History */
-        get: operations["customer_login_history_api_v1_platform_admin_customers__organization_id__login_history_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Customer Login History
+         * @description Cross-organisation login history, IP addresses included, is an audited view. It is a POST (security
+         *     review L4) so the audit row can only come from an explicit request carrying the BFF's CSRF token, never from
+         *     a cross-site link that a browser follows with the session cookie.
+         */
+        post: operations["customer_login_history_api_v1_platform_admin_customers__organization_id__login_history_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2307,10 +2312,7 @@ export interface components {
             family: "frris_wrris" | "megis";
             /** Name */
             name: string;
-            /** Overrides */
-            overrides?: {
-                [key: string]: number | boolean | null;
-            } | null;
+            overrides?: components["schemas"]["Overrides"] | null;
             /** Owner Email */
             owner_email?: string | null;
             /** Owner Issuer */
@@ -2337,10 +2339,7 @@ export interface components {
              * @enum {string}
              */
             family: "frris_wrris" | "megis";
-            /** Overrides */
-            overrides?: {
-                [key: string]: number | boolean | null;
-            } | null;
+            overrides?: components["schemas"]["Overrides"] | null;
             /** Plan Key */
             plan_key: string;
             /** Reason */
@@ -4607,6 +4606,23 @@ export interface components {
             /** Slug */
             slug: string;
         };
+        /**
+         * Overrides
+         * @description Per-contract values (security review L2): typed per field, bounded, no booleans for numbers. Only the
+         *     fields sent are changed; send null to clear one (the plan's value applies again).
+         */
+        Overrides: {
+            /** Monthly Credits Override */
+            monthly_credits_override?: number | null;
+            /** Refund On Data Failure Override */
+            refund_on_data_failure_override?: boolean | null;
+            /** Seat Limit Override */
+            seat_limit_override?: number | null;
+            /** Session Limit Override */
+            session_limit_override?: number | null;
+            /** Storage Bytes Override */
+            storage_bytes_override?: number | null;
+        };
         /** OverviewHeadline */
         OverviewHeadline: {
             /** Baseline Period */
@@ -4709,10 +4725,7 @@ export interface components {
         };
         /** PlanChangeRequest */
         PlanChangeRequest: {
-            /** Overrides */
-            overrides?: {
-                [key: string]: number | boolean | null;
-            } | null;
+            overrides?: components["schemas"]["Overrides"] | null;
             /** Plan Key */
             plan_key?: string | null;
             /** Reason */
@@ -10909,7 +10922,7 @@ export interface operations {
             };
         };
     };
-    customer_login_history_api_v1_platform_admin_customers__organization_id__login_history_get: {
+    customer_login_history_api_v1_platform_admin_customers__organization_id__login_history_post: {
         parameters: {
             query?: {
                 limit?: number;

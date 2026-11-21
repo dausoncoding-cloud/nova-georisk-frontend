@@ -105,6 +105,8 @@ describe("NOVA ARI console", () => {
     const usage = await screen.findByText("Analyses run");
     expect(usage.closest("dl")).toHaveTextContent(/Analyses run7.*Credits remaining3.*Data processed2\.40 GB.*Downloads5.*API requests1,830.*Registered devices2/);
     expect(await screen.findByText("Ended earlier session")).toBeInTheDocument();
+    // Audited view: fetched with POST, so it carries the CSRF token (security review L4).
+    expect(calls.filter((call) => call.path.endsWith("/login-history")).map((call) => call.method)).toEqual(["POST"]);
     expect(screen.getByText(/IP geolocation by DB-IP/)).toBeInTheDocument();
     expect(screen.getByText("Every admin action is written to the audit log with the admin's name and a reason.")).toBeInTheDocument();
   });

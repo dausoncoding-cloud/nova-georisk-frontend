@@ -32,9 +32,11 @@ export function CustomersPage() {
   });
   const items = customers.data?.items ?? [];
   useEffect(() => {
-    if (!items.length) return;
-    if (!selected || !items.some((row) => rowKey(row) === rowKey(selected))) setSelected(items[0]);
-    else setSelected(items.find((row) => rowKey(row) === rowKey(selected)) ?? items[0]);
+    const first = items[0];
+    if (!first) return;
+    // Keep the selected customer (with its refreshed row) when it is still listed; otherwise select the first row.
+    const current = selected ? items.find((row) => rowKey(row) === rowKey(selected)) : undefined;
+    setSelected(current ?? first);
   }, [customers.data]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = (name: keyof typeof filters) => (event: { target: { value: string } }) => {
     setFilters((current) => ({ ...current, [name]: event.target.value }));

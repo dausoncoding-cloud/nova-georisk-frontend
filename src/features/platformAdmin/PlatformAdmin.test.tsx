@@ -81,6 +81,12 @@ function renderConsole() {
 }
 
 const posts = (suffix: string) => calls.filter((call) => call.method === "POST" && call.path.endsWith(suffix));
+/** The n-th call of a list the test has already checked the length of; fails the test clearly if it is missing. */
+function nth<T>(items: T[], index: number): T {
+  const item = items[index];
+  if (item === undefined) throw new Error(`expected at least ${index + 1} call(s), got ${items.length}`);
+  return item;
+}
 
 describe("NOVA ARI console", () => {
   it("is closed to anyone who is not a platform admin, and asks for nothing else", async () => {
@@ -120,7 +126,7 @@ describe("NOVA ARI console", () => {
     fireEvent.change(within(dialog).getByLabelText(/Reason/), { target: { value: "Unpaid invoice 14" } });
     fireEvent.click(confirm);
     await waitFor(() => expect(posts("/status")).toHaveLength(1));
-    expect(posts("/status")[0].body).toEqual({ status: "suspended", reason: "Unpaid invoice 14", change_ends_at: false });
+    expect(nth(posts("/status"), 0).body).toEqual({ status: "suspended", reason: "Unpaid invoice 14", change_ends_at: false });
   });
 
   it("records a payment with one Idempotency-Key, reused only after a server error", async () => {
@@ -135,7 +141,9 @@ describe("NOVA ARI console", () => {
     expect(await within(dialog).findByRole("alert")).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
     await waitFor(() => expect(posts("/payments")).toHaveLength(2));
-    const [first, second] = posts("/payments");
+    const payments = posts("/payments");
+    const first = nth(payments, 0);
+    const second = nth(payments, 1);
     expect(first.headers.get("Idempotency-Key")).toMatch(/^nova-/);
     expect(second.headers.get("Idempotency-Key")).toBe(first.headers.get("Idempotency-Key"));
     expect(first.body).toMatchObject({ purpose: "top_up", amount: 100000, credits: 10, method: "bank_transfer", note: "Top-up pack, M-Pesa" });

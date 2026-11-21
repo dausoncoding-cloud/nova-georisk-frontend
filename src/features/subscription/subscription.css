@@ -91,3 +91,18 @@
 .sub-mobile-status { border: 1px solid var(--fr-line); border-radius: 12px; display: grid; gap: 4px; padding: 12px 16px; }
 .sub-mobile-status.sub-pending { background: var(--fr-primary-soft); color: var(--fr-primary-text); }
 .sub-mobile-status.sub-ok { background: var(--fr-success-soft); }
+
+/* Q5 storage card, Q6 seller line, Q9 privacy notice. */
+.sub-meter { background: var(--fr-line); border-radius: 999px; height: 8px; margin: 8px 0 12px; overflow: hidden; }
+.sub-meter > span { background: var(--fr-primary); display: block; height: 100%; }
+.sub-meter > span.is-warn { background: var(--fr-warning-text, #a86a00); }
+.sub-meter > span.is-full { background: var(--fr-danger-text); }
+.sub-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+.sub-inline-form { align-items: end; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.sub-inline-form .field { max-width: 180px; }
+.sub-dialog--wide { max-width: 720px; }
+.sub-storage-list { display: grid; gap: 10px; list-style: none; margin: 12px 0; max-height: 50vh; overflow: auto; padding: 0; }
+.sub-storage-list li { align-items: center; border: 1px solid var(--fr-line); border-radius: 10px; display: flex; gap: 12px; justify-content: space-between; padding: 10px 12px; }
+.sub-storage-list li > div { display: grid; gap: 2px; min-width: 0; }
+.sub-downloads { display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; }
+.sub-seller { border-top: 1px solid var(--fr-line); margin-top: 8px; padding-top: 12px; }

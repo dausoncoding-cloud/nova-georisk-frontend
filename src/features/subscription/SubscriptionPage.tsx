@@ -6,6 +6,7 @@ import { getErrorMessage } from "../../shared/api/errors";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
 import { useOrganizationContext } from "../organization/OrganizationContext";
+import { MobileMoneyPay } from "./MobileMoney";
 import { SubscriptionBanner } from "./SubscriptionNotices";
 import {
   FAMILY_NAME, SYSTEM_NAME, fetchDevices, fetchLedger, fetchLogins, fetchPayments, fetchPlans, fetchRequests,
@@ -61,7 +62,7 @@ export function SubscriptionPage() {
       ) : null}
       <SubscriptionBanner engine={subscription.engines[0] ?? "firris"} onPage />
       <div className="sub-grid">
-        <PlanCard subscription={subscription} seatsUsed={summary.data.seats.used} storage={summary.data.storage} />
+        <PlanCard subscription={subscription} seatsUsed={summary.data.seats.used} storage={summary.data.storage} canManage={canManage} />
         <CreditsCard subscription={subscription} />
       </div>
       <CreditActivity family={subscription.family} />
@@ -76,7 +77,7 @@ export function SubscriptionPage() {
   );
 }
 
-function PlanCard({ subscription, seatsUsed, storage }: { subscription: Subscription; seatsUsed: number; storage: { used: number; limit?: number | null } }) {
+function PlanCard({ subscription, seatsUsed, storage, canManage }: { subscription: Subscription; seatsUsed: number; storage: { used: number; limit?: number | null }; canManage: boolean }) {
   const devices = useQuery({ queryKey: subscriptionKeys.devices, queryFn: fetchDevices });
   const status = subscription.status;
   return (
@@ -93,6 +94,7 @@ function PlanCard({ subscription, seatsUsed, storage }: { subscription: Subscrip
         <div><dt>Storage</dt><dd>{gb(storage.used)}{storage.limit != null ? ` of ${gb(storage.limit)}` : ""}</dd></div>
         <div><dt>{subscription.ends_at && subscription.renews_on === subscription.ends_at ? "Ends on" : "Renews on"}</dt><dd>{day(subscription.renews_on ?? subscription.ends_at)}</dd></div>
       </dl>
+      <MobileMoneyPay subscription={subscription} purpose="renewal" canManage={canManage} />
     </section>
   );
 }
@@ -169,6 +171,7 @@ function TopUpCard({ subscription, canManage }: { subscription: Subscription; ca
               onClick={() => request.mutate({ subscription_id: subscription.id, kind: "top_up" })}>{open ? "Requested" : request.isPending ? "Sending…" : "Request top-up"}</button>
             : null}
         </div>
+        <MobileMoneyPay subscription={subscription} purpose="top_up" canManage={canManage} />
         {open ? <p className="sub-ok" role="status">Requested on {day(open.created_at)}. NOVA ARI will send payment details to the account owner.</p> : null}
         {request.isError ? <p className="inline-alert" role="alert">{getErrorMessage(request.error)}</p> : null}
         <p className="sub-muted sub-small">{canManage ? "Payment details are sent to the account owner. No payment is taken in NOVA-GeoRisk." : "Ask your organisation's owner or admin to request a top-up."}</p>
@@ -276,7 +279,7 @@ function Payments() {
         <tbody>{payments.data.items.map((payment) => (
           <tr key={payment.id}>
             <td data-label="Paid on">{day(payment.paid_on)}</td>
-            <td data-label="For">{payment.purpose === "plan_period" ? `Plan · ${day(payment.covers_from)} to ${day(payment.covers_until)}` : payment.purpose === "top_up" ? `Top-up · ${payment.credits} credits` : "Reversal"}{payment.reversed ? " (reversed)" : ""}</td>
+            <td data-label="For">{payment.purpose === "plan_period" ? `Plan · ${day(payment.covers_from)} to ${day(payment.covers_until)}` : payment.purpose === "top_up" ? `Top-up · ${payment.credits} credits` : payment.purpose === "test" ? "Test payment (no credits)" : "Reversal"}{payment.reversed ? " (reversed)" : ""}</td>
             <td data-label="Amount" className="sub-num">{payment.currency} {payment.amount.toLocaleString("en-GB")}</td>
             <td data-label="Reference">{payment.reference ?? "—"}</td>
           </tr>

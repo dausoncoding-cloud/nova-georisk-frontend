@@ -20,15 +20,12 @@ const money = (value: number | null | undefined) => (value == null ? "Contract" 
 const STATUS: Record<string, string> = { active: "Active", trial: "Trial", suspended: "Suspended", expired: "Expired", canceled: "Cancelled", pending: "Pending" };
 const RESULT: Record<string, string> = { active: "Signed in", signed_out: "Signed out", replaced: "Ended by a newer sign-in", ended_by_user: "Signed out from another device", ended_by_admin: "Signed out by NOVA ARI", expired: "Expired" };
 
+// The server's fixed label per entry type (NOVA ARI's reasons are internal), plus the analysis or plan name.
 function activity(entry: LedgerEntry): string {
-  switch (entry.kind) {
-    case "charge": return ["Analysis", entry.aoi_name ?? entry.project_name].filter(Boolean).join(" · ");
-    case "refund": return `Refund · ${entry.reason ?? "analysis stopped"}`;
-    case "monthly_grant": return `Monthly allowance${entry.plan_name ? ` · ${entry.plan_name} plan` : ""}`;
-    case "top_up": return `Top-up · ${entry.amount} credits${entry.reason ? ` · ${entry.reason}` : ""}`;
-    case "expiry": return "Unused monthly credits expired";
-    default: return `Adjustment${entry.reason ? ` · ${entry.reason}` : ""}`;
-  }
+  if (entry.kind === "charge") return [entry.label, entry.aoi_name ?? entry.project_name].filter(Boolean).join(" · ");
+  if (entry.kind === "monthly_grant" && entry.plan_name) return `${entry.label} · ${entry.plan_name} plan`;
+  if (entry.kind === "top_up") return `${entry.label} · ${entry.amount} credits`;
+  return entry.label;
 }
 
 export function SubscriptionPage() {

@@ -43,9 +43,9 @@ beforeEach(() => {
     calls.push({ method: request.method, path, body });
     if (path === "/api/v1/billing/summary") return json(request.url, { enforcement_enabled: state.enforced, subscriptions: [subscription()], seats: { used: 1, limit: 1, level: 100 }, storage: { used: 600_000_000, limit: 2_000_000_000, level: null }, storage_blocks_at_limit: false });
     if (path === "/api/v1/billing/ledger") return json(request.url, { total: 4, limit: 20, offset: 0, items: [
-      { id: "1", created_at: "2026-11-20T09:00:00Z", period: "2026-11", kind: "charge", bucket: "monthly", amount: -1, balance_after: 3, task_id: "t1", reason: null, project_name: "Rufiji", aoi_name: "Rufiji floodplain 2024", plan_name: null },
-      { id: "2", created_at: "2026-11-19T09:00:00Z", period: "2026-11", kind: "refund", bucket: "monthly", amount: 1, balance_after: 4, task_id: "t2", reason: "analysis stopped (not enough valid radar data)", project_name: null, aoi_name: null, plan_name: null },
-      { id: "3", created_at: "2026-11-01T00:00:00Z", period: "2026-11", kind: "monthly_grant", bucket: "monthly", amount: 10, balance_after: 10, task_id: null, reason: null, project_name: null, aoi_name: null, plan_name: "Researcher" },
+      { id: "1", created_at: "2026-11-20T09:00:00Z", period: "2026-11", kind: "charge", bucket: "monthly", amount: -1, balance_after: 3, task_id: "t1", label: "Analysis", project_name: "Rufiji", aoi_name: "Rufiji floodplain 2024", plan_name: null },
+      { id: "2", created_at: "2026-11-19T09:00:00Z", period: "2026-11", kind: "refund", bucket: "monthly", amount: 1, balance_after: 4, task_id: "t2", label: "Refund · analysis stopped (not enough valid satellite data)", project_name: null, aoi_name: null, plan_name: null },
+      { id: "3", created_at: "2026-11-01T00:00:00Z", period: "2026-11", kind: "monthly_grant", bucket: "monthly", amount: 10, balance_after: 10, task_id: null, label: "Monthly allowance", project_name: null, aoi_name: null, plan_name: "Researcher" },
     ] });
     if (path === "/api/v1/billing/plans") return json(request.url, { family: "frris_wrris", plans: [
       { key: "frris_wrris.researcher", family: "frris_wrris", name: "Researcher", is_custom: false, currency: "TZS", monthly_price: 150000, limits: { seat_limit: 1, monthly_credits: 10, storage_bytes: 2e9, session_limit: 1 } },
@@ -84,7 +84,7 @@ describe("My subscription", () => {
     expect(credits).toHaveTextContent("Warnings at 75% and 90%");
     expect(within(credits).getByRole("link", { name: "Run new analysis" })).toBeInTheDocument();
     expect(await screen.findByText("Analysis · Rufiji floodplain 2024")).toBeInTheDocument();
-    expect(screen.getByText("Refund · analysis stopped (not enough valid radar data)")).toBeInTheDocument();
+    expect(screen.getByText("Refund · analysis stopped (not enough valid satellite data)")).toBeInTheDocument();
     expect(screen.getByText("Monthly allowance · Researcher plan")).toBeInTheDocument();
     expect(screen.getByText("Signing in and viewing results never uses credits.")).toBeInTheDocument();
     expect(await screen.findByText("This device · Chrome, Windows")).toBeInTheDocument();

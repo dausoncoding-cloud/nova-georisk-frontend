@@ -419,7 +419,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Billing Summary */
+        /**
+         * Get Billing Summary
+         * @description Write on GET, by design and idempotent (independent review 6): before reading, each subscription is
+         *     brought to the current billing month, which writes the month's grant (and the previous month's expiry)
+         *     at most once, under the subscription row lock, keyed grant:<subscription>:<YYYY-MM>. Repeating the GET,
+         *     or a cross-site GET, can only cause that same single write earlier than the first analysis would.
+         */
         get: operations["get_billing_summary_api_v1_billing_summary_get"];
         put?: never;
         post?: never;
@@ -2369,6 +2375,55 @@ export interface components {
             /** Organization Name */
             organization_name: string | null;
         };
+        /**
+         * AdminLedgerEntry
+         * @description NOVA ARI console only: the customer's entry plus the internal reason.
+         */
+        AdminLedgerEntry: {
+            /** Amount */
+            amount: number;
+            /** Aoi Name */
+            aoi_name: string | null;
+            /** Balance After */
+            balance_after: number;
+            /** Bucket */
+            bucket: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Period */
+            period: string;
+            /** Plan Name */
+            plan_name: string | null;
+            /** Project Name */
+            project_name: string | null;
+            /** Reason */
+            reason: string | null;
+            /** Task Id */
+            task_id: string | null;
+        };
+        /** AdminLedgerPage */
+        AdminLedgerPage: {
+            /** Items */
+            items: components["schemas"]["AdminLedgerEntry"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** AdminLoginEntry */
         AdminLoginEntry: {
             /** Browser */
@@ -4237,14 +4292,14 @@ export interface components {
             id: string;
             /** Kind */
             kind: string;
+            /** Label */
+            label: string;
             /** Period */
             period: string;
             /** Plan Name */
             plan_name: string | null;
             /** Project Name */
             project_name: string | null;
-            /** Reason */
-            reason: string | null;
             /** Task Id */
             task_id: string | null;
         };
@@ -10863,7 +10918,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LedgerPage"];
+                    "application/json": components["schemas"]["AdminLedgerPage"];
                 };
             };
             /** @description Bad request */

@@ -59,6 +59,10 @@ export type MobilePayment = S["AdminMobilePayment"];
 // Mobile Money payments (Abliner) waiting for a person: amount/reference mismatch, or completed after expiry.
 export const fetchMobileReviews = async () =>
   unwrapResponse(await apiClient.GET("/api/v1/platform-admin/mobile-payments", { params: { query: { state: "review", limit: 50 } } }));
+export type Integration = S["IntegrationResponse"];
+export const fetchIntegrations = async () => unwrapResponse(await apiClient.GET("/api/v1/platform-admin/integrations"));
+export const testIntegration = async (name: string) =>
+  unwrapResponse(await apiClient.POST("/api/v1/platform-admin/integrations/{name}/test", { params: { path: { name } } }));
 export const resolveMobilePayment = async (intent_id: string, body: S["ResolveReviewRequest"]) =>
   unwrapResponse(await apiClient.POST("/api/v1/platform-admin/mobile-payments/{intent_id}/resolve", { params: { path: { intent_id } }, body }));
 export const fetchRequests = async () =>

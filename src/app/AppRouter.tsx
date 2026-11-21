@@ -33,6 +33,7 @@ const CustomersPage = lazy(() => import("../features/platformAdmin/CustomersPage
 const PaymentsPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.PaymentsPage })));
 const PlansPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.PlansPage })));
 const SecurityAlertsPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.SecurityAlertsPage })));
+const IntegrationsPage = lazy(() => import("../features/platformAdmin/IntegrationsPage").then(m => ({ default: m.IntegrationsPage })));
 const AuditLogPage = lazy(() => import("../features/platformAdmin/ConsolePages").then(m => ({ default: m.AuditLogPage })));
 const SubscriptionPage = lazy(() => import("../features/subscription/SubscriptionPage").then(m => ({ default: m.SubscriptionPage })));
 const ExternalDataPage = lazy(() => import("../features/management/ExternalDataPage").then(m => ({ default: m.ExternalDataPage })));
@@ -49,6 +50,7 @@ export function AppRouter() {
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="plans" element={<PlansPage />} />
             <Route path="security-alerts" element={<SecurityAlertsPage />} />
+            <Route path="integrations" element={<IntegrationsPage />} />
             <Route path="audit" element={<AuditLogPage />} />
           </Route>
           <Route element={<OrganizationContextProvider><Outlet /></OrganizationContextProvider>}>

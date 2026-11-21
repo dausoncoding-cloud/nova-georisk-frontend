@@ -99,7 +99,7 @@ describe("NOVA ARI console", () => {
   it("shows the tiles, the customers table with flags, usage and login history as on the board", async () => {
     renderConsole();
     expect(await screen.findByRole("heading", { level: 1, name: "Customers and subscriptions" })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Administration" })).toHaveTextContent(/Customers.*Payments.*Plans and pricing.*Security alerts.*Audit log/);
+    expect(screen.getByRole("navigation", { name: "Administration" })).toHaveTextContent(/Customers.*Payments.*Plans and pricing.*Security alerts.*Integrations.*Audit log/);
     const tiles = screen.getByRole("region", { name: "Summary" });
     await waitFor(() => expect(tiles).toHaveTextContent("Active subscriptions12"));
     expect(tiles).toHaveTextContent("Open security alerts3");

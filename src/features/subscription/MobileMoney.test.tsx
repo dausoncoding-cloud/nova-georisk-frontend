@@ -66,8 +66,8 @@ it("pays with an Idempotency-Key and waits for the server's result", async () =>
   fireEvent.change(within(dialog).getByLabelText(/Mobile Money number/), { target: { value: "0712 345 678" } });
   fireEvent.click(within(dialog).getByRole("button", { name: "Pay TZS 100,000" }));
   await waitFor(() => expect(posts).toHaveLength(1));
-  expect(posts[0].body).toEqual({ subscription_id: "s1", purpose: "top_up", phone: "0712 345 678" });
-  expect(posts[0].headers.get("Idempotency-Key")).toBeTruthy();
+  expect(posts[0]?.body).toEqual({ subscription_id: "s1", purpose: "top_up", phone: "0712 345 678" });
+  expect(posts[0]?.headers.get("Idempotency-Key")).toBeTruthy();
   const waiting = await screen.findByRole("status");
   expect(waiting).toHaveTextContent(/Waiting for approval….*Check your phone.*2557•••••678/);
   expect(screen.queryByRole("button", { name: "Pay with Mobile Money" })).toBeNull();

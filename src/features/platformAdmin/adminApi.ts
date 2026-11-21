@@ -55,6 +55,12 @@ export const endSessions = async (organization_id: string, body: S["EndSessionsR
 export const fetchPayments = async (offset: number) =>
   unwrapResponse(await apiClient.GET("/api/v1/platform-admin/payments", { params: { query: { offset, limit: 50 } } }));
 export type CustomerRequest = S["AdminRequest"];
+export type MobilePayment = S["AdminMobilePayment"];
+// Mobile Money payments (Abliner) waiting for a person: amount/reference mismatch, or completed after expiry.
+export const fetchMobileReviews = async () =>
+  unwrapResponse(await apiClient.GET("/api/v1/platform-admin/mobile-payments", { params: { query: { state: "review", limit: 50 } } }));
+export const resolveMobilePayment = async (intent_id: string, body: S["ResolveReviewRequest"]) =>
+  unwrapResponse(await apiClient.POST("/api/v1/platform-admin/mobile-payments/{intent_id}/resolve", { params: { path: { intent_id } }, body }));
 export const fetchRequests = async () =>
   unwrapResponse(await apiClient.GET("/api/v1/platform-admin/requests", { params: { query: { state: "open", limit: 50 } } }));
 export const closeRequest = async (request_id: string, body: S["CloseRequest"]) =>

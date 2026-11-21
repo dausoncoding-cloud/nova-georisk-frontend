@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "../../app/AppProviders";
 import { AppRouter } from "../../app/AppRouter";
 
-const NOTICE = "You were signed out because your account signed in on another device (Chrome on Windows, Dar es Salaam, 14:02).";
+const NOTICE = "You were signed out because your account signed in on another device.";
 const json = (url: string, body: unknown, status = 200) => {
   const response = new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
   Object.defineProperty(response, "url", { value: url });

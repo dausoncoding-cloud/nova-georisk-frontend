@@ -1,7 +1,9 @@
+import { useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { FRRIS_ROUTES } from "../../app/routes";
 import { getErrorMessage } from "../../shared/api/errors";
+import { IdempotentAction } from "../../shared/api/idempotency";
 import { queryKeys } from "../../shared/api/queryKeys";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { Icon } from "../../shared/ui/Icon";
@@ -22,9 +24,12 @@ export function TaskDetailPage() {
   const aoi = useQuery({ queryKey: queryKeys.aois.detail(aoiId), queryFn: () => fetchAoi(aoiId), enabled: Boolean(aoiId), retry: false });
   // The submitted windows are in the task archive; when the role cannot read it, the header simply omits the dates.
   const archive = useQuery({ queryKey: ["tasks", taskId, "archive"], queryFn: () => fetchTaskArchive(taskId), enabled: Boolean(taskId), retry: false, staleTime: 60_000 });
+  const retryAction = useRef(new IdempotentAction()).current;
   const action = useMutation({
-    mutationFn: (kind: "cancel" | "retry") => kind === "cancel" ? cancelTask(taskId) : retryTask(taskId),
+    mutationFn: (kind: "cancel" | "retry") => kind === "cancel" ? cancelTask(taskId) : retryTask(taskId, retryAction.keyFor(taskId)),
+    onError: (caught, kind) => { if (kind === "retry") retryAction.settle(caught); },
     onSuccess: (updated, kind) => {
+      if (kind === "retry") retryAction.settle();
       queryClient.setQueryData(queryKeys.tasks.detail(updated.task_id), updated);
       void queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
       if (kind === "retry" && updated.task_id !== taskId) navigate(`/tasks/${updated.task_id}`, { replace: true });

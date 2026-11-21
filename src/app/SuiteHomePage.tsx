@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useSession } from "../features/auth/authQueries";
 import { LogoutButton } from "../features/auth/LogoutButton";
+import { AdminConsoleLink } from "../features/platformAdmin/AdminConsoleLink";
 import { useAvailableEngines } from "../features/engines/engineQueries";
 import { useOrganizationContext } from "../features/organization/OrganizationContext";
 import { Icon } from "../shared/ui/Icon";
@@ -50,6 +51,7 @@ export function SuiteHomePage() {
         <SuiteBrand />
         <div className="fr-suite__account">
           <span>{userName ? `${userName} · ` : ""}{organization.current_organization.name}</span>
+          <AdminConsoleLink />
           <LogoutButton />
         </div>
       </header>

@@ -26,13 +26,17 @@ export function LoginPage() {
   const canSignIn = authConfig.isSuccess && isConfigured;
   const authError = authConfig.isError ? getErrorMessage(authConfig.error) : session.isError ? getErrorMessage(session.error) : null;
 
-  if (state?.expired) {
+  // Subscriptions M3: this browser's session was ended elsewhere (plan session limit, another device, NOVA ARI).
+  const signedOutNotice = session.data && !session.data.authenticated ? session.data.signedOutNotice ?? null : null;
+
+  if (state?.expired || signedOutNotice) {
     // P5: the session ended while the user was working; signing in again returns to the same page.
     return (
       <div className="fr-suite">
         <header className="fr-suite__header"><SuiteBrand /></header>
         <main id="main-content" className="fr-suite__main fr-state-page">
           <SessionEndedState disabled={!canSignIn} onSignIn={() => window.location.assign(buildLoginUrl(returnTo))}>
+            {signedOutNotice ? <p className="fr-box" role="status">{signedOutNotice}</p> : null}
             {authError ? <p className="fr-box fr-box--danger" role="alert">{authError}</p> : null}
             {authConfig.isSuccess && !isConfigured ? <p className="fr-box fr-box--danger" role="alert">{authConfig.data.message}</p> : null}
           </SessionEndedState>

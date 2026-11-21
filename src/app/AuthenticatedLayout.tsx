@@ -5,6 +5,8 @@ import { useSession } from "../features/auth/authQueries";
 import { LogoutButton } from "../features/auth/LogoutButton";
 import { useOrganizationContext } from "../features/organization/OrganizationContext";
 import { OrganizationMenu } from "../features/organization/OrganizationMenu";
+import { SubscriptionBanner } from "../features/subscription/SubscriptionNotices";
+import { useBillingSummary } from "../features/subscription/subscriptionApi";
 import { fetchTasks } from "../features/tasks/tasksApi";
 import { queryKeys } from "../shared/api/queryKeys";
 import { Icon } from "../shared/ui/Icon";
@@ -13,7 +15,7 @@ import { FRRIS_ROUTES } from "./routes";
 import { roleLabel, SuiteBrand } from "./SuiteBrand";
 import { FRRIS_SYSTEM, SUITE_SYSTEMS } from "./suiteSystems";
 
-type NavItem = { to: string; icon: Parameters<typeof Icon>[0]["name"]; label: string; end?: boolean; adminOnly?: boolean };
+type NavItem = { to: string; icon: Parameters<typeof Icon>[0]["name"]; label: string; end?: boolean; adminOnly?: boolean; requiresSubscription?: boolean };
 
 // Primary FRRIS navigation, as in the design.
 export const PRIMARY_NAV: readonly NavItem[] = [
@@ -22,6 +24,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
   { to: FRRIS_ROUTES.playground, icon: "aoi", label: "Area playground" },
   { to: "/data", icon: "data", label: "Data catalog" },
   { to: "/exports", icon: "exports", label: "Exports" },
+  { to: "/subscription", icon: "card", label: "Subscription", requiresSubscription: true },
 ];
 
 // Every other existing workspace page stays reachable.
@@ -115,7 +118,9 @@ export function AuthenticatedLayout() {
   const compact = useCompactViewport();
   const isAdmin = ["admin", "owner"].includes(organization.current_role);
   const workspaceNav = WORKSPACE_NAV.filter((item) => !item.adminOnly || isAdmin);
-  const allNav = [...PRIMARY_NAV, ...workspaceNav];
+  const billing = useBillingSummary();
+  const primaryNav = PRIMARY_NAV.filter((item) => !item.requiresSubscription || (billing.data?.subscriptions?.length ?? 0) > 0);
+  const allNav = [...primaryNav, ...workspaceNav];
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -167,7 +172,7 @@ export function AuthenticatedLayout() {
         <nav aria-label="Main" className="fr-sidebar__scroll">
           <SystemSwitcher />
           <div className="fr-nav">
-            <NavList items={PRIMARY_NAV} runningTasks={tasks.data?.total ?? 0} />
+            <NavList items={primaryNav} runningTasks={tasks.data?.total ?? 0} />
           </div>
           <div className={`fr-nav fr-nav--workspace${workspaceOpen ? " is-open" : ""}`}>
             <button type="button" className="fr-nav__toggle" aria-expanded={workspaceOpen} aria-controls={workspaceListId} onClick={() => setWorkspaceOpen((value) => !value)}>
@@ -186,7 +191,7 @@ export function AuthenticatedLayout() {
           <LogoutButton />
         </div>
       </div>
-      <main id="main-content" tabIndex={-1} className="fr-main content"><Outlet /></main>
+      <main id="main-content" tabIndex={-1} className="fr-main content"><SubscriptionBanner /><Outlet /></main>
       {searchOpen ? <div className="modal-backdrop command-backdrop" onClick={() => setSearchOpen(false)}><section ref={searchDialog} role="dialog" aria-modal="true" aria-label="Workspace navigation" tabIndex={-1} className="command-palette" onClick={(event) => event.stopPropagation()}><div><Icon name="search" /><input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} aria-label="Find a workspace page" placeholder="Find a page…" /><button type="button" className="icon-button" aria-label="Close workspace navigation" onClick={() => setSearchOpen(false)}><Icon name="close" /></button></div><p>Workspace pages</p>{matches.map((item) => <button type="button" key={item.to} onClick={() => { navigate(item.to); setSearchOpen(false); }}><Icon name={item.icon} />{item.label}</button>)}{matches.length === 0 ? <p role="status">No matching pages.</p> : null}</section></div> : null}
     </div>
   );

@@ -21,6 +21,9 @@ const mandatoryChecks = ["qa_verified", "licence_verified", "provenance_verified
 const optionalChecks = ["hydrologic_coverage_verified", "dem_conditioning_verified", "coverage_complete_verified", "hydraulic_model_verified", "annual_record_complete_verified", "predictor_catalogue_verified", "scoring_policy_verified", "validation_definition_verified", "independent_observations_verified", "impact_definition_verified", "dss_definitions_verified", "live_policy_verified", "susceptibility_method_verified", "zonation_method_verified"] as const;
 const label = (s: string) => s.replaceAll("_", " ");
 function parseMetadata(raw: string): Record<string, unknown> { const parsed: unknown = JSON.parse(raw); if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Scientific metadata must be a JSON object."); return parsed as Record<string, unknown>; }
+// The External data upload route allows 50 MiB (app, gateway and edge; owner decision 2026-11-27).
+export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+
 export function ExternalDataPage() {
   const org = useOrganizationContext(); const { projectId } = useParams(); const cache = useQueryClient();
   const [project, setProject] = useState(projectId ?? ""); const [tab, setTab] = useState("datasets");
@@ -49,7 +52,7 @@ export function ExternalDataPage() {
     setError(null);
     if (kind === "upload") {
       if (!file || !title.trim() || !uploadType) throw new Error("Title, dataset type and file are required.");
-      if (file.size > 16 * 1024 * 1024) throw new Error("The upload limit is 16 MiB.");
+      if (file.size > MAX_UPLOAD_BYTES) throw new Error("The upload limit is 50 MiB.");
       const metadata = parseMetadata(raw);
       return api.uploadDataset(project, { title, category: uploadType, aoi_id: aoiId || null, replaces: replacement ? selected?.id : null, metadata }, file);
     }
@@ -74,7 +77,7 @@ export function ExternalDataPage() {
       </section> : null}
       {tab === "upload" ? <section className="panel content-panel"><h2>Upload private dataset</h2>{!write ? <p role="alert">Analyst, admin or owner permissions are required to upload.</p> : <>{selected ? <label className="confirm-choice"><input type="checkbox" checked={replacement} onChange={e => { setReplacement(e.target.checked); if (e.target.checked) { setUploadType(selected.category); setTitle(selected.title); } }} />Create a new version of {selected.title} (current v{selected.version})</label> : null}
         {!uploadReview ? <><div className="management-fields"><label className="field">Dataset title<input required value={title} maxLength={255} onChange={e => setTitle(e.target.value)} /></label><label className="field">Dataset type<select required value={uploadType} disabled={replacement} onChange={e => { setUploadType(e.target.value); setFile(null); }}><option value="">Select catalogue type</option>{Object.keys(profiles).map(k => <option value={k} key={k}>{label(k)}</option>)}</select></label><label className="field">Attach to AOI (optional)<select value={aoiId} onChange={e => setAoiId(e.target.value)}><option value="">Project-wide</option>{aois.data?.items.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label></div>
-          <label className="field">Source file (maximum 16 MiB)<input key={uploadType} type="file" accept={profiles[uploadType]?.format === "geotiff" ? ".tif" : profiles[uploadType]?.format === "geojson" ? ".geojson" : ".csv"} onChange={e => setFile(e.target.files?.[0] ?? null)} /></label>
+          <label className="field">Source file (maximum 50 MiB)<input key={uploadType} type="file" accept={profiles[uploadType]?.format === "geotiff" ? ".tif" : profiles[uploadType]?.format === "geojson" ? ".geojson" : ".csv"} onChange={e => setFile(e.target.files?.[0] ?? null)} /></label>
           {uploadType && profiles[uploadType] ? <Disclosure title="Catalogue format and required attributes"><pre>{JSON.stringify(profiles[uploadType], null, 2)}</pre></Disclosure> : null}
           <MetadataEditor raw={raw} onChange={setRaw} /><MetadataGuide /><label className="field">Scientific metadata (JSON)<textarea rows={8} value={raw} onChange={e => setRaw(e.target.value)} spellCheck={false} /></label><p className="notice">CSV, GeoJSON and single-band GeoTIFF are supported by category. ZIP, Shapefile, GeoPackage, KML and executable content are not accepted here. Missing scientific metadata is recorded; it is never invented.</p><button className="button button--primary" onClick={prepareUpload}>Review upload</button>
         </> : <><dl className="review-facts"><div><dt>Title</dt><dd>{title}</dd></div><div><dt>Type</dt><dd>{label(uploadType)}</dd></div><div><dt>File</dt><dd>{file?.name} · {file?.size} bytes</dd></div><div><dt>Attachment</dt><dd>{aoiId || "Project-wide"}</dd></div><div><dt>Access</dt><dd>Private to this organization/project</dd></div></dl><div className="form-actions"><button className="button button--quiet" onClick={() => setUploadReview(false)}>Edit upload</button><button className="button button--primary" disabled={action.isPending} onClick={() => action.mutate("upload")}>Store private dataset</button></div></>}

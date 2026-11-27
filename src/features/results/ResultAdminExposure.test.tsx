@@ -76,7 +76,7 @@ describe("exposure by administrative unit", () => {
   it("shows wards from the approved client dataset with their council and the provenance line", () => {
     const statement = "Ward boundaries supplied by the client on 22 Nov 2026. Year: not officially confirmed; evidence points to 2022. Licence: unconfirmed.";
     const wards = { level: "L3", level_name: "Ward", status: "assessed",
-      provenance: { dataset: "client-supplied ward boundaries (reviewed dataset)", dataset_id: "ds-1", licence: { identifier: "unconfirmed (MIT notice belongs to the GitHub repository)" }, provenance_statement: statement },
+      provenance: { dataset: "client-supplied ward boundaries (reviewed dataset)", dataset_id: "ds-1", licence: { identifier: "unconfirmed (MIT notice belongs to the GitHub repository)" }, provenance_statement: statement, positional_accuracy: "Source positional accuracy: not stated by the source." },
       rows: [{ unit_id: "060511023", name: "Mgomba", parent: "Rufiji DC", share_of_unit_in_aoi: 0.46, extents: { observed_extent: cell(1200, 180) } },
              { unit_id: "060711131", name: "Mtunda", parent: "Kibiti DC", share_of_unit_in_aoi: 0.001, extents: { observed_extent: cell(3, 0) } }],
       check: { ok: true, extents: { observed_extent: { people_total: 1203, buildings_total: 180, buildings_ok: true } } } };
@@ -87,6 +87,7 @@ describe("exposure by administrative unit", () => {
     expect(within(table).getByRole("columnheader", { name: "Council" })).toBeInTheDocument();
     expect(within(table).getByRole("rowheader", { name: "Mgomba" }).closest("tr")).toHaveTextContent("Rufiji DC46.0%1,200180 (181)");
     expect(screen.getByText(/Provenance: Ward boundaries supplied by the client/)).toHaveTextContent("evidence points to 2022");
+    expect(screen.getByText(/Provenance: Ward boundaries supplied by the client/)).toHaveTextContent("Source positional accuracy: not stated");
     expect(screen.getByText(/licence unconfirmed \(MIT notice belongs to the GitHub repository\)/)).toBeInTheDocument();
   });
 });

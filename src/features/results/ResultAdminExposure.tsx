@@ -91,7 +91,8 @@ function sourceText(level: Row): string {
   if (prov.dataset_id) {
     const licence = asRecord(prov.licence);
     const statement = prov.provenance_statement ? ` Provenance: ${String(prov.provenance_statement)}` : "";
-    return `Boundaries: ${String(prov.dataset ?? "")}; licence ${String(licence?.identifier ?? licence?.name ?? prov.licence ?? "")}.${statement}`;
+    const accuracy = prov.positional_accuracy ? ` ${String(prov.positional_accuracy)}` : "";
+    return `Boundaries: ${String(prov.dataset ?? "")}; licence ${String(licence?.identifier ?? licence?.name ?? prov.licence ?? "")}.${statement}${accuracy}`;
   }
   return "";
 }

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -21,6 +21,19 @@ describe("External dataset lifecycle UI", () => {
     fireEvent.click(screen.getByRole("button", { name: "Review upload" })); expect(api.uploadDataset).not.toHaveBeenCalled(); expect(screen.getByText("Private to this organization/project")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Store private dataset" })); await waitFor(() => expect(api.uploadDataset).toHaveBeenCalled());
     expect(await screen.findByText("Uploaded", { selector: ".count-badge" })).toBeInTheDocument(); expect(api.reviewDataset).not.toHaveBeenCalled();
+  });
+  it("accepts a 26 MB file (the NBS ward layer) and refuses one above 50 MiB before uploading", async () => {
+    const attempt = async (bytes: number) => {
+      vi.mocked(api.uploadDataset).mockClear();
+      setup(); await project(); fireEvent.click(screen.getByRole("tab", { name: "Upload" }));
+      fireEvent.change(screen.getByLabelText("Dataset title"), { target: { value: "Wards" } }); fireEvent.change(screen.getByLabelText("Dataset type"), { target: { value: "rainfall_stations" } });
+      expect(screen.getByLabelText(/Source file \(maximum 50 MiB\)/)).toBeInTheDocument();
+      const file = new File(["station,value\ns1,2\n"], "gauges.csv", { type: "text/csv" }); Object.defineProperty(file, "size", { value: bytes });
+      fireEvent.change(screen.getByLabelText(/Source file/), { target: { files: [file] } });
+      fireEvent.click(screen.getByRole("button", { name: "Review upload" })); fireEvent.click(screen.getByRole("button", { name: "Store private dataset" }));
+    };
+    await attempt(26_020_486); await waitFor(() => expect(api.uploadDataset).toHaveBeenCalled()); cleanup();
+    await attempt(50 * 1024 * 1024 + 1); expect(await screen.findByText(/The upload limit is 50 MiB\./)).toBeInTheDocument(); expect(api.uploadDataset).not.toHaveBeenCalled();
   });
   it("allows viewer inspection but blocks upload controls", async () => { state.role = "viewer"; setup(); await project(); fireEvent.click(screen.getByRole("tab", { name: "Upload" })); expect(screen.getByRole("alert")).toHaveTextContent("permissions"); expect(screen.queryByRole("button", { name: "Store private dataset" })).not.toBeInTheDocument(); });
   it("does not offer an unapproved source as an analysis input", async () => { setup(); await project(); fireEvent.click(await screen.findByRole("button", { name: "Inspect version" })); fireEvent.click(screen.getByRole("tab", { name: "Usage" })); expect(await screen.findByText("Not ready for this analysis")).toBeInTheDocument(); expect(screen.queryByLabelText("Approved source identifier for explicit analysis bindings")).not.toBeInTheDocument(); expect(screen.getByLabelText("Approved version for analysis compatibility").querySelectorAll("option")).toHaveLength(1); });

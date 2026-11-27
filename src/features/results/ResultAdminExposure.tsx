@@ -88,7 +88,11 @@ function sourceText(level: Row): string {
     const grouped = level.level === "L1" ? " Regions are built by merging these districts." : "";
     return `Boundaries: geoBoundaries ${String(prov.release_type ?? "")} ${String(prov.boundaryID ?? "")}, ${String(prov.source ?? "")}, ${String(prov.year_represented ?? "")}; licence ${String(prov.licence ?? "")}.${grouped}`;
   }
-  if (prov.dataset_id) return `Boundaries: ${String(prov.dataset ?? "")} (reviewed dataset); licence ${String(asRecord(prov.licence)?.name ?? prov.licence ?? "")}.`;
+  if (prov.dataset_id) {
+    const licence = asRecord(prov.licence);
+    const statement = prov.provenance_statement ? ` Provenance: ${String(prov.provenance_statement)}` : "";
+    return `Boundaries: ${String(prov.dataset ?? "")}; licence ${String(licence?.identifier ?? licence?.name ?? prov.licence ?? "")}.${statement}`;
+  }
   return "";
 }
 
@@ -141,7 +145,7 @@ export function ResultAdminExposure({ record, resultId, artifacts }: { record: R
           <div className="fr-table-wrap">
             <table className="fr-table">
               <caption>Estimated exposure by {levelName.toLowerCase()}: {extentLabel} (WorldPop R2025A, area-weighted; Open Buildings v3, centroid inside)</caption>
-              <thead><tr><th scope="col">{levelName}</th>{levelCode !== "L1" ? <th scope="col" className="fr-nowrap">Region</th> : null}<th scope="col">Share inside the area</th><th scope="col">People (estimate)</th><th scope="col">Buildings ≥ 0.75 (≥ 0.65)</th></tr></thead>
+              <thead><tr><th scope="col">{levelName}</th>{levelCode !== "L1" ? <th scope="col" className="fr-nowrap">{levelCode === "L3" ? "Council" : "Region"}</th> : null}<th scope="col">Share inside the area</th><th scope="col">People (estimate)</th><th scope="col">Buildings ≥ 0.75 (≥ 0.65)</th></tr></thead>
               <tbody>
                 {lines.map((line) => <tr key={line.name}>
                   <th scope="row">{line.name}</th>{levelCode !== "L1" ? <td>{line.parent ?? "—"}</td> : null}<td className="fr-num">{share(line.share)}</td>

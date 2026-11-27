@@ -72,4 +72,21 @@ describe("exposure by administrative unit", () => {
     expect(screen.queryByRole("table")).toBeNull();
     expect(screen.queryByRole("link")).toBeNull();
   });
+
+  it("shows wards from the approved client dataset with their council and the provenance line", () => {
+    const statement = "Ward boundaries supplied by the client on 22 Nov 2026. Year: not officially confirmed; evidence points to 2022. Licence: unconfirmed.";
+    const wards = { level: "L3", level_name: "Ward", status: "assessed",
+      provenance: { dataset: "client-supplied ward boundaries (reviewed dataset)", dataset_id: "ds-1", licence: { identifier: "unconfirmed (MIT notice belongs to the GitHub repository)" }, provenance_statement: statement },
+      rows: [{ unit_id: "060511023", name: "Mgomba", parent: "Rufiji DC", share_of_unit_in_aoi: 0.46, extents: { observed_extent: cell(1200, 180) } },
+             { unit_id: "060711131", name: "Mtunda", parent: "Kibiti DC", share_of_unit_in_aoi: 0.001, extents: { observed_extent: cell(3, 0) } }],
+      check: { ok: true, extents: { observed_extent: { people_total: 1203, buildings_total: 180, buildings_ok: true } } } };
+    const withWards = { ...record, by_admin_unit: { ...record.by_admin_unit, levels: [...record.by_admin_unit.levels.slice(0, 2), wards] } };
+    render(<ResultAdminExposure record={withWards} resultId="r1" artifacts={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Wards" }));
+    const table = screen.getByRole("table");
+    expect(within(table).getByRole("columnheader", { name: "Council" })).toBeInTheDocument();
+    expect(within(table).getByRole("rowheader", { name: "Mgomba" }).closest("tr")).toHaveTextContent("Rufiji DC46.0%1,200180 (181)");
+    expect(screen.getByText(/Provenance: Ward boundaries supplied by the client/)).toHaveTextContent("evidence points to 2022");
+    expect(screen.getByText(/licence unconfirmed \(MIT notice belongs to the GitHub repository\)/)).toBeInTheDocument();
+  });
 });

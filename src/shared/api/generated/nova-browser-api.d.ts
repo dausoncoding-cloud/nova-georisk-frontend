@@ -422,6 +422,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing/payments/{payment_id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Payment Receipt
+         * @description Q6: the PDF receipt of one of this organisation's payments (owners and admins). The first download freezes
+         *     the seller identity onto the receipt (a write on GET).
+         */
+        get: operations["get_payment_receipt_api_v1_billing_payments__payment_id__receipt_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billing/plans": {
         parameters: {
             query?: never;
@@ -461,6 +482,47 @@ export interface paths {
          *     while one is open returns the open request.
          */
         post: operations["create_request_api_v1_billing_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/storage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Storage
+         * @description Storage used and the results that hold it, largest first (members). Read only.
+         */
+        get: operations["get_storage_api_v1_billing_storage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/storage/results/{result_id}/delete-files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Delete Result Files
+         * @description Q5a "Free up space": delete one finished result's output files (owners and admins, after confirming;
+         *     audited). The result record and history stay. Download the files first: this cannot be undone.
+         */
+        post: operations["delete_result_files_api_v1_billing_storage_results__result_id__delete_files_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1310,6 +1372,26 @@ export interface paths {
         };
         /** List Payments */
         get: operations["list_payments_api_v1_platform_admin_payments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform-admin/payments/{payment_id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Payment Receipt
+         * @description Q6: any payment's receipt, for NOVA ARI.
+         */
+        get: operations["payment_receipt_api_v1_platform_admin_payments__payment_id__receipt_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2732,6 +2814,8 @@ export interface components {
             paid_on: string;
             /** Purpose */
             purpose: string;
+            /** Receipt Number */
+            receipt_number?: string | null;
             /** Recorded By */
             recorded_by: string | null;
             /** Reference */
@@ -2812,6 +2896,8 @@ export interface components {
             requested_by: string | null;
             /** Status */
             status: string;
+            /** Storage Gb */
+            storage_gb?: number | null;
             /**
              * Subscription Id
              * Format: uuid
@@ -3252,6 +3338,7 @@ export interface components {
             /** Enforcement Enabled */
             enforcement_enabled: boolean;
             seats: components["schemas"]["Allowance"];
+            seller?: components["schemas"]["SellerIdentity"] | null;
             storage: components["schemas"]["Allowance"];
             /** Storage Blocks At Limit */
             storage_blocks_at_limit: boolean;
@@ -3865,6 +3952,24 @@ export interface components {
             tables: {
                 [key: string]: Record<string, never>[];
             };
+        };
+        /** DeleteFilesRequest */
+        DeleteFilesRequest: {
+            /** Confirm */
+            confirm: string;
+        };
+        /** DeleteFilesResponse */
+        DeleteFilesResponse: {
+            /** Bytes Freed */
+            bytes_freed: number;
+            /** Files Deleted */
+            files_deleted: number;
+            /**
+             * Result Id
+             * Format: uuid
+             */
+            result_id: string;
+            storage: components["schemas"]["Allowance"];
         };
         /** DeliveryRepresentation */
         DeliveryRepresentation: {
@@ -5093,6 +5198,8 @@ export interface components {
             paid_on: string;
             /** Purpose */
             purpose: string;
+            /** Receipt Number */
+            receipt_number?: string | null;
             /** Reference */
             reference: string | null;
             /** Reversed */
@@ -5839,6 +5946,22 @@ export interface components {
              */
             user_id: string;
         };
+        /**
+         * SellerIdentity
+         * @description Q6: who sells NOVA-GeoRisk (settings), shown on My subscription and on receipts.
+         */
+        SellerIdentity: {
+            /** Address */
+            address: string | null;
+            /** Legal Name */
+            legal_name: string;
+            /** Tin */
+            tin: string | null;
+            /** Vat Mode */
+            vat_mode: string;
+            /** Vat Rate Percent */
+            vat_rate_percent: number;
+        };
         /** SessionOrganization */
         SessionOrganization: {
             /**
@@ -6129,6 +6252,48 @@ export interface components {
              */
             status: "active" | "suspended" | "expired" | "canceled";
         };
+        /** StorageOverview */
+        StorageOverview: {
+            /** Blocks At Limit */
+            blocks_at_limit: boolean;
+            /** Can Manage */
+            can_manage: boolean;
+            /** Items */
+            items: components["schemas"]["StoredResultItem"][];
+            /** Level */
+            level: number | null;
+            /** Limit */
+            limit: number | null;
+            /** Used */
+            used: number;
+            /** Warning Levels */
+            warning_levels: number[];
+        };
+        /** StoredResultItem */
+        StoredResultItem: {
+            /** Bytes */
+            bytes: number;
+            /** Confirmation Code */
+            confirmation_code: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Downloads */
+            downloads: string[];
+            /** Files */
+            files: number;
+            /** Project Name */
+            project_name: string;
+            /**
+             * Result Id
+             * Format: uuid
+             */
+            result_id: string;
+            /** Result Type */
+            result_type: string;
+        };
         /** SubscriptionRequestCreate */
         SubscriptionRequestCreate: {
             /** Kind */
@@ -6137,6 +6302,8 @@ export interface components {
             note?: string | null;
             /** Plan Key */
             plan_key?: string | null;
+            /** Storage Gb */
+            storage_gb?: number | null;
             /**
              * Subscription Id
              * Format: uuid
@@ -6172,6 +6339,10 @@ export interface components {
             plan_name: string | null;
             /** Status */
             status: string;
+            /** Storage Gb */
+            storage_gb?: number | null;
+            /** Storage Price */
+            storage_price?: number | null;
             /**
              * Subscription Id
              * Format: uuid
@@ -6180,6 +6351,8 @@ export interface components {
         };
         /** SubscriptionSummary */
         SubscriptionSummary: {
+            /** Access Ends At */
+            access_ends_at?: string | null;
             /** Block Code */
             block_code: string | null;
             /** Block Message */
@@ -8435,6 +8608,82 @@ export interface operations {
             };
         };
     };
+    get_payment_receipt_api_v1_billing_payments__payment_id__receipt_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The payment receipt (PDF). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     get_plan_catalogue_api_v1_billing_plans_get: {
         parameters: {
             query: {
@@ -8605,6 +8854,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SubscriptionRequestResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_storage_api_v1_billing_storage_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageOverview"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    delete_result_files_api_v1_billing_storage_results__result_id__delete_files_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                result_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteFilesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteFilesResponse"];
                 };
             };
             /** @description Bad request */
@@ -12265,6 +12670,82 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminPaymentPage"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authorization failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    payment_receipt_api_v1_platform_admin_payments__payment_id__receipt_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The payment receipt (PDF). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
                 };
             };
             /** @description Bad request */

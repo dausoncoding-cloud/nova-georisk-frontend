@@ -83,6 +83,8 @@ export function LoginPage() {
           <p className="security-note">
             Authentication is completed by the NOVA server. Provider credentials and tokens are never stored in this browser application.
           </p>
+          {/* Q9 (decided 2026-11-21) */}
+          <p className="security-note login-privacy">For security we record sign-ins (device, approximate location and IP address). IP addresses are deleted after 30 days.</p>
         </div>
       </section>
     </main>

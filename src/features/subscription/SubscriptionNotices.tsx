@@ -13,14 +13,27 @@ export function SubscriptionBanner({ engine = "firris", onPage = false }: { engi
   const subscription = subscriptionFor(summary.data, engine);
   if (!summary.data?.enforcement_enabled || !subscription) return null;
   if (subscription.block_code) {
-    const credits = subscription.block_code === "credits_exhausted" || subscription.block_code === "storage_full";
+    const credits = subscription.block_code === "credits_exhausted";
+    const storage = subscription.block_code === "storage_full";
+    const ended = subscription.block_code === "subscription_expired" || subscription.block_code === "subscription_canceled";
     return (
       <div className="sub-banner sub-banner--danger" role="alert">
-        <p><span className="sub-banner__icon" aria-hidden="true">!</span>{subscription.block_message}</p>
+        <p><span className="sub-banner__icon" aria-hidden="true">!</span>{subscription.block_message}
+          {ended && subscription.access_ends_at ? ` Viewing and downloads close on ${new Date(subscription.access_ends_at).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.` : ""}</p>
         <p className="sub-banner__links">
           {credits ? <><Link to="/subscription#top-up">Buy credits</Link><Link to="/subscription#plans">Upgrade plan</Link></>
+            : storage ? <><Link to="/subscription#storage">Free up space</Link><Link to="/subscription#storage">Request storage</Link></>
+            : ended ? <Link to="/subscription#renew">Renew plan</Link>
             : !onPage ? <Link to="/subscription">View subscription</Link> : null}
         </p>
+      </div>
+    );
+  }
+  if (summary.data.storage.level === 90) { // Q5: the 90% storage warning, for every member
+    return (
+      <div className="sub-banner sub-banner--warning" role="status">
+        <p>Storage is 90% used. Free up space or request more storage before it is full; at 100% new analyses pause.</p>
+        <p className="sub-banner__links"><Link to="/subscription#storage">Manage storage</Link></p>
       </div>
     );
   }

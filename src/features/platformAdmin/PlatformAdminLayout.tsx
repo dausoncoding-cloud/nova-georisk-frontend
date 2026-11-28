@@ -12,6 +12,7 @@ export const ARI_NAV = [
   { to: "/nova-ari/payments", label: "Payments" },
   { to: "/nova-ari/plans", label: "Plans and pricing" },
   { to: "/nova-ari/security-alerts", label: "Security alerts" },
+  { to: "/nova-ari/integrations", label: "Integrations" },
   { to: "/nova-ari/audit", label: "Audit log" },
 ] as const;
 

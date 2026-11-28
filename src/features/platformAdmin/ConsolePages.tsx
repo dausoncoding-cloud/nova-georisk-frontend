@@ -5,13 +5,13 @@ import { Disclosure } from "../../shared/ui/Disclosure";
 import { ErrorState } from "../../shared/ui/ErrorState";
 import { LoadingState } from "../../shared/ui/LoadingState";
 import { Pagination } from "../../shared/ui/Pagination";
-import { acknowledgeAlert, changeLimits, changePrice, closeRequest, fetchAlerts, fetchAudit, fetchPayments, fetchPlans, fetchRequests, reversePayment,
-  type AdminPayment, type AdminPlan, type CustomerRequest, type SecurityAlert } from "./adminApi";
+import { acknowledgeAlert, changeLimits, changePrice, closeRequest, fetchAlerts, fetchAudit, fetchMobileReviews, fetchPayments, fetchPlans, fetchRequests,
+  resolveMobilePayment, reversePayment, type AdminPayment, type AdminPlan, type CustomerRequest, type MobilePayment, type SecurityAlert } from "./adminApi";
 import { ReasonDialog } from "./ReasonDialog";
 import { FAMILY_LABEL, dateTime, gigabytes, shortDate, tzs } from "./format";
 
 const METHOD: Record<string, string> = { bank_transfer: "Bank transfer", mobile_money: "Mobile money", cash: "Cash", other: "Other" };
-const PURPOSE: Record<string, string> = { plan_period: "Plan period", top_up: "Top-up", reversal: "Reversal" };
+const PURPOSE: Record<string, string> = { plan_period: "Plan period", top_up: "Top-up", reversal: "Reversal", test: "Test payment (no credits)" };
 
 function useRefresh() {
   const cache = useQueryClient();
@@ -31,6 +31,7 @@ export function PaymentsPage() {
   return (
     <div className="ari-page">
       <PageHeader title="Payments" intro="Payments recorded by NOVA ARI. A payment is never edited; a mistake is reversed with a reason." />
+      <MobileReviews />
       <CustomerRequests />
       <section className="ari-card">
         {list.isPending ? <LoadingState label="Loading payments…" /> : list.isError ? <ErrorState title="Payments unavailable" error={list.error} /> : <>
@@ -56,6 +57,49 @@ export function PaymentsPage() {
       </section>
       {reversing ? <ReverseDialog payment={reversing} onClose={() => setReversing(null)} /> : null}
     </div>
+  );
+}
+
+// Mobile Money (Abliner) payments in review: never credited automatically; an admin decides, with a reason.
+function MobileReviews() {
+  const reviews = useQuery({ queryKey: ["platform-admin", "mobile-reviews"], queryFn: fetchMobileReviews });
+  const [resolving, setResolving] = useState<{ payment: MobilePayment; resolution: "credited_manually" | "no_action" } | null>(null);
+  if (!reviews.data?.items.length) return null;
+  return (
+    <section className="ari-card" aria-labelledby="mobile-review-heading">
+      <div className="ari-card__head"><h2 id="mobile-review-heading">Mobile Money payments to review <span className="ari-pill ari-pill--danger">{reviews.data.total}</span></h2>
+        <span className="ari-sub">No credits were added. If the customer paid, record the payment for them first, then mark it credited.</span></div>
+      <div className="table-wrap"><table className="ari-table">
+        <thead><tr><th scope="col">Started</th><th scope="col">Customer</th><th scope="col">For</th><th scope="col">Why</th><th scope="col">Abliner</th><th scope="col"><span className="visually-hidden">Actions</span></th></tr></thead>
+        <tbody>{reviews.data.items.map((payment) => (
+          <tr key={payment.id}>
+            <td data-label="Started">{dateTime(payment.created_at)}<div className="ari-sub">{payment.phone}</div></td>
+            <td data-label="Customer">{payment.organization_name}<div><span className="ari-pill ari-pill--danger">Review</span></div></td>
+            <td data-label="For" className="ari-num">{tzs(payment.amount)}<div className="ari-sub">{payment.purpose === "top_up" ? `Top-up · ${payment.credits} credits` : "Plan renewal"}</div></td>
+            <td data-label="Why">{payment.review_reason}</td>
+            <td data-label="Abliner"><span className="break-anywhere">{payment.abliner_event_tx_id ?? payment.abliner_tx_id ?? "—"}</span><div className="ari-sub">{payment.reference}</div></td>
+            <td data-label="Actions"><div className="row-links">
+              <button type="button" className="button button--quiet button--small" onClick={() => setResolving({ payment, resolution: "credited_manually" })}>Mark credited</button>
+              <button type="button" className="button button--quiet button--small" onClick={() => setResolving({ payment, resolution: "no_action" })}>No action</button>
+            </div></td>
+          </tr>
+        ))}</tbody>
+      </table></div>
+      {resolving ? <ResolveDialog {...resolving} onClose={() => setResolving(null)} /> : null}
+    </section>
+  );
+}
+
+function ResolveDialog({ payment, resolution, onClose }: { payment: MobilePayment; resolution: "credited_manually" | "no_action"; onClose: () => void }) {
+  const refresh = useRefresh();
+  const mutation = useMutation({ mutationFn: (reason: string) => resolveMobilePayment(payment.id, { resolution, reason }), onSuccess: () => { refresh(); onClose(); } });
+  return (
+    <ReasonDialog title={`${resolution === "credited_manually" ? "Mark credited" : "No action"} · ${payment.organization_name}`}
+      confirmLabel={resolution === "credited_manually" ? "Mark credited" : "Close without credit"} busy={mutation.isPending} error={mutation.error}
+      onClose={onClose} onConfirm={(reason) => mutation.mutate(reason)}
+      intro={resolution === "credited_manually"
+        ? <p>This closes the review only. Record the payment for {payment.organization_name} in the console first if they should receive credits.</p>
+        : <p>Close this review without adding anything. Say what you checked.</p>} />
   );
 }
 
